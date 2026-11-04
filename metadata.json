@@ -1,0 +1,6 @@
+{
+  "name": "Campus Enfermería Toledo - Guía y Estudio",
+  "description": "Aplicación integral para estudiantes del Grado en Enfermería: guías farmacológicas, cálculo de dosificación, terminología médica, recordatorios de exámenes y prácticas, autoevaluación interactiva y manuales de procedimientos clínicos offline.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

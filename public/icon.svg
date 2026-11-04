@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d523e"/>
+      <stop offset="100%" stop-color="#1b3528"/>
+    </linearGradient>
+    <linearGradient id="crossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fdfdfc"/>
+      <stop offset="100%" stop-color="#eaf3ea"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background with rounded squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  
+  <!-- Subtle inner glow ring -->
+  <rect x="16" y="16" width="480" height="480" rx="98" fill="none" stroke="#689376" stroke-width="4" stroke-opacity="0.3"/>
+
+  <!-- Nursing Medical Cross with Soft Rounded Corners -->
+  <g filter="url(#shadow)">
+    <!-- Vertical Bar -->
+    <rect x="206" y="96" width="100" height="320" rx="36" fill="url(#crossGrad)"/>
+    <!-- Horizontal Bar -->
+    <rect x="96" y="206" width="320" height="100" rx="36" fill="url(#crossGrad)"/>
+  </g>
+
+  <!-- Central Heart & Stethoscope Motif in Forest Green & Gold -->
+  <circle cx="256" cy="256" r="32" fill="#365e45"/>
+  <path d="M256 268 C256 268, 240 252, 240 242 C240 234, 246 228, 256 236 C266 228, 272 234, 272 242 C272 252, 256 268, 256 268 Z" fill="#e7c874"/>
+</svg>

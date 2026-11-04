@@ -1,0 +1,1106 @@
+Análisis técnico del ZIP y plan de desarrollo de Campus Enfermería Toledo
+He abierto y revisado la estructura del proyecto y sus archivos TypeScript, React, datos, almacenamiento y configuración PWA. La buena noticia es que no necesitas empezar de cero ni cambiar de tecnología.
+
+Tu aplicación está desarrollada con React 19, TypeScript, Vite, Tailwind CSS y Lucide, y utiliza una arquitectura de componentes y vistas independientes. También incorpora una configuración para instalarla como aplicación móvil mediante PWA.
+
+Mi propuesta es mantener esa base y convertir la siguiente versión en una evolución estructurada, no en una aplicación completamente nueva.
+1. Diagnóstico de lo que realmente tienes
+Campus Enfermería Toledo
+Base aprovechable
+
+React + TypeScript
+Arquitectura identificada en el ZIP
+19
+Archivos TS/TSX aproximadamente entre vistas, componentes, hooks y datos
+
+12
+Vistas principales conectadas desde App.tsx
+
+PWA
+Instalable y con configuración de caché
+
+Local
+Persistencia mediante localStorage
+
+
+
+Archivos que ya existen y debemos aprovechar
+Archivo	Función actual	Decisión
+src/App.tsx	Navegación y vistas	Ampliar
+src/types/index.ts	Modelos de datos	Ampliar
+src/hooks/useCampusStore.ts	Estado y persistencia	Refactorizar
+src/data/subjects.ts	Asignaturas UCLM	Ampliar
+src/data/pharmacology.ts	Base de fármacos	Ampliar
+src/data/dosage.ts	Cálculos de dosis	Ampliar y validar
+src/data/clinicalManuals.ts	Procedimientos	Ampliar
+src/data/selfEvaluation.ts	Preguntas de autoevaluación	Ampliar
+src/views/SubjectsView.tsx	Asignaturas de primero	Convertir en academia
+src/views/PracticasView.tsx	Portfolio de prácticas	Convertir en Prácticas 360
+src/views/ManualsView.tsx	Manuales clínicos	Integrar con ECOE
+src/views/PharmacologyView.tsx	Farmacología	Evolucionar a PRO
+src/views/DosageView.tsx	Calculadora	Integrar con PRO
+src/views/ToolsView.tsx	PAE, SBAR y constantes	Ampliar laboratorio
+src/views/SelfEvaluationView.tsx	Tests	Convertir en academia avanzada
+src/components/Sidebar.tsx	Menú lateral	Rediseñar
+src/components/MobileBottomNav.tsx	Menú móvil	Adaptar
+
+Cinco problemas que resolvería antes de añadir funcionalidades
+1. Datos personales incrustados en el código.
+
+He encontrado el nombre de la estudiante y un mensaje familiar escritos directamente en el almacenamiento inicial y en la interfaz. También hay datos de demostración de notas, gastos, turnos y progreso.
+
+Esto debe convertirse en un perfil configurable, con datos ficticios claramente identificados y sin información personal predeterminada en la versión distribuible.
+
+2. Almacenamiento demasiado limitado.
+
+El useCampusStore.ts guarda todo en localStorage. Es adecuado para comenzar, pero no para manejar cientos de documentos, fotografías, preguntas y usuarios compartiendo contenidos.
+
+3. Estado duplicado entre vistas.
+
+Las distintas vistas invocan individualmente useCampusStore(). Cada una puede crear su propio estado React y cargarlo desde el almacenamiento. Funciona en el flujo actual de navegación, pero conviene centralizarlo en un proveedor común para evitar inconsistencias cuando añadamos más módulos.
+
+4. Falta un sistema formal de fuentes clínicas.
+
+Los manuales y fichas existentes tienen contenido, pero necesitamos añadir autoría, bibliografía, fecha de revisión, versión y nivel de evidencia o autoridad de la fuente.
+
+5. La función offline necesita completarse.
+
+La configuración PWA está bien encaminada, pero marcar un manual como offlineReady no garantiza por sí mismo que todo su contenido esté disponible sin conexión. Necesitamos una gestión real de documentos y caché.
+
+2. Arquitectura que propongo para la versión 2.0
+No haría siete aplicaciones dentro de una. Mantendría un único Campus Enfermería, con siete grandes áreas conectadas entre sí.
+CAMPUS ENFERMERÍA
+TOLEDO · UCLM · VERSIÓN 2.0
+
+Mi UCLM
+
+Vida académica
+
+
+Academia
+
+Estudio y exámenes
+
+
+Laboratorio
+
+Analíticas y ECG
+
+
+Simulación ECOE
+
+Entrenamiento
+
+
+Farmacología PRO
+
+Medicamentos y dosis
+
+
+Prácticas 360
+
+Portfolio clínico
+
+
+Tutor IA
+
+Profesor virtual
+
+
+
+Núcleo común
+
+Perfil · Base de datos · Documentos · Búsqueda · Favoritos · Sincronización · Fuentes · Seguridad · Modo offline
+
+
+La arquitectura tendría cuatro capas:
+1. Interfaz: las pantallas que utiliza la estudiante.
+2. Lógica: cálculos, evaluaciones, seguimiento y reglas académicas.
+3. Datos: asignaturas, preguntas, medicamentos, escalas, procedimientos y documentos.
+4. Servicios: IA, sincronización, almacenamiento y actualización de contenidos.
+Estructura de carpetas propuesta
+No eliminaría las carpetas actuales. Las reorganizaría gradualmente y añadiría estas:
+src/
+├── App.tsx
+├── main.tsx
+│
+├── components/
+│   ├── Sidebar.tsx
+│   ├── Header.tsx
+│   ├── MobileBottomNav.tsx
+│   ├── Footer.tsx
+│   ├── OfflineBanner.tsx
+│   ├── PageHeader.tsx
+│   ├── SearchBar.tsx
+│   ├── SourceReference.tsx
+│   └── ProgressCard.tsx
+│
+├── context/
+│   └── CampusProvider.tsx
+│
+├── hooks/
+│   ├── useCampusStore.ts
+│   ├── useOnlineStatus.ts
+│   ├── usePWAInstall.ts
+│   └── useSearch.ts
+│
+├── types/
+│   ├── index.ts
+│   ├── academic.ts
+│   ├── clinical.ts
+│   ├── pharmacology.ts
+│   ├── practice.ts
+│   └── ai.ts
+│
+├── data/
+│   ├── subjects.ts
+│   ├── pharmacology.ts
+│   ├── dosage.ts
+│   ├── clinicalManuals.ts
+│   ├── selfEvaluation.ts
+│   ├── reminders.ts
+│   ├── uclm/
+│   ├── academy/
+│   ├── laboratory/
+│   ├── ecoe/
+│   ├── pharmacy/
+│   └── clinical/
+│
+├── views/
+│   ├── TodayView.tsx
+│   ├── UCLMView.tsx
+│   ├── AcademyView.tsx
+│   ├── LaboratoryView.tsx
+│   ├── ECOEView.tsx
+│   ├── PharmacologyProView.tsx
+│   ├── Practice360View.tsx
+│   ├── TutorAIView.tsx
+│   └── ...
+│
+├── services/
+│   ├── storageService.ts
+│   ├── documentService.ts
+│   ├── academicService.ts
+│   ├── calculatorService.ts
+│   ├── clinicalContentService.ts
+│   └── aiService.ts
+│
+└── utils/
+    ├── dateUtils.ts
+    ├── calculations.ts
+    ├── validation.ts
+    └── exportPDF.ts
+
+
+No es necesario crear todos estos archivos el primer día. Es la estructura objetivo para evitar que App.tsx, useCampusStore.ts y las vistas actuales terminen acumulando demasiadas responsabilidades.
+
+3. Desarrollo detallado de los siete módulos
+MÓDULO 1. MI UCLM
+Primera prioridad
+Objetivo: que la estudiante tenga toda su vida universitaria organizada en una sola pantalla.
+Pantalla principal
+Mi Universidad
+Toledo
+
+9 asignaturas
+
+Primer curso
+
+60 ECTS
+
+Créditos del curso
+
+Mi calendario
+
+Clases y exámenes
+
+Campus
+
+Fábrica de Armas
+
+
+
+Progresión académica
+Fundamentos de Enfermería I
+Asignatura llave
+
+Estado de aprobación pendiente de configurar por el estudiante.
+
+Próximos eventos
+
+Calendario académico
+
+Exámenes, entregas y clases
+
+
+Maqueta funcional conceptual; no representa datos académicos reales.
+Funcionalidades
+- [ ] Selector de curso: primero, segundo, tercero y cuarto.
+- [ ] Asignaturas oficiales de cada curso.
+- [ ] ECTS y semestre.
+- [ ] Estado de matrícula.
+- [ ] Estado de aprobación.
+- [ ] Asignaturas llave y prerrequisitos.
+- [ ] Mapa de dependencias académicas.
+- [ ] Horario semanal.
+- [ ] Calendario de exámenes.
+- [ ] Calendario de entregas.
+- [ ] Calendario de prácticas.
+- [ ] Calculadora de notas.
+- [ ] Progreso de cada asignatura.
+- [ ] Acceso a guías docentes oficiales.
+- [ ] Enlaces de secretaría y facultad.
+- [ ] Mapa de los campus de Toledo.
+- [ ] Información de los centros de prácticas.
+- [ ] Alertas de fechas importantes.
+Archivos que modificaría
+Archivo	Modificación
+src/data/subjects.ts	Plan completo de cuatro cursos
+src/types/index.ts	Prerrequisitos, matrícula y calificaciones
+src/views/SubjectsView.tsx	Convertir en catálogo académico
+src/views/RemindersView.tsx	Calendario unificado
+src/App.tsx	Incorporar UCLMView
+src/components/Sidebar.tsx	Nuevo acceso Mi UCLM
+src/components/MobileBottomNav.tsx	Acceso rápido
+
+Archivos nuevos:
+- src/data/uclm/curriculum.ts
+- src/data/uclm/prerequisites.ts
+- src/data/uclm/links.ts
+- src/views/UCLMView.tsx
+- src/services/academicService.ts
+Una condición: los requisitos académicos se cargarán desde la normativa y guías docentes vigentes, con fecha de revisión. No se codificarán como verdades inmutables.
+
+MÓDULO 2. ACADEMIA
+Objetivo: convertir la aplicación en una plataforma completa de estudio.
+Organización
+Academia de Enfermería
+
+Ejemplo de organización del primer curso
+Anatomía Humana
+
+6 ECTS
+
+
+Psicología
+
+6 ECTS
+
+
+Bioquímica
+
+6 ECTS
+
+
+Fundamentos I
+
+6 ECTS
+
+
+Salud Pública
+
+6 ECTS
+
+
+Estadística
+
+6 ECTS
+
+
+Diversidad Cultural
+
+6 ECTS
+
+
+Fisiología
+
+6 ECTS
+
+
+Nutrición
+
+6 ECTS
+
+
+
+Dentro de cada asignatura
+- [ ] Temario por unidades.
+- [ ] Diapositivas.
+- [ ] Apuntes PDF.
+- [ ] Esquemas.
+- [ ] Bibliografía.
+- [ ] Vídeos autorizados.
+- [ ] Flashcards.
+- [ ] Preguntas tipo test.
+- [ ] Simulacros de examen.
+- [ ] Preguntas falladas.
+- [ ] Registro de notas.
+- [ ] Plan de repaso.
+Sistema de exámenes
+Implementaría cuatro modalidades:
+Modalidad	Funcionamiento
+Repaso rápido	10 preguntas
+Examen normal	30 preguntas
+Simulacro completo	Número configurable y cronómetro
+Mis errores	Preguntas contestadas incorrectamente
+
+Cada pregunta tendrá:
+interface AcademyQuestion {
+  id: string;
+  subjectId: string;
+  topicId: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  difficulty: 'Básica' | 'Media' | 'Avanzada';
+  source?: string;
+  reviewedAt?: string;
+  tags: string[];
+}
+
+
+Añadiría también un algoritmo de repetición espaciada. Una pregunta fallada reaparecerá antes que otra que se responde correctamente de forma consistente.
+Archivos a modificar
+- src/views/SubjectsView.tsx
+- src/views/SelfEvaluationView.tsx
+- src/data/subjects.ts
+- src/data/selfEvaluation.ts
+- src/types/index.ts
+- src/hooks/useCampusStore.ts
+Archivos nuevos
+- src/views/AcademyView.tsx
+- src/data/academy/questions/
+- src/data/academy/flashcards.ts
+- src/data/academy/studyPlans.ts
+- src/services/quizService.ts
+- src/services/spacedRepetitionService.ts
+Decisión técnica importante: los PDF no se introducirán como cadenas enormes en el almacenamiento local. Se guardarán como archivos, con metadatos y referencias desde la asignatura.
+
+MÓDULO 3. LABORATORIO CLÍNICO
+Objetivo: crear un laboratorio virtual para aprender a interpretar analíticas y resultados.
+
+Lo dividiría en cinco pestañas:
+1. Analíticas.
+2. Gasometrías.
+3. Tubos de extracción.
+4. Orina y microbiología.
+5. ECG básico.
+Analíticas
+- [ ] Hemograma.
+- [ ] Bioquímica.
+- [ ] Coagulación.
+- [ ] Iones.
+- [ ] Función renal.
+- [ ] Función hepática.
+- [ ] Marcadores inflamatorios.
+- [ ] Marcadores cardíacos.
+- [ ] Perfil lipídico.
+- [ ] Análisis de orina.
+Gasometría
+Crearía un asistente de interpretación didáctica que solicite:
+- pH.
+- PaCO₂ o PvCO₂.
+- HCO₃⁻.
+- Exceso de bases, si está disponible.
+- PaO₂, si se trata de una gasometría arterial.
+- Lactato.
+- Contexto clínico ficticio.
+Y que explique:
+- Acidosis o alcalosis.
+- Componente respiratorio o metabólico.
+- Compensación.
+- Posible trastorno mixto.
+- Limitaciones de interpretación.
+La gasometría venosa no se interpretará como equivalente a la arterial, especialmente en oxigenación.
+Tubos
+Cada tubo tendrá una ficha con:
+- Color.
+- Aditivo.
+- Tipo de muestra.
+- Pruebas habituales.
+- Orden de extracción.
+- Instrucciones de llenado.
+- Fuente y fabricante.
+- Particularidades del laboratorio.
+Archivos nuevos
+- src/views/LaboratoryView.tsx
+- src/data/laboratory/hematology.ts
+- src/data/laboratory/biochemistry.ts
+- src/data/laboratory/coagulation.ts
+- src/data/laboratory/bloodTubes.ts
+- src/data/laboratory/gasometry.ts
+- src/data/laboratory/ecg.ts
+- src/services/laboratoryService.ts
+Pruebas que debe superar
+- No aceptar unidades incompatibles sin conversión explícita.
+- No presentar rangos universales.
+- Distinguir arterial de venosa.
+- Mostrar los cálculos utilizados.
+- Señalar datos insuficientes.
+- Explicar los resultados sin emitir diagnósticos médicos automáticos.
+
+MÓDULO 4. SIMULACIÓN ECOE
+Objetivo: que pueda entrenar procedimientos antes de realizar sus prácticas en el laboratorio de habilidades.
+Estructura de cada estación
+Estación ECOE
+Modo práctica
+
+Extracción de sangre venosa
+
+Caso ficticio · Nivel básico
+
+1. Preparación
+- Identificación del paciente simulado.
+- Higiene de manos.
+- Material necesario.
+- Información y consentimiento.
+  
+  2. Ejecución
+- Técnica según protocolo docente.
+- Seguridad y asepsia.
+- Obtención de la muestra.
+  
+  3. Finalización
+- Eliminación de material.
+- Identificación de muestras.
+- Registro y comunicación.
+  
+  4. Evaluación
+- Pasos realizados.
+- Pasos omitidos.
+- Errores críticos.
+- Retroalimentación.
+
+Funciones
+- [ ] Catálogo de estaciones.
+- [ ] Checklist interactivo.
+- [ ] Temporizador.
+- [ ] Modo examen sin ayudas.
+- [ ] Modo aprendizaje con explicaciones.
+- [ ] Evaluación de errores críticos.
+- [ ] Puntuación configurable.
+- [ ] Historial de intentos.
+- [ ] Repetición de estaciones fallidas.
+- [ ] Material necesario.
+- [ ] Bibliografía.
+- [ ] Vídeos autorizados.
+- [ ] Exportación de resultados.
+Estaciones iniciales
+Empezaría con diez:
+1. Higiene de manos y EPI.
+2. Toma de constantes.
+3. Glucemia capilar.
+4. Administración de medicación oral.
+5. Administración subcutánea.
+6. Extracción sanguínea.
+7. Canalización venosa simulada.
+8. Cura de heridas.
+9. Sondaje vesical en simulador.
+10. Valoración inicial ABCDE.
+Archivos a modificar
+- src/data/clinicalManuals.ts
+- src/types/index.ts
+- src/views/ManualsView.tsx
+- src/views/PracticasView.tsx
+- src/App.tsx
+Archivos nuevos
+- src/views/ECOEView.tsx
+- src/data/ecoe/stations.ts
+- src/data/ecoe/checklists.ts
+- src/services/ecoeScoringService.ts
+La puntuación debe basarse en criterios revisados por docentes o fuentes formativas fiables. Los pasos críticos no pueden compensarse simplemente con puntos obtenidos en otros apartados.
+
+MÓDULO 5. FARMACOLOGÍA PRO
+Objetivo: convertir la farmacología actual en una herramienta de consulta y aprendizaje mucho más completa.
+
+Ya tienes una base de medicamentos en src/data/pharmacology.ts, una pantalla de consulta y una calculadora. No las sustituiría: las ampliaría.
+Ficha de cada medicamento
+Ficha farmacológica
+Modelo propuesto
+
+Paracetamol
+Ejemplo educativo de ficha
+
+Identificación
+- Principio activo.
+- Marcas comerciales.
+- Familia farmacológica.
+- Código ATC.
+  Información farmacológica
+- Mecanismo de acción.
+- Indicaciones autorizadas.
+- Presentaciones.
+- Vías de administración.
+  Seguridad
+- Contraindicaciones.
+- Precauciones.
+- Reacciones adversas.
+- Interacciones.
+- Ajustes especiales.
+  Cuidados de enfermería
+- Comprobaciones previas.
+- Monitorización.
+- Educación al paciente.
+- Observaciones durante la administración.
+  
+  La ficha real se alimentará de fuentes farmacológicas oficiales y llevará fecha de revisión.
+
+Nuevas funciones
+- [ ] Buscador por principio activo.
+- [ ] Buscador por nombre comercial.
+- [ ] Clasificación ATC.
+- [ ] Fichas por familias.
+- [ ] Alertas de medicamentos de alto riesgo.
+- [ ] Alertas LASA.
+- [ ] Antídotos y reversores.
+- [ ] Interacciones.
+- [ ] Compatibilidad IV.
+- [ ] Compatibilidad en Y.
+- [ ] Diluyentes y reconstitución.
+- [ ] Estabilidad y conservación.
+- [ ] Monitorización de enfermería.
+- [ ] Favoritos.
+- [ ] Historial de consultas.
+- [ ] Fichas imprimibles.
+Calculadoras PRO
+Ampliaría DosageView.tsx con estas herramientas:
+Calculadora	Resultado
+Dosis por peso	mg y ml
+Dosis por superficie corporal	mg
+Reconstitución	Concentración final
+Dilución	Volumen y concentración
+Bomba volumétrica	ml/h
+Goteo	gotas/min
+Microgoteo	microgotas/min
+Perfusión continua	ml/h y unidades de dosis
+Bomba de jeringa	ml/h
+Conversor	g, mg, mcg, UI y otras unidades compatibles
+
+En perfusiones de mcg/kg/min, por ejemplo, el cálculo necesita peso, dosis prescrita, concentración final y unidades homogéneas. Debe detectar errores de unidades antes de mostrar el resultado.
+Matriz de compatibilidades
+La diseñaría como una búsqueda de dos medicamentos:
+Consulta de compatibilidad IV
+
+Ejemplo de interfaz, no consulta clínica real
+Medicamento A
+
+Seleccionar medicamento
+
+Medicamento B
+
+Seleccionar medicamento
+
+Condiciones
+
+Concentración · Diluyente · Administración en Y
+
+La consulta real mostrará el resultado documentado, las condiciones y la fuente. Si no existe evidencia suficiente, indicará «compatibilidad no establecida».
+Archivos a modificar
+- src/data/pharmacology.ts
+- src/data/dosage.ts
+- src/types/index.ts
+- src/views/PharmacologyView.tsx
+- src/views/DosageView.tsx
+Archivos nuevos
+- src/views/PharmacologyProView.tsx
+- src/data/pharmacy/interactions.ts
+- src/data/pharmacy/compatibilities.ts
+- src/data/pharmacy/highRiskDrugs.ts
+- src/services/calculatorService.ts
+- src/services/drugInformationService.ts
+- src/utils/medicationValidation.ts
+Una precaución especial: antes de ampliar las calculadoras revisaría los ejemplos y fórmulas actuales. En particular, eliminaría ejemplos de dosificación farmacológica que puedan interpretarse como pautas clínicas generales. La calculadora debe enseñar matemáticas de administración, no prescribir tratamientos.
+
+MÓDULO 6. PRÁCTICAS 360
+Objetivo: acompañar a la estudiante durante sus estancias clínicas, desde segundo hasta cuarto curso.
+
+Aquí aprovecharía PracticasView.tsx, que ya permite registrar turnos, horas y procedimientos.
+Nueva estructura
+Tendría cinco pestañas:
+1. Mi calendario.
+2. Registro de horas.
+3. Pasaporte de competencias.
+4. Diario reflexivo.
+5. Portfolio.
+Registro de turnos
+Cada turno tendría:
+- Fecha.
+- Centro.
+- Unidad.
+- Turno de mañana, tarde o noche.
+- Hora de entrada.
+- Hora de salida.
+- Descansos, si procede.
+- Horas efectivas.
+- Objetivos de aprendizaje.
+- Estado de validación.
+- Observaciones educativas.
+Estados de validación
+Validado
+ Pendiente de tutor
+ Sin presentar
+
+
+La aplicación debe diferenciar las horas anotadas por el alumno de las horas reconocidas por el centro o la universidad.
+Diario reflexivo
+Para cada jornada:
+- ¿Qué he aprendido hoy?
+- ¿Qué técnica he observado?
+- ¿Qué técnica he practicado?
+- ¿Qué me ha resultado difícil?
+- ¿Qué dudas me han surgido?
+- ¿Qué debo estudiar?
+- ¿Qué objetivo me propongo para mañana?
+Incluiría una plantilla de reflexión clínica tipo Gibbs, adaptable a los requisitos de la asignatura.
+Pasaporte de competencias
+Cada competencia podrá tener cuatro estados:
+Estado	Significado
+Pendiente	Todavía no trabajada
+Observada	Ha visto cómo se realiza
+Practicada	Ha participado en simulación o bajo supervisión
+Evaluada	Ha recibido evaluación documentada
+
+El alumno no podrá marcar por sí solo una competencia como oficialmente evaluada por el tutor.
+Archivos a modificar
+- src/views/PracticasView.tsx
+- src/types/index.ts
+- src/hooks/useCampusStore.ts
+- src/data/reminders.ts
+Archivos nuevos
+- src/views/Practice360View.tsx
+- src/data/clinical/competencies.ts
+- src/services/practiceService.ts
+- src/utils/portfolioExport.ts
+Exportaciones
+- [ ] Informe mensual de horas.
+- [ ] Diario reflexivo.
+- [ ] Portfolio completo.
+- [ ] Competencias por estado.
+- [ ] Informe de objetivos alcanzados.
+- [ ] Memoria de prácticas en PDF.
+La validación del tutor inicialmente será un campo de revisión y constancia, no una firma electrónica con validez institucional. Para eso haría falta un sistema de identidad y firma específico.
+
+MÓDULO 7. TUTOR IA
+Mayor potencial de diferenciación
+Este módulo puede convertirse en el elemento que haga que la aplicación sea especialmente atractiva.
+
+Ya existe una dependencia @google/genai en el proyecto, pero no he encontrado una integración de IA implementada en las vistas ni un servicio de servidor que la gestione.
+
+Por tanto, no basta con añadir un chat. Hay que construir correctamente la conexión.
+La pantalla del Tutor IA
+
+Tutor de Enfermería
+
+Asistente de aprendizaje académico
+
+Concepto
+
+¿En qué puedo ayudarte hoy?
+
+Puedo ayudarte a entender tus apuntes, preparar exámenes y practicar casos clínicos ficticios.
+
+Elige un profesor especializado
+Anatomía
+
+
+Fisiología
+
+
+Farmacología
+
+
+Laboratorio
+
+
+ECOE
+
+
+Fundamentos
+
+
+
+
+Acciones rápidas
+- Explícame un concepto.
+- Resume mis apuntes.
+- Hazme un examen.
+- Crea tarjetas de memoria.
+- Simula un caso clínico.
+- Corrige mis respuestas.
+  Escribe tu pregunta...
+
+Siete profesores especializados
+Tutor	Especialidad
+Anatomía	Estructuras y sistemas
+Fisiología	Funcionamiento del organismo
+Farmacología	Medicamentos y cálculos
+Laboratorio	Analíticas y gasometrías
+Fundamentos	Técnicas y cuidados
+ECOE	Simulaciones prácticas
+Académico UCLM	Asignaturas y preparación de exámenes
+
+Funcionalidades
+- [ ] Chat contextual por asignatura.
+- [ ] Adjuntar PDF.
+- [ ] Leer diapositivas.
+- [ ] Resumir documentos.
+- [ ] Crear esquemas.
+- [ ] Generar test.
+- [ ] Corregir preguntas.
+- [ ] Crear flashcards.
+- [ ] Explicar conceptos en tres niveles.
+- [ ] Generar casos clínicos ficticios.
+- [ ] Simular estaciones ECOE.
+- [ ] Consultar fuentes bibliográficas.
+- [ ] Guardar conversaciones favoritas.
+- [ ] Consultar historial.
+- [ ] Continuar conversaciones anteriores.
+La característica que considero más potente: IA conectada a los apuntes
+La estudiante selecciona Anatomía, sube sus diapositivas y pregunta:
+
+«Explícame el sistema nervioso autónomo porque no consigo entender la diferencia entre simpático y parasimpático».
+
+La IA utiliza el documento que ha subido, explica el contenido y después le prepara diez preguntas para comprobar que lo ha entendido.
+
+Esto es mucho más útil que un chatbot genérico que responde sin conocer el material que está estudiando.
+Cómo construiría la IA técnicamente
+Aplicación React
+
+TutorAIView.tsx
+
+
+Servicio de servidor seguro
+
+Autenticación · Validación · Límites de uso
+
+
+Motor de IA
+
+Google Gemini mediante API de servidor
+
+
+Biblioteca documental
+
+Apuntes, guías docentes y bibliografía autorizada
+
+
+Archivos nuevos:
+- src/views/TutorAIView.tsx
+- src/types/ai.ts
+- src/services/aiService.ts
+- src/services/documentService.ts
+- server/index.ts
+- server/routes/ai.ts
+- server/services/geminiService.ts
+- server/middleware/rateLimit.ts
+La clave de Gemini nunca se incluirá en el código JavaScript enviado al navegador. Se guardará como secreto en el servidor.
+
+También añadiría controles para impedir que se envíen datos identificativos de pacientes a la IA. La IA será un profesor de apoyo, no un profesional sanitario ni un sistema de decisión clínica.
+
+4. El núcleo que hará que todos los módulos funcionen juntos
+Este es el trabajo técnico más importante. Si no lo hacemos bien ahora, cada nuevo módulo irá por su cuenta.
+4.1. Un único almacenamiento compartido
+Refactorizaría useCampusStore.ts para que todos los módulos compartan los mismos datos.
+
+Actualmente las vistas llaman individualmente al hook. Lo sustituiría por:
+- CampusProvider.tsx: estado global de la aplicación.
+- useCampusStore.ts: acceso al estado compartido.
+- storageService.ts: lectura y escritura de datos.
+- documentService.ts: gestión de archivos.
+- migrationService.ts: actualización de versiones antiguas.
+¿Qué tecnología utilizaría?
+Tecnología	Utilización
+IndexedDB con Dexie	Datos y documentos locales
+localStorage	Preferencias pequeñas
+Service Worker	Recursos offline
+Backend	Sincronización y cuentas
+Gemini API	Tutor IA
+Almacenamiento de archivos	PDF, imágenes y apuntes
+
+Mi elección inicial sería IndexedDB mediante Dexie. Es una evolución natural de lo que tienes, permite guardar documentos y datos estructurados y funciona en dispositivos móviles.
+
+No obligaría a contratar un servidor desde el primer día. Primero construiría una excelente experiencia individual y después habilitaría las funciones colaborativas.
+4.2. Sistema de fuentes y revisión
+Todos los contenidos clínicos importantes deberían utilizar una estructura común:
+interface ContentMetadata {
+  id: string;
+  title: string;
+  source: string;
+  sourceUrl?: string;
+  author?: string;
+  version: string;
+  lastReviewed: string;
+  nextReview?: string;
+  status: 'draft' | 'reviewed' | 'published';
+  educationalUseOnly: boolean;
+}
+
+
+Así podremos saber si una ficha farmacológica está revisada, si una escala corresponde a una versión determinada y si una guía docente sigue vigente.
+4.3. Migración sin perder los datos actuales
+Esto es especialmente importante.
+
+La aplicación ya tiene información guardada bajo la clave:
+
+campusEnfermeriaToledo_v2
+
+No cambiaría esa clave sin preparar antes una migración.
+
+La nueva versión deberá:
+1. Detectar los datos de la versión anterior.
+2. Hacer una copia de seguridad.
+3. Convertir los datos al nuevo formato.
+4. Conservar notas, turnos, recordatorios y favoritos.
+5. Eliminar los valores de demostración que no sean del estudiante.
+6. Permitir restaurar una copia anterior.
+No se debe publicar la versión nueva hasta comprobar que una instalación antigua puede actualizarse sin perder información.
+
+5. Archivos exactos que habría que modificar
+Esta es la relación de trabajo que entregaría a un desarrollador.
+Archivos existentes
+
+Se conservan y evolucionan
+Ocultar archivossrc/App.tsx
+
+Navegación de los siete módulos
+
+src/types/index.ts
+
+Nuevos modelos de datos
+
+src/hooks/useCampusStore.ts
+
+Estado global y migración
+
+src/data/subjects.ts
+
+Plan académico completo
+
+src/data/pharmacology.ts
+
+Fichas farmacológicas ampliadas
+
+src/data/dosage.ts
+
+Cálculos y fórmulas validadas
+
+src/data/clinicalManuals.ts
+
+Procedimientos y checklists ECOE
+
+src/data/selfEvaluation.ts
+
+Banco de preguntas
+
+src/data/reminders.ts
+
+Calendario académico y turnos
+
+src/views/SubjectsView.tsx
+
+Academia y asignaturas
+
+src/views/SelfEvaluationView.tsx
+
+Exámenes avanzados
+
+src/views/ManualsView.tsx
+
+Procedimientos y simulación
+
+src/views/PharmacologyView.tsx
+
+Farmacología PRO
+
+src/views/DosageView.tsx
+
+Calculadoras PRO
+
+src/views/PracticasView.tsx
+
+Prácticas 360
+
+src/views/ToolsView.tsx
+
+Laboratorio y herramientas clínicas
+
+src/components/Sidebar.tsx
+
+Menú principal
+
+src/components/MobileBottomNav.tsx
+
+Navegación móvil
+
+src/components/Header.tsx
+
+Búsqueda y accesos rápidos
+
+vite.config.ts
+
+PWA y caché
+
+package.json
+
+Dependencias y scripts
+
+
+Archivos nuevos principales
+- src/context/CampusProvider.tsx
+- src/views/UCLMView.tsx
+- src/views/AcademyView.tsx
+- src/views/LaboratoryView.tsx
+- src/views/ECOEView.tsx
+- src/views/PharmacologyProView.tsx
+- src/views/Practice360View.tsx
+- src/views/TutorAIView.tsx
+- src/services/storageService.ts
+- src/services/aiService.ts
+- src/utils/exportPDF.ts
+- server/index.ts
+
+
+6. Orden de construcción: cómo lo desarrollaría realmente
+No empezaría por la IA, aunque sea muy atractiva. Primero construiría la base que necesitan todos los módulos.
+Plan de ejecución V2.0
+1. FASE 1 · Fundamentos técnicos
+   Primera en desarrollar
+   - Centralizar estado.
+   - Migrar almacenamiento.
+   - Corregir perfil y datos de demostración.
+   - Preparar navegación.
+   - Crear sistema de fuentes.
+     
+     Resultado: una base preparada para crecer.
+2. FASE 2 · Mi UCLM
+   - Plan de cuatro cursos.
+   - Asignaturas llave.
+   - Calendario.
+   - Prerrequisitos.
+   - Información de Toledo.
+     
+     Resultado: organización universitaria completa.
+3. FASE 3 · Academia
+   - Documentos.
+   - Banco de preguntas.
+   - Simulacros.
+   - Flashcards.
+   - Repetición espaciada.
+     
+     Resultado: herramienta diaria de estudio.
+4. FASE 4 · Laboratorio clínico
+   - Analíticas.
+   - Gasometría.
+   - Tubos.
+   - ECG.
+   - Casos simulados.
+     
+     Resultado: laboratorio de aprendizaje.
+5. FASE 5 · ECOE
+   - Estaciones.
+   - Checklists.
+   - Temporizadores.
+   - Evaluación.
+     
+     Resultado: entrenamiento práctico.
+6. FASE 6 · Farmacología PRO
+   - Fichas ampliadas.
+   - Calculadoras.
+   - Compatibilidades.
+   - Seguridad.
+     
+     Resultado: consulta farmacológica avanzada.
+7. FASE 7 · Prácticas 360
+   - Turnos.
+   - Diario.
+   - Competencias.
+   - Portfolio.
+   - PDF.
+     
+     Resultado: seguimiento de la formación clínica.
+8. FASE 8 · Tutor IA
+   - Integración Gemini.
+   - Documentos.
+   - Profesores especializados.
+   - Casos clínicos.
+   - Generación de preguntas.
+     
+     Resultado: profesor virtual integrado.
+9. FASE 9 · Revisión y lanzamiento
+   - Pruebas móviles.
+   - Seguridad.
+   - Funcionamiento offline.
+   - Exportaciones.
+   - Accesibilidad.
+   - Validación de contenido.
+     
+     Resultado: versión lista para compartir.
+
+7. Pruebas que exigiría antes de dar por terminada la versión
+No consideraría terminado un módulo simplemente porque se vea bien.
+Módulo	Prueba de aceptación
+Mi UCLM	Los prerrequisitos bloquean correctamente las progresiones configuradas
+Academia	Se generan exámenes, se corrigen y se guardan resultados
+Laboratorio	Los cálculos, unidades y explicaciones son coherentes
+ECOE	Se registran pasos, errores y puntuaciones
+Farmacología	Las calculadoras validan entradas y unidades
+Prácticas 360	Las horas y competencias se conservan y exportan
+Tutor IA	Responde usando los documentos seleccionados y cita sus fuentes
+Global	No se pierden datos al actualizar
+PWA	Los contenidos descargados funcionan sin conexión
+Seguridad	No se exponen claves ni datos de pacientes
+
+Hay una limitación que debo dejar clara: he podido inspeccionar los archivos del ZIP, pero no ejecutar todavía el proyecto ni certificar que compila, porque el archivo no incluye node_modules y no he instalado sus dependencias. Por tanto, este es un plan basado en el código real, no una auditoría de ejecución superada.
+
+8. Mi decisión sobre el diseño de la aplicación
+Mantendría el estilo visual actual: verde sanitario, fondos claros, tarjetas, esquinas redondeadas y navegación móvil.
+
+Pero cambiaría la organización para que los siete módulos sean mucho más visibles.
+
+La navegación principal quedaría así:
+
+CAMPUS ENFERMERÍA
+
+MENÚ PRINCIPAL · PROPUESTA V2.0
+Mi Día
+
+
+Mi UCLM
+
+
+Academia
+
+
+Laboratorio clínico
+
+
+Simulación ECOE
+
+
+Farmacología PRO
+
+
+Prácticas 360
+
+
+Tutor IA
+
+
+Bienestar y organización
+
+
+Las herramientas existentes de dosis, terminología, escalas, PAE y SBAR se integrarán dentro de las nuevas áreas, sin desaparecer.
+
+9. Qué haría inmediatamente
+Mi recomendación es que empecemos por la FASE 1: preparar técnicamente la aplicación actual para la versión 2.0, y después avancemos módulo a módulo.
+
+Antes de escribir código, hay tres decisiones que conviene dejar establecidas:
+1. Usuarios: inicialmente una estudiante con sus datos privados, pero con arquitectura preparada para incorporar compañeros posteriormente.
+2. IA: Gemini, aprovechando que el proyecto ya tiene instalada su biblioteca, pero utilizando un servidor seguro.
+3. Documentos: almacenamiento local y offline en el dispositivo, con posibilidad de sincronización en una futura fase.
+Y una última recomendación: no pondría en circulación los contenidos farmacológicos, de compatibilidad intravenosa y procedimientos hasta que estén revisados científicamente.
+
+El objetivo no es que la aplicación tenga más pantallas. Es que un alumno pueda empezar primero con ella, aprobar sus asignaturas, preparar sus ECOE, llevar su portfolio y terminar cuarto utilizando la misma herramienta.
+
+Ese sería el verdadero valor de Campus Enfermería Toledo 2.0.
