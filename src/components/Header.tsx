@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
           title="Ver perfil de Julia H. Carreras"
         >
           <img
-            src="/assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png"
+            src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
             alt="Julia H. Carreras"
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-emerald-500/70 shrink-0 shadow-xs"
           />

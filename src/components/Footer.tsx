@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
         {/* Left Side: Dedication to Julia */}
         <div className="flex items-center gap-3 text-center sm:text-left">
           <img
-            src="/assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png"
+            src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
             alt="Julia H. Carreras"
             className="w-9 h-9 rounded-full object-cover border-2 border-emerald-500 shadow-xs shrink-0"
           />
@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
           </span>
           <div className="p-1.5 px-3 rounded-xl bg-white border border-stone-200/90 shadow-2xs hover:shadow-xs transition">
             <img
-              src="/assets/aistudio/logo-ivimoca_6074b254.png"
+              src={`${import.meta.env.BASE_URL}assets/aistudio/logo-ivimoca_6074b254.png`}
               alt="Logo IviMOCA"
               className="h-6 sm:h-7 w-auto object-contain"
             />

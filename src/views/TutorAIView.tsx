@@ -198,7 +198,7 @@ Puedes consultarme dudas sobre cualquiera de tus asignaturas, pedirme que te res
       }
 
       const data = await response.json();
-      const tutorReplyText = data.response || 'No se pudo generar respuesta.';
+      const tutorReplyText = data.reply || 'No se pudo generar respuesta.';
 
       const tutorMsg: TutorChatMessage = {
         id: 'tutor-' + Date.now(),

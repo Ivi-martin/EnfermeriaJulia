@@ -106,7 +106,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
           <div className="relative shrink-0 group">
             <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-3xl overflow-hidden border-4 border-white/95 shadow-2xl ring-4 ring-emerald-400/50 bg-white/10 transition-transform duration-300 group-hover:scale-[1.02]">
               <img
-                src="/assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png"
+                src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
                 alt="Julia H. Carreras - Estudiante de Enfermería"
                 className="w-full h-full object-cover"
               />

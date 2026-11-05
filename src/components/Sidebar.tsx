@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Julia H. Carreras Profile Chip in Sidebar */}
         <div className="p-3 mx-3 mt-3 rounded-2xl bg-[#f6f9f6] border border-emerald-200/80 flex items-center gap-3 shadow-2xs">
           <img
-            src="/assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png"
+            src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
             alt="Julia H. Carreras"
             className="w-11 h-11 rounded-xl object-cover border-2 border-emerald-500 shadow-xs shrink-0"
           />
@@ -167,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-400">
             <span>UCLM Fábrica de Armas</span>
             <img
-              src="/assets/aistudio/logo-ivimoca_6074b254.png"
+              src={`${import.meta.env.BASE_URL}assets/aistudio/logo-ivimoca_6074b254.png`}
               alt="IviMOCA"
               className="h-4 w-auto object-contain opacity-70 hover:opacity-100 transition"
             />
