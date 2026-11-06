@@ -49,11 +49,44 @@ Guías a Julia para formular diagnósticos en formato PES (Problema, Etiología,
 Ayudas a planificar el estudio, organizar las 10 asignaturas de primero, entender las asignaturas llave, preparar los exámenes parciales y finales, y gestionar el tiempo con serenidad y constancia.`
 };
 
+type ChatTurn = { role: 'user' | 'model'; parts: { text: string }[] };
+
+const MAX_HISTORY_MESSAGES = 10;
+
+// Construye la conversación para Gemini: valida el historial recibido,
+// se queda con los últimos mensajes y fusiona turnos consecutivos del mismo rol.
+export function buildContents(history: unknown, message: string): ChatTurn[] {
+  const turns: ChatTurn[] = [];
+
+  if (Array.isArray(history)) {
+    for (const item of history.slice(-MAX_HISTORY_MESSAGES)) {
+      const role = item?.role === 'model' ? 'model' : item?.role === 'user' ? 'user' : null;
+      const text = typeof item?.text === 'string' ? item.text.slice(0, MAX_MESSAGE_LENGTH).trim() : '';
+      if (!role || !text) continue;
+      turns.push({ role, parts: [{ text }] });
+    }
+  }
+  turns.push({ role: 'user', parts: [{ text: message }] });
+
+  const merged: ChatTurn[] = [];
+  for (const turn of turns) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === turn.role) {
+      last.parts[0].text += '\n\n' + turn.parts[0].text;
+    } else {
+      merged.push({ role: turn.role, parts: [{ text: turn.parts[0].text }] });
+    }
+  }
+  // Gemini espera que la conversación empiece por el usuario
+  while (merged.length > 1 && merged[0].role === 'model') merged.shift();
+  return merged;
+}
+
 export type TutorResult = { status: number; body: Record<string, unknown> };
 
 export async function handleTutorRequest(input: any): Promise<TutorResult> {
   try {
-    const { message, tutor = 'anatomia', action = 'chat', subject = 'General' } = input || {};
+    const { message, history, tutor = 'anatomia', action = 'chat', subject = 'General' } = input || {};
 
     if (!message || typeof message !== 'string') {
       return { status: 400, body: { error: 'El mensaje es obligatorio.' } };
@@ -78,7 +111,7 @@ Ahora mismo no hay clave de API configurada, aquí tienes una orientación acad�
 
     const response = await ai.models.generateContent({
       model: getModel(),
-      contents: message,
+      contents: buildContents(history, message),
       config: {
         systemInstruction: `${systemPrompt}
 Estás respondiendo a Julia H. Carreras, estudiante de primer curso de Enfermería en Toledo.

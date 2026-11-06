@@ -178,6 +178,12 @@ Puedes consultarme dudas sobre cualquiera de tus asignaturas, pedirme que te res
       tutorPersona: selectedPersonaId
     };
 
+    // Historial para que el tutor recuerde la charla (sin bienvenidas ni respuestas de respaldo)
+    const history = messages
+      .filter(m => !m.id.startsWith('welcome') && !m.id.startsWith('fallback'))
+      .slice(-10)
+      .map(m => ({ role: m.sender === 'user' ? 'user' : 'model', text: m.text }));
+
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsLoading(true);
@@ -188,6 +194,7 @@ Puedes consultarme dudas sobre cualquiera de tus asignaturas, pedirme que te res
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
+          history,
           tutor: selectedPersonaId,
           subject: activePersona.name
         })
