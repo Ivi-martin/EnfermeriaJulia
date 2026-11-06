@@ -3,7 +3,29 @@ import { GoogleGenAI } from '@google/genai';
 // Lógica del Tutor IA compartida: la usan tanto server.ts (npm run dev)
 // como la función serverless de Vercel (api/ai/tutor.ts).
 
-const getModel = () => process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+// Modelos a probar por orden. Si el primero no está disponible para la clave, se prueba el siguiente.
+const getModels = () => {
+  const list = [process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'];
+  return [...new Set(list.filter((m): m is string => !!m))];
+};
+
+// Traduce un error de Gemini a un mensaje comprensible
+function describeError(error: any): { code: string; message: string; detail: string } {
+  const status = Number(error?.status ?? error?.code) || 0;
+  const raw = String(error?.message || error || '').replace(/\s+/g, ' ');
+  const detail = raw.slice(0, 300);
+  if (status === 429 || /quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(raw)) {
+    return { code: 'QUOTA', message: 'Se ha alcanzado el límite de uso de la IA. Espera un momento y vuelve a intentarlo.', detail };
+  }
+  if (status === 401 || status === 403 || /api key|permission|unauthenticated|PERMISSION_DENIED/i.test(raw)) {
+    return { code: 'API_KEY', message: 'La clave de Gemini no es válida o no tiene permiso. Revisa GEMINI_API_KEY en Vercel.', detail };
+  }
+  if (status === 404 || /not found|not supported|no longer available/i.test(raw)) {
+    return { code: 'MODEL', message: 'El modelo de IA no está disponible para esta clave.', detail };
+  }
+  return { code: 'UNKNOWN', message: 'Error al procesar la consulta con el Tutor IA.', detail };
+}
+
 const MAX_MESSAGE_LENGTH = 4000;
 
 let genAI: GoogleGenAI | null = null;
@@ -109,24 +131,38 @@ Ahora mismo no hay clave de API configurada, aquí tienes una orientación acad�
       return { status: 200, body: { reply: fallbackResponse, model: 'tutor-offline-fallback', tutor } };
     }
 
-    const response = await ai.models.generateContent({
-      model: getModel(),
-      contents: buildContents(history, message),
-      config: {
-        systemInstruction: `${systemPrompt}
+    const systemInstruction = `${systemPrompt}
 Estás respondiendo a Julia H. Carreras, estudiante de primer curso de Enfermería en Toledo.
 Acción solicitada: ${action}.
 Materia en estudio: ${subject}.
-Sé claro, empático, estructurado con viñetas y negritas, e incluye siempre una 'Perla Clínica' o pregunta de repaso al final.`,
-        temperature: 0.7,
-      },
-    });
+Sé claro, empático, estructurado con viñetas y negritas, e incluye siempre una 'Perla Clínica' o pregunta de repaso al final.`;
 
-    const reply = response.text || 'No se pudo generar la respuesta. Por favor, reformula tu pregunta.';
-    return { status: 200, body: { reply, model: getModel(), tutor } };
+    const contents = buildContents(history, message);
+    let lastError: any = null;
+
+    for (const model of getModels()) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config: { systemInstruction, temperature: 0.7 },
+        });
+        const reply = response.text || 'No se pudo generar la respuesta. Por favor, reformula tu pregunta.';
+        return { status: 200, body: { reply, model, tutor } };
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Error con el modelo ${model}:`, error);
+        // Solo se prueba otro modelo si este no está disponible
+        if (describeError(error).code !== 'MODEL') break;
+      }
+    }
+
+    const { code, message: errorMessage, detail } = describeError(lastError);
+    return { status: 502, body: { error: errorMessage, code, detail } };
   } catch (error: any) {
     console.error('Error en el Tutor IA:', error);
-    return { status: 500, body: { error: 'Error al procesar la consulta con el Tutor IA.' } };
+    const { code, message: errorMessage, detail } = describeError(error);
+    return { status: 500, body: { error: errorMessage, code, detail } };
   }
 }
 

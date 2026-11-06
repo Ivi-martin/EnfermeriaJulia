@@ -201,7 +201,11 @@ Puedes consultarme dudas sobre cualquiera de tus asignaturas, pedirme que te res
       });
 
       if (!response.ok) {
-        throw new Error(`Error en servidor: ${response.status}`);
+        const errData = await response.json().catch(() => null);
+        const err: any = new Error(`Error en servidor: ${response.status}`);
+        err.serverMessage = errData?.error;
+        err.detail = errData?.detail;
+        throw err;
       }
 
       const data = await response.json();
@@ -222,7 +226,9 @@ Puedes consultarme dudas sobre cualquiera de tus asignaturas, pedirme que te res
       const fallbackMsg: TutorChatMessage = {
         id: 'fallback-' + Date.now(),
         sender: 'tutor',
-        text: `[${activePersona.title}]\n\nHola Julia, sobre tu consulta de "${text}":\n\n1. **Concepto Clínico**: Recuerda que en ${activePersona.specialty} la clave es relacionar la teoría fisiológica con la seguridad directa del paciente.\n2. **Punto Crítico**: En las evaluaciones de la UCLM, se valora tanto la precisión teórica como la justificación de cada cuidado de enfermería.\n3. **Revisión**: Consulta este bloque temático en las guías docentes de Fábrica de Armas y practica con nuestras estaciones de simulación ECOE y el banco de preguntas.\n\n*(El servidor ha respondido con la orientación clínica local. Para respuestas generativas completas, asegúrate de que el servidor tenga acceso a la API)*.`,
+        text: (err as any)?.serverMessage
+          ? `⚠️ ${(err as any).serverMessage}${(err as any).detail ? `\n\nDetalle técnico: ${(err as any).detail}` : ''}`
+          : `[${activePersona.title}]\n\nHola Julia, sobre tu consulta de "${text}":\n\n1. **Concepto Clínico**: Recuerda que en ${activePersona.specialty} la clave es relacionar la teoría fisiológica con la seguridad directa del paciente.\n2. **Punto Crítico**: En las evaluaciones de la UCLM, se valora tanto la precisión teórica como la justificación de cada cuidado de enfermería.\n3. **Revisión**: Consulta este bloque temático en las guías docentes de Fábrica de Armas y practica con nuestras estaciones de simulación ECOE y el banco de preguntas.\n\n*(El servidor ha respondido con la orientación clínica local. Para respuestas generativas completas, asegúrate de que el servidor tenga acceso a la API)*.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         tutorPersona: selectedPersonaId
       };
