@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 
 // Modelos a probar por orden. Si el primero no está disponible para la clave, se prueba el siguiente.
 const getModels = () => {
-  const list = [process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'];
+  const list = [process.env.GEMINI_MODEL, 'gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'];
   return [...new Set(list.filter((m): m is string => !!m))];
 };
 
@@ -19,6 +19,9 @@ function describeError(error: any): { code: string; message: string; detail: str
   }
   if (status === 401 || status === 403 || /api key|permission|unauthenticated|PERMISSION_DENIED/i.test(raw)) {
     return { code: 'API_KEY', message: 'La clave de Gemini no es válida o no tiene permiso. Revisa GEMINI_API_KEY en Vercel.', detail };
+  }
+  if (status === 503 || status === 500 || status === 504 || /UNAVAILABLE|high demand|overloaded|DEADLINE_EXCEEDED/i.test(raw)) {
+    return { code: 'BUSY', message: 'Gemini está saturado en este momento. Vuelve a intentarlo en unos segundos.', detail };
   }
   if (status === 404 || /not found|not supported|no longer available/i.test(raw)) {
     return { code: 'MODEL', message: 'El modelo de IA no está disponible para esta clave.', detail };
@@ -152,8 +155,9 @@ Sé claro, empático, estructurado con viñetas y negritas, e incluye siempre un
       } catch (error: any) {
         lastError = error;
         console.error(`Error con el modelo ${model}:`, error);
-        // Solo se prueba otro modelo si este no está disponible
-        if (describeError(error).code !== 'MODEL') break;
+        // Se prueba otro modelo si este no existe o está saturado; otros errores (clave, cuota) no mejoran cambiando de modelo
+        const { code } = describeError(error);
+        if (code !== 'MODEL' && code !== 'BUSY') break;
       }
     }
 
