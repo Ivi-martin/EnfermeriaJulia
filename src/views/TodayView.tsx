@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCampusStore, isDemoMode, setDemoMode } from '../hooks/useCampusStore';
+import { getMessageForDate } from '../utils/dailyMessage';
 import {
   Heart,
   Calendar,
@@ -29,9 +30,20 @@ interface TodayViewProps {
 }
 
 export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
-  const { state, updateParentMessage, updateState } = useCampusStore();
-  const [isEditingMsg, setIsEditingMsg] = useState(false);
-  const [tempMsg, setTempMsg] = useState(state.parentMessage);
+  const { state, updateState } = useCampusStore();
+
+  // Mensaje de casa del día: cambia solo cada día (a medianoche) y no se puede editar
+  const [today, setToday] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const refresh = () => setToday(new Date());
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
+  const dailyMessage = getMessageForDate(today);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayWb = state.wellbeing[todayStr] || {};
@@ -85,11 +97,6 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
         },
       },
     }));
-  };
-
-  const handleSaveParentMsg = () => {
-    updateParentMessage(tempMsg);
-    setIsEditingMsg(false);
   };
 
   const completedPocket = state.pocketChecklist.filter((i) => i.checked).length;
@@ -198,49 +205,24 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
               </span>
             </div>
 
-            {/* Supportive Message Box */}
+            {/* Mensaje de casa del día (no editable) */}
             <div className="mt-4 pt-4 border-t border-white/15 text-left">
-              <div className="flex items-center justify-between text-xs text-emerald-200 mb-1.5 font-bold uppercase tracking-wider">
+              <div className="flex items-center justify-between gap-2 text-xs text-emerald-200 mb-1.5 font-bold uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
                   <MessageSquareHeart className="w-3.5 h-3.5 text-emerald-300" />
                   <span>Un mensaje especial para ti</span>
                 </span>
-                <button
-                  onClick={() => setIsEditingMsg(!isEditingMsg)}
-                  className="text-[11px] text-emerald-300 hover:text-white underline font-semibold transition"
-                >
-                  {isEditingMsg ? 'Cerrar' : 'Editar mensaje'}
-                </button>
+                <span className="text-[11px] text-emerald-300 font-semibold normal-case tracking-normal shrink-0">
+                  {dailyMessage.icon ? `${dailyMessage.icon} ` : ''}
+                  {dailyMessage.category}
+                </span>
               </div>
-
-              {isEditingMsg ? (
-                <div className="space-y-2 mt-2">
-                  <textarea
-                    value={tempMsg}
-                    onChange={(e) => setTempMsg(e.target.value)}
-                    className="w-full rounded-2xl bg-white/15 border border-white/30 p-3 text-sm text-white placeholder-emerald-200/50 focus:outline-none focus:ring-2 focus:ring-emerald-300 min-h-[80px]"
-                    placeholder="Escribe un mensaje de cariño y ánimo para Julia..."
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveParentMsg}
-                      className="px-4 py-1.5 rounded-xl bg-white text-[#203a2b] font-bold text-xs hover:bg-emerald-50 transition shadow-sm"
-                    >
-                      Guardar mensaje
-                    </button>
-                    <button
-                      onClick={() => setIsEditingMsg(false)}
-                      className="px-3 py-1.5 rounded-xl bg-white/10 text-white font-medium text-xs hover:bg-white/20 transition"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-base sm:text-lg font-medium leading-relaxed italic text-emerald-50 bg-black/10 p-3.5 rounded-2xl border border-white/10">
-                  «{state.parentMessage}»
+              <div className="bg-black/10 p-3.5 rounded-2xl border border-white/10 space-y-2">
+                <p className="text-base sm:text-lg font-medium leading-relaxed italic text-emerald-50">
+                  «{dailyMessage.text}»
                 </p>
-              )}
+                <p className="text-sm text-emerald-200 text-right">{dailyMessage.signature}</p>
+              </div>
             </div>
           </div>
         </div>
