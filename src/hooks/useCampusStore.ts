@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
   Subject,
   Drug,
@@ -15,7 +15,7 @@ import {
   ClinicalCompetency,
   GibbsReflection,
 } from '../types';
-import { OFFICIAL_SUBJECTS } from '../data/subjects';
+import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
 import { INITIAL_DRUGS } from '../data/pharmacology';
 import { MEDICAL_TERMINOLOGY } from '../data/terminology';
 import { INITIAL_EXAMS, INITIAL_PRACTICE_SHIFTS, DEFAULT_POCKET_CHECKLIST } from '../data/reminders';
@@ -23,8 +23,11 @@ import { CLINICAL_MANUALS } from '../data/clinicalManuals';
 import { INITIAL_COMPETENCIES } from '../data/clinical/competencies';
 
 const STORAGE_KEY = 'campusEnfermeriaToledo_v2';
+// Versión de los datos guardados. Los guardados con una versión anterior se "limpian" de ejemplos al cargarse.
+const DATA_VERSION = 3;
 
 export interface CampusState {
+  dataVersion?: number;
   subjects: Subject[];
   drugs: Drug[];
   terms: MedicalTerm[];
@@ -64,8 +67,9 @@ function getInitialDatePlus(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-const DEFAULT_STATE: CampusState = {
-  subjects: OFFICIAL_SUBJECTS,
+// Datos de EJEMPLO: es lo que se ve en el modo Demo (solo lectura)
+const DEMO_STATE: CampusState = {
+  subjects: UCLM_NURSING_CURRICULUM,
   drugs: INITIAL_DRUGS,
   terms: MEDICAL_TERMINOLOGY,
   exams: INITIAL_EXAMS,
@@ -147,33 +151,156 @@ const DEFAULT_STATE: CampusState = {
   }
 };
 
-export function useCampusStore() {
-  const [state, setState] = useState<CampusState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_STATE,
-          ...parsed,
-          studentName: 'Julia H. Carreras',
-          // Ensure arrays contain the defaults if missing
-          subjects: parsed.subjects?.length ? parsed.subjects : DEFAULT_STATE.subjects,
-          drugs: parsed.drugs?.length ? parsed.drugs : DEFAULT_STATE.drugs,
-          terms: parsed.terms?.length ? parsed.terms : DEFAULT_STATE.terms,
-          manuals: parsed.manuals?.length ? parsed.manuals : DEFAULT_STATE.manuals,
-          competencies: parsed.competencies?.length ? parsed.competencies : DEFAULT_STATE.competencies,
-          reflections: parsed.reflections?.length ? parsed.reflections : DEFAULT_STATE.reflections,
-          ecoeScores: parsed.ecoeScores || DEFAULT_STATE.ecoeScores,
-        };
+// ---------- Estado VACÍO: lo que ve una usuaria nueva ----------
+const blankSubject = (subject: Subject): Subject => {
+  const { grade: _grade, ...rest } = subject;
+  return { ...rest, status: subject.year === 1 ? 'Matriculada' : 'Pendiente', progress: 0 };
+};
+const blankCompetencies = (list: ClinicalCompetency[]): ClinicalCompetency[] =>
+  list.map((c) => ({ ...c, status: 'Pendiente', observations: undefined, evaluatedBy: undefined, updatedAt: undefined }));
+const blankPocket = (list: PocketCheckItem[]): PocketCheckItem[] => list.map((i) => ({ ...i, checked: false }));
+const zeroProcedures = (p: Record<string, number>) => Object.fromEntries(Object.keys(p).map((k) => [k, 0]));
+
+export const EMPTY_STATE: CampusState = {
+  ...DEMO_STATE,
+  dataVersion: DATA_VERSION,
+  subjects: UCLM_NURSING_CURRICULUM.map(blankSubject),
+  exams: [],
+  shifts: [],
+  pocketChecklist: blankPocket(DEFAULT_POCKET_CHECKLIST),
+  tasks: [],
+  events: [],
+  grades: [],
+  expenses: [],
+  clinicalProcedures: zeroProcedures(DEMO_STATE.clinicalProcedures),
+  competencies: blankCompetencies(INITIAL_COMPETENCIES),
+  reflections: [],
+  ecoeScores: {},
+  quizStats: { totalQuizzes: 0, totalCorrect: 0, totalAnswered: 0, bestScorePercent: 0, history: [] },
+};
+export { DEMO_STATE };
+
+// Quita de unos datos guardados antiguos los ejemplos que no se hayan tocado, y conserva lo que la usuaria haya escrito.
+export function stripDemoData(saved: any): any {
+  const out: any = { ...saved };
+  const notDemo = (list: any, demo: { id: string | number }[]) =>
+    Array.isArray(list) ? list.filter((item) => !demo.some((d) => d.id === item.id)) : list;
+
+  out.exams = notDemo(saved.exams, INITIAL_EXAMS);
+  out.shifts = notDemo(saved.shifts, INITIAL_PRACTICE_SHIFTS);
+  out.tasks = notDemo(saved.tasks, DEMO_STATE.tasks);
+  out.events = notDemo(saved.events, DEMO_STATE.events);
+  out.expenses = notDemo(saved.expenses, DEMO_STATE.expenses);
+  out.grades = Array.isArray(saved.grades)
+    ? saved.grades.filter((g: any) => !DEMO_STATE.grades.some((d) => d.id === g.id && d.name === g.name))
+    : saved.grades;
+  out.reflections = Array.isArray(saved.reflections)
+    ? saved.reflections.filter((r: any) => r.id !== 'refl-1')
+    : saved.reflections;
+
+  if (saved.ecoeScores) {
+    const scores = { ...saved.ecoeScores };
+    for (const [id, demo] of Object.entries(DEMO_STATE.ecoeScores)) {
+      const cur = scores[id];
+      if (cur && cur.lastScore === demo.lastScore && cur.bestScore === demo.bestScore && cur.passed === demo.passed) {
+        delete scores[id];
       }
+    }
+    out.ecoeScores = scores;
+  }
+
+  const q = saved.quizStats;
+  const dq = DEMO_STATE.quizStats;
+  if (q && q.totalQuizzes >= dq.totalQuizzes && q.totalCorrect >= dq.totalCorrect && q.totalAnswered >= dq.totalAnswered) {
+    const history = Array.isArray(q.history) ? q.history : [];
+    out.quizStats = {
+      totalQuizzes: q.totalQuizzes - dq.totalQuizzes,
+      totalCorrect: q.totalCorrect - dq.totalCorrect,
+      totalAnswered: q.totalAnswered - dq.totalAnswered,
+      bestScorePercent: history.reduce((m: number, h: any) => Math.max(m, h.total ? Math.round((h.score / h.total) * 100) : 0), 0),
+      history,
+    };
+  }
+
+  if (Array.isArray(saved.pocketChecklist)) {
+    const untouched =
+      DEFAULT_POCKET_CHECKLIST.length === saved.pocketChecklist.length &&
+      DEFAULT_POCKET_CHECKLIST.every((d) => saved.pocketChecklist.find((i: any) => i.id === d.id)?.checked === d.checked);
+    if (untouched) out.pocketChecklist = blankPocket(DEFAULT_POCKET_CHECKLIST);
+  }
+
+  if (Array.isArray(saved.competencies)) {
+    const untouched =
+      INITIAL_COMPETENCIES.length === saved.competencies.length &&
+      INITIAL_COMPETENCIES.every((d) => saved.competencies.find((c: any) => c.id === d.id)?.status === d.status);
+    if (untouched) out.competencies = blankCompetencies(INITIAL_COMPETENCIES);
+  }
+
+  if (saved.clinicalProcedures) {
+    const untouched = Object.entries(DEMO_STATE.clinicalProcedures).every(([k, v]) => saved.clinicalProcedures[k] === v);
+    if (untouched) out.clinicalProcedures = zeroProcedures(DEMO_STATE.clinicalProcedures);
+  }
+
+  // La lista antigua de 10 asignaturas se sustituye por el plan completo (editable)
+  delete out.subjects;
+  Object.keys(out).forEach((k) => out[k] === undefined && delete out[k]);
+  return out;
+}
+
+// Convierte unos datos guardados en un estado completo (función pura, fácil de probar)
+export function loadSavedState(raw: string | null): CampusState {
+  if (!raw) return EMPTY_STATE;
+  const parsed = JSON.parse(raw);
+  const data = parsed.dataVersion === DATA_VERSION ? parsed : stripDemoData(parsed);
+  return {
+    ...EMPTY_STATE,
+    ...data,
+    dataVersion: DATA_VERSION,
+    studentName: 'Julia H. Carreras',
+    // Una lista vacía de asignaturas o reflexiones es válida (la usuaria las borró)
+    subjects: Array.isArray(data.subjects) ? data.subjects : EMPTY_STATE.subjects,
+    reflections: Array.isArray(data.reflections) ? data.reflections : [],
+    drugs: data.drugs?.length ? data.drugs : EMPTY_STATE.drugs,
+    terms: data.terms?.length ? data.terms : EMPTY_STATE.terms,
+    manuals: data.manuals?.length ? data.manuals : EMPTY_STATE.manuals,
+    competencies: data.competencies?.length ? data.competencies : EMPTY_STATE.competencies,
+    ecoeScores: data.ecoeScores || {},
+  };
+}
+
+// ---------- Modo Demo (solo lectura) ----------
+let demoActive = false;
+const demoListeners = new Set<() => void>();
+export const DEMO_BLOCKED_EVENT = 'campus-demo-blocked';
+export const isDemoMode = () => demoActive;
+export function setDemoMode(active: boolean) {
+  if (demoActive === active) return;
+  demoActive = active;
+  demoListeners.forEach((listener) => listener());
+}
+const subscribeDemo = (listener: () => void) => {
+  demoListeners.add(listener);
+  return () => {
+    demoListeners.delete(listener);
+  };
+};
+export const useDemoMode = () => useSyncExternalStore(subscribeDemo, isDemoMode);
+
+export function useCampusStore() {
+  // En modo Demo se muestran los datos de ejemplo, no se guarda nada y los cambios se bloquean
+  const demoInstance = useRef(demoActive).current;
+  const [state, setState] = useState<CampusState>(() => {
+    if (demoInstance) return DEMO_STATE;
+    try {
+      return loadSavedState(localStorage.getItem(STORAGE_KEY));
     } catch (e) {
       console.warn('Error loading campus store from localStorage', e);
     }
-    return DEFAULT_STATE;
+    return EMPTY_STATE;
   });
 
   useEffect(() => {
+    if (demoInstance) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
@@ -182,6 +309,10 @@ export function useCampusStore() {
   }, [state]);
 
   const updateState = (updater: (prev: CampusState) => CampusState) => {
+    if (demoInstance) {
+      window.dispatchEvent(new Event(DEMO_BLOCKED_EVENT));
+      return;
+    }
     setState((prev) => updater(prev));
   };
 
@@ -381,13 +512,31 @@ export function useCampusStore() {
   };
 
   // Academic subject status update
-  const updateSubjectStatus = (code: string, status: Subject['status'], grade?: number) => {
+  // Subject operations (el plan de estudios es editable)
+  const addSubject = (data: Omit<Subject, 'code'> & { code?: string }) => {
+    updateState(prev => {
+      let code = (data.code || '').trim() || 'ASIG-' + Date.now();
+      while (prev.subjects.some(s => s.code === code)) code += '-2';
+      return { ...prev, subjects: [...prev.subjects, { ...data, code }] };
+    });
+  };
+
+  const updateSubject = (code: string, patch: Partial<Subject>) => {
     updateState(prev => ({
       ...prev,
-      subjects: prev.subjects.map(s =>
-        s.code === code ? { ...s, status, grade: grade !== undefined ? grade : s.grade } : s
-      )
+      subjects: prev.subjects.map(s => (s.code === code ? { ...s, ...patch } : s))
     }));
+  };
+
+  const removeSubject = (code: string) => {
+    updateState(prev => ({
+      ...prev,
+      subjects: prev.subjects.filter(s => s.code !== code)
+    }));
+  };
+
+  const updateSubjectStatus = (code: string, status: Subject['status'], grade?: number) => {
+    updateSubject(code, { status, ...(grade !== undefined ? { grade } : {}) });
   };
 
   return {
@@ -411,6 +560,9 @@ export function useCampusStore() {
     addGibbsReflection,
     removeGibbsReflection,
     recordEcoeScore,
-    updateSubjectStatus
+    updateSubjectStatus,
+    addSubject,
+    updateSubject,
+    removeSubject
   };
 }

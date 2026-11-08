@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
-import { UCLM_NURSING_CURRICULUM, PREREQUISITE_RULES, TOLEDO_CAMPUS_LOCATIONS } from '../data/uclm/curriculum';
+import { PREREQUISITE_RULES, TOLEDO_CAMPUS_LOCATIONS } from '../data/uclm/curriculum';
 import { Subject } from '../types';
 import {
   GraduationCap,
@@ -14,28 +14,115 @@ import {
   Sparkles,
   Search,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Plus,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 
+interface SubjectForm {
+  originalCode: string | null;
+  code: string;
+  name: string;
+  year: 1 | 2 | 3 | 4;
+  sem: string;
+  ects: string;
+  type: Subject['type'];
+  professor: string;
+  status: 'Matriculada' | 'Aprobada' | 'Pendiente';
+  grade: string;
+  progress: number;
+  error: string;
+}
+
 export const UCLMView: React.FC = () => {
-  const { state, updateSubjectStatus } = useCampusStore();
+  const { state, updateSubjectStatus, addSubject, updateSubject, removeSubject } = useCampusStore();
   const [selectedYear, setSelectedYear] = useState<1 | 2 | 3 | 4>(1);
   const [activeTab, setActiveTab] = useState<'plan' | 'prerequisites' | 'campus'>('plan');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Merge curriculum with user's customized subject progress from store if any
-  const fullCurriculum = UCLM_NURSING_CURRICULUM.map(subject => {
-    const userSubject = state.subjects.find(s => s.code === subject.code || s.name.toLowerCase() === subject.name.toLowerCase());
-    if (userSubject) {
-      return {
-        ...subject,
-        status: userSubject.status || subject.status || 'Pendiente',
-        grade: userSubject.grade ?? subject.grade,
-        progress: userSubject.progress ?? subject.progress
-      };
+  // El plan de estudios vive en los datos de la usuaria, así que se puede editar
+  const fullCurriculum = state.subjects;
+
+  // Formulario para añadir o editar una asignatura
+  const [form, setForm] = useState<SubjectForm | null>(null);
+
+  const openNewSubject = () =>
+    setForm({
+      originalCode: null,
+      code: '',
+      name: '',
+      year: selectedYear,
+      sem: '1º Semestre',
+      ects: '6',
+      type: 'Obligatoria',
+      professor: '',
+      status: 'Matriculada',
+      grade: '',
+      progress: 0,
+      error: ''
+    });
+
+  const openEditSubject = (sub: Subject) =>
+    setForm({
+      originalCode: sub.code,
+      code: sub.code,
+      name: sub.name,
+      year: sub.year,
+      sem: sub.sem,
+      ects: String(sub.ects),
+      type: sub.type,
+      professor: sub.professor || '',
+      status: sub.status || 'Pendiente',
+      grade: sub.grade !== undefined ? String(sub.grade) : '',
+      progress: sub.progress || 0,
+      error: ''
+    });
+
+  const handleSaveSubject = () => {
+    if (!form) return;
+    const name = form.name.trim();
+    const code = form.code.trim();
+    const ects = Number(form.ects.replace(',', '.'));
+    const gradeText = form.grade.trim().replace(',', '.');
+    const grade = gradeText === '' ? undefined : Number(gradeText);
+
+    let error = '';
+    if (!name) error = 'Escribe el nombre de la asignatura.';
+    else if (Number.isNaN(ects) || ects < 0 || ects > 60) error = 'Los créditos (ECTS) deben ser un número entre 0 y 60.';
+    else if (grade !== undefined && (Number.isNaN(grade) || grade < 0 || grade > 10)) error = 'La nota debe estar entre 0 y 10 (o déjala vacía).';
+    else if (code && state.subjects.some(s => s.code === code && s.code !== form.originalCode)) error = 'Ya existe otra asignatura con ese código.';
+    if (error) {
+      setForm({ ...form, error });
+      return;
     }
-    return subject;
-  });
+
+    const data = {
+      name,
+      year: form.year,
+      sem: form.sem,
+      ects,
+      type: form.type,
+      professor: form.professor.trim() || undefined,
+      status: form.status,
+      grade,
+      progress: form.progress
+    };
+    if (form.originalCode) {
+      updateSubject(form.originalCode, { ...data, code: code || form.originalCode });
+    } else {
+      addSubject({ ...data, code: code || undefined });
+      setSelectedYear(form.year);
+    }
+    setForm(null);
+  };
+
+  const handleDeleteSubject = (sub: Subject) => {
+    if (window.confirm(`¿Eliminar «${sub.name}» de tu lista de asignaturas?`)) {
+      removeSubject(sub.code);
+    }
+  };
 
   const yearSubjects = fullCurriculum.filter(s => s.year === selectedYear);
   const filteredSubjects = yearSubjects.filter(s =>
@@ -79,7 +166,7 @@ export const UCLMView: React.FC = () => {
                 {approvedEcts} / {totalEcts} ECTS
               </strong>
               <span className="text-[10px] text-stone-300 block">
-                {Math.round((approvedEcts / totalEcts) * 100)}% completado
+                {totalEcts > 0 ? Math.round((approvedEcts / totalEcts) * 100) : 0}% completado
               </span>
             </div>
             <div className="w-12 h-12 rounded-xl bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-lg">
@@ -197,6 +284,25 @@ export const UCLMView: React.FC = () => {
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-stone-500">
+              Puedes editar, borrar o añadir las asignaturas que quieras.
+            </p>
+            <button
+              type="button"
+              onClick={openNewSubject}
+              className="px-4 py-2 rounded-xl bg-[#365e45] hover:bg-[#2c4d39] text-white text-xs font-bold transition flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nueva asignatura</span>
+            </button>
+          </div>
+          {yearSubjects.length === 0 && (
+            <div className="p-10 text-center rounded-3xl bg-white border border-stone-200 text-sm text-stone-500">
+              No hay asignaturas en este curso. Pulsa «Nueva asignatura» para añadir la primera.
+            </div>
+          )}
+
           {/* Subjects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredSubjects.map((sub) => {
@@ -274,6 +380,25 @@ export const UCLMView: React.FC = () => {
                         </ul>
                       </div>
                     )}
+                  </div>
+
+                  <div className="px-5 pb-3 flex justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditSubject(sub)}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-600 hover:bg-stone-100 transition flex items-center gap-1"
+                      title="Editar asignatura"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubject(sub)}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-500 hover:text-red-700 hover:bg-red-50 transition flex items-center gap-1"
+                      title="Eliminar asignatura"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Borrar
+                    </button>
                   </div>
 
                   {/* Footer of Card: Grade & Progress */}
@@ -436,6 +561,180 @@ export const UCLMView: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {form && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="subject-form-title"
+        >
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 id="subject-form-title" className="text-lg font-extrabold text-stone-900">
+                {form.originalCode ? 'Editar asignatura' : 'Nueva asignatura'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setForm(null)}
+                className="p-1.5 rounded-lg text-stone-400 hover:bg-stone-100"
+                aria-label="Cerrar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <label className="block">
+                <span className="text-xs font-bold text-stone-700">Nombre *</span>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#365e45]/40"
+                />
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Curso</span>
+                  <select
+                    value={form.year}
+                    onChange={(e) => setForm({ ...form, year: Number(e.target.value) as 1 | 2 | 3 | 4 })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  >
+                    <option value={1}>1.º curso</option>
+                    <option value={2}>2.º curso</option>
+                    <option value={3}>3.º curso</option>
+                    <option value={4}>4.º curso</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Semestre</span>
+                  <select
+                    value={form.sem}
+                    onChange={(e) => setForm({ ...form, sem: e.target.value })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  >
+                    <option value="1º Semestre">1.º semestre</option>
+                    <option value="2º Semestre">2.º semestre</option>
+                    <option value="Anual">Anual</option>
+                    {!['1º Semestre', '2º Semestre', 'Anual'].includes(form.sem) && (
+                      <option value={form.sem}>{form.sem}</option>
+                    )}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Créditos (ECTS)</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.ects}
+                    onChange={(e) => setForm({ ...form, ects: e.target.value })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Código (opcional)</span>
+                  <input
+                    type="text"
+                    value={form.code}
+                    onChange={(e) => setForm({ ...form, code: e.target.value })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-xs font-bold text-stone-700">Tipo</span>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as Subject['type'] })}
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                >
+                  <option value="Formación básica">Formación básica</option>
+                  <option value="Obligatoria">Obligatoria</option>
+                  <option value="Prácticas Tuteladas">Prácticas tuteladas</option>
+                  <option value="Optativa">Optativa</option>
+                  <option value="TFG">TFG</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold text-stone-700">Profesor/a (opcional)</span>
+                <input
+                  type="text"
+                  value={form.professor}
+                  onChange={(e) => setForm({ ...form, professor: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                />
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Estado</span>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value as SubjectForm['status'] })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  >
+                    <option value="Matriculada">Matriculada</option>
+                    <option value="Aprobada">Aprobada</option>
+                    <option value="Pendiente">Pendiente</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-bold text-stone-700">Nota (0-10, opcional)</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.grade}
+                    onChange={(e) => setForm({ ...form, grade: e.target.value })}
+                    placeholder="Sin calificar"
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-xs font-bold text-stone-700">Progreso de estudio: {form.progress}%</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={form.progress}
+                  onChange={(e) => setForm({ ...form, progress: Number(e.target.value) })}
+                  className="mt-1 w-full accent-[#365e45]"
+                />
+              </label>
+            </div>
+
+            {form.error && (
+              <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                {form.error}
+              </p>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setForm(null)}
+                className="px-4 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-sm font-bold text-stone-700"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSubject}
+                className="px-4 py-2.5 rounded-xl bg-[#365e45] hover:bg-[#2c4d39] text-white text-sm font-bold"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

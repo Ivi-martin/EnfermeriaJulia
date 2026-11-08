@@ -18,6 +18,7 @@ import {
   Brain
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { useDemoMode, setDemoMode } from '../hooks/useCampusStore';
 
 interface SidebarProps {
   currentPage: string;
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen,
   setIsMobileOpen
 }) => {
+  const isDemo = useDemoMode();
   const navSections = [
     {
       title: 'INICIO',
@@ -163,6 +165,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer with PWA Install Prompt & IviMOCA */}
         <div className="p-4 border-t border-stone-100 bg-[#fafbfa] space-y-3">
+          <button
+            type="button"
+            onClick={() => {
+              setDemoMode(!isDemo);
+              onNavigate('today');
+              setIsMobileOpen(false);
+            }}
+            className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
+              isDemo
+                ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
+                : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+            }`}
+            title={isDemo ? 'Volver a tus datos' : 'Ver la app con datos de ejemplo (solo lectura)'}
+          >
+            <span aria-hidden="true">{isDemo ? '↩️' : '👀'}</span>
+            <span>{isDemo ? 'Salir de la demo' : 'Demo'}</span>
+          </button>
           <PWAInstallButton />
           <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-400">
             <span>UCLM Fábrica de Armas</span>

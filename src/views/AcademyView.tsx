@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useCampusStore } from '../hooks/useCampusStore';
+import { useCampusStore, isDemoMode } from '../hooks/useCampusStore';
 import { SELF_EVALUATION_QUESTIONS } from '../data/selfEvaluation';
 import { QuizQuestion } from '../types';
 import {
@@ -39,6 +39,7 @@ export const AcademyView: React.FC = () => {
   // Timer for timed exam
   const [timeRemaining, setTimeRemaining] = useState<number>(900); // 15 min default
   const [mistakesHistory, setMistakesHistory] = useState<string[]>(() => {
+    if (isDemoMode()) return [];
     try {
       const saved = localStorage.getItem('campus_mistakes_ids');
       return saved ? JSON.parse(saved) : [];
@@ -52,6 +53,7 @@ export const AcademyView: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
 
   useEffect(() => {
+    if (isDemoMode()) return;
     try {
       localStorage.setItem('campus_mistakes_ids', JSON.stringify(mistakesHistory));
     } catch {

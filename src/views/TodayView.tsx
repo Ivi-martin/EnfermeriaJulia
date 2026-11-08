@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useCampusStore } from '../hooks/useCampusStore';
+import { useCampusStore, isDemoMode, setDemoMode } from '../hooks/useCampusStore';
 import {
   Heart,
   Calendar,
@@ -96,6 +96,57 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
+      {/* Bienvenida: solo mientras la app está vacía */}
+      {!isDemoMode() &&
+        state.exams.length === 0 &&
+        state.shifts.length === 0 &&
+        state.grades.length === 0 &&
+        state.reflections.length === 0 && (
+          <section className="rounded-3xl bg-white border border-[#d9e6dc] p-6 space-y-4">
+            <div>
+              <h2 className="text-lg font-extrabold text-stone-900">👋 ¡Bienvenida, Julia! Tu app está lista para empezar de cero</h2>
+              <p className="text-sm text-stone-600 mt-1">
+                Aún no hay nada guardado, así que empieza por lo básico. Cuando añadas tus datos, esta portada se llenará
+                sola con tus próximos exámenes y turnos.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => onNavigate('reminders')}
+                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
+              >
+                1. Añade tus exámenes y turnos de prácticas
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('uclm')}
+                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
+              >
+                2. Revisa y ajusta tus asignaturas
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('life')}
+                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
+              >
+                3. Apunta tus notas y tus hábitos
+              </button>
+            </div>
+            <p className="text-xs text-stone-500">
+              ¿Quieres ver cómo se ve la app cuando está llena?{' '}
+              <button
+                type="button"
+                onClick={() => setDemoMode(true)}
+                className="font-bold text-[#365e45] underline underline-offset-2"
+              >
+                Pulsa aquí para abrir la Demo
+              </button>{' '}
+              (es solo para mirar; no toca tus datos).
+            </p>
+          </section>
+        )}
+
       {/* Grand Hero: Julia H. Carreras & Family Support */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3325] via-[#2d553e] to-[#152a1e] p-6 sm:p-8 md:p-10 text-white shadow-xl border border-emerald-500/20">
         <div className="absolute right-0 top-0 translate-x-16 -translate-y-16 w-80 h-80 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -24,10 +24,33 @@ import { SubjectsView } from './views/SubjectsView';
 import { ToolsView } from './views/ToolsView';
 import { LifeView } from './views/LifeView';
 import { Footer } from './components/Footer';
+import { useDemoMode, setDemoMode, DEMO_BLOCKED_EVENT } from './hooks/useCampusStore';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('today');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const isDemo = useDemoMode();
+  const [showDemoToast, setShowDemoToast] = useState<boolean>(false);
+
+  // En modo Demo no se puede cambiar nada: se avisa con un mensaje breve
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onBlocked = () => {
+      setShowDemoToast(true);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setShowDemoToast(false), 3500);
+    };
+    window.addEventListener(DEMO_BLOCKED_EVENT, onBlocked);
+    return () => {
+      window.removeEventListener(DEMO_BLOCKED_EVENT, onBlocked);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  const exitDemo = () => {
+    setDemoMode(false);
+    setCurrentPage('today');
+  };
 
   const renderActiveView = () => {
     switch (currentPage) {
@@ -86,6 +109,24 @@ export default function App() {
 
       {/* Main Content Area */}
       <div className="flex-1 lg:ml-72 flex flex-col min-h-screen">
+        {isDemo && (
+          <div
+            className="sticky top-0 z-40 bg-amber-100 border-b border-amber-300 text-amber-950 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm"
+            role="status"
+          >
+            <span>
+              <strong>👀 Modo Demo:</strong> estás viendo datos de ejemplo. Solo puedes mirar; nada de lo que hagas aquí
+              se guarda y tus datos reales están a salvo.
+            </span>
+            <button
+              type="button"
+              onClick={exitDemo}
+              className="px-3 py-1.5 rounded-lg bg-amber-900 hover:bg-amber-950 text-white font-bold text-xs shrink-0"
+            >
+              Salir de la demo
+            </button>
+          </div>
+        )}
         <OfflineBanner />
         <Header
           currentPage={currentPage}
@@ -93,12 +134,21 @@ export default function App() {
           onNavigate={setCurrentPage}
         />
 
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto pb-8">
+        <main key={isDemo ? 'demo' : 'real'} className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto pb-8">
           {renderActiveView()}
         </main>
 
         {/* Persistent Global Footer with logo-ivimoca.png */}
         <Footer />
+
+        {showDemoToast && (
+          <div
+            className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] px-4 py-3 rounded-2xl bg-stone-900 text-white text-xs sm:text-sm font-semibold shadow-2xl text-center"
+            role="alert"
+          >
+            Estás en la demo: es solo para mirar y no se guarda nada.
+          </div>
+        )}
 
         {/* Mobile bottom nav for rapid one-handed switching */}
         <MobileBottomNav

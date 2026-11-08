@@ -1,0 +1,895 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index bca255b..0a0ab64 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from 'react';
++import React, { useEffect, useState } from 'react';
+ import { Sidebar } from './components/Sidebar';
+ import { Header } from './components/Header';
+ import { MobileBottomNav } from './components/MobileBottomNav';
+@@ -24,10 +24,33 @@ import { SubjectsView } from './views/SubjectsView';
+ import { ToolsView } from './views/ToolsView';
+ import { LifeView } from './views/LifeView';
+ import { Footer } from './components/Footer';
++import { useDemoMode, setDemoMode, DEMO_BLOCKED_EVENT } from './hooks/useCampusStore';
+ 
+ export default function App() {
+   const [currentPage, setCurrentPage] = useState<string>('today');
+   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
++  const isDemo = useDemoMode();
++  const [showDemoToast, setShowDemoToast] = useState<boolean>(false);
++
++  // En modo Demo no se puede cambiar nada: se avisa con un mensaje breve
++  useEffect(() => {
++    let timer: ReturnType<typeof setTimeout> | undefined;
++    const onBlocked = () => {
++      setShowDemoToast(true);
++      if (timer) clearTimeout(timer);
++      timer = setTimeout(() => setShowDemoToast(false), 3500);
++    };
++    window.addEventListener(DEMO_BLOCKED_EVENT, onBlocked);
++    return () => {
++      window.removeEventListener(DEMO_BLOCKED_EVENT, onBlocked);
++      if (timer) clearTimeout(timer);
++    };
++  }, []);
++
++  const exitDemo = () => {
++    setDemoMode(false);
++    setCurrentPage('today');
++  };
+ 
+   const renderActiveView = () => {
+     switch (currentPage) {
+@@ -86,6 +109,24 @@ export default function App() {
+ 
+       {/* Main Content Area */}
+       <div className="flex-1 lg:ml-72 flex flex-col min-h-screen">
++        {isDemo && (
++          <div
++            className="sticky top-0 z-40 bg-amber-100 border-b border-amber-300 text-amber-950 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm"
++            role="status"
++          >
++            <span>
++              <strong>👀 Modo Demo:</strong> estás viendo datos de ejemplo. Solo puedes mirar; nada de lo que hagas aquí
++              se guarda y tus datos reales están a salvo.
++            </span>
++            <button
++              type="button"
++              onClick={exitDemo}
++              className="px-3 py-1.5 rounded-lg bg-amber-900 hover:bg-amber-950 text-white font-bold text-xs shrink-0"
++            >
++              Salir de la demo
++            </button>
++          </div>
++        )}
+         <OfflineBanner />
+         <Header
+           currentPage={currentPage}
+@@ -93,13 +134,22 @@ export default function App() {
+           onNavigate={setCurrentPage}
+         />
+ 
+-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto pb-8">
++        <main key={isDemo ? 'demo' : 'real'} className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto pb-8">
+           {renderActiveView()}
+         </main>
+ 
+         {/* Persistent Global Footer with logo-ivimoca.png */}
+         <Footer />
+ 
++        {showDemoToast && (
++          <div
++            className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] px-4 py-3 rounded-2xl bg-stone-900 text-white text-xs sm:text-sm font-semibold shadow-2xl text-center"
++            role="alert"
++          >
++            Estás en la demo: es solo para mirar y no se guarda nada.
++          </div>
++        )}
++
+         {/* Mobile bottom nav for rapid one-handed switching */}
+         <MobileBottomNav
+           currentPage={currentPage}
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+index 42b27e5..ff27ce9 100644
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -18,6 +18,7 @@ import {
+   Brain
+ } from 'lucide-react';
+ import { PWAInstallButton } from './PWAInstallButton';
++import { useDemoMode, setDemoMode } from '../hooks/useCampusStore';
+ 
+ interface SidebarProps {
+   currentPage: string;
+@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
+   isMobileOpen,
+   setIsMobileOpen
+ }) => {
++  const isDemo = useDemoMode();
+   const navSections = [
+     {
+       title: 'INICIO',
+@@ -163,6 +165,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
+ 
+         {/* Footer with PWA Install Prompt & IviMOCA */}
+         <div className="p-4 border-t border-stone-100 bg-[#fafbfa] space-y-3">
++          <button
++            type="button"
++            onClick={() => {
++              setDemoMode(!isDemo);
++              onNavigate('today');
++              setIsMobileOpen(false);
++            }}
++            className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
++              isDemo
++                ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
++                : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
++            }`}
++            title={isDemo ? 'Volver a tus datos' : 'Ver la app con datos de ejemplo (solo lectura)'}
++          >
++            <span aria-hidden="true">{isDemo ? '↩️' : '👀'}</span>
++            <span>{isDemo ? 'Salir de la demo' : 'Demo'}</span>
++          </button>
+           <PWAInstallButton />
+           <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-400">
+             <span>UCLM Fábrica de Armas</span>
+diff --git a/src/hooks/useCampusStore.ts b/src/hooks/useCampusStore.ts
+index 81fc573..d105c81 100644
+--- a/src/hooks/useCampusStore.ts
++++ b/src/hooks/useCampusStore.ts
+@@ -1,4 +1,4 @@
+-import { useState, useEffect } from 'react';
++import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+ import {
+   Subject,
+   Drug,
+@@ -15,7 +15,7 @@ import {
+   ClinicalCompetency,
+   GibbsReflection,
+ } from '../types';
+-import { OFFICIAL_SUBJECTS } from '../data/subjects';
++import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
+ import { INITIAL_DRUGS } from '../data/pharmacology';
+ import { MEDICAL_TERMINOLOGY } from '../data/terminology';
+ import { INITIAL_EXAMS, INITIAL_PRACTICE_SHIFTS, DEFAULT_POCKET_CHECKLIST } from '../data/reminders';
+@@ -23,8 +23,11 @@ import { CLINICAL_MANUALS } from '../data/clinicalManuals';
+ import { INITIAL_COMPETENCIES } from '../data/clinical/competencies';
+ 
+ const STORAGE_KEY = 'campusEnfermeriaToledo_v2';
++// Versión de los datos guardados. Los guardados con una versión anterior se "limpian" de ejemplos al cargarse.
++const DATA_VERSION = 3;
+ 
+ export interface CampusState {
++  dataVersion?: number;
+   subjects: Subject[];
+   drugs: Drug[];
+   terms: MedicalTerm[];
+@@ -64,8 +67,9 @@ function getInitialDatePlus(days: number): string {
+   return d.toISOString().slice(0, 10);
+ }
+ 
+-const DEFAULT_STATE: CampusState = {
+-  subjects: OFFICIAL_SUBJECTS,
++// Datos de EJEMPLO: es lo que se ve en el modo Demo (solo lectura)
++const DEMO_STATE: CampusState = {
++  subjects: UCLM_NURSING_CURRICULUM,
+   drugs: INITIAL_DRUGS,
+   terms: MEDICAL_TERMINOLOGY,
+   exams: INITIAL_EXAMS,
+@@ -147,33 +151,156 @@ const DEFAULT_STATE: CampusState = {
+   }
+ };
+ 
++// ---------- Estado VACÍO: lo que ve una usuaria nueva ----------
++const blankSubject = (subject: Subject): Subject => {
++  const { grade: _grade, ...rest } = subject;
++  return { ...rest, status: subject.year === 1 ? 'Matriculada' : 'Pendiente', progress: 0 };
++};
++const blankCompetencies = (list: ClinicalCompetency[]): ClinicalCompetency[] =>
++  list.map((c) => ({ ...c, status: 'Pendiente', observations: undefined, evaluatedBy: undefined, updatedAt: undefined }));
++const blankPocket = (list: PocketCheckItem[]): PocketCheckItem[] => list.map((i) => ({ ...i, checked: false }));
++const zeroProcedures = (p: Record<string, number>) => Object.fromEntries(Object.keys(p).map((k) => [k, 0]));
++
++export const EMPTY_STATE: CampusState = {
++  ...DEMO_STATE,
++  dataVersion: DATA_VERSION,
++  subjects: UCLM_NURSING_CURRICULUM.map(blankSubject),
++  exams: [],
++  shifts: [],
++  pocketChecklist: blankPocket(DEFAULT_POCKET_CHECKLIST),
++  tasks: [],
++  events: [],
++  grades: [],
++  expenses: [],
++  clinicalProcedures: zeroProcedures(DEMO_STATE.clinicalProcedures),
++  competencies: blankCompetencies(INITIAL_COMPETENCIES),
++  reflections: [],
++  ecoeScores: {},
++  quizStats: { totalQuizzes: 0, totalCorrect: 0, totalAnswered: 0, bestScorePercent: 0, history: [] },
++};
++export { DEMO_STATE };
++
++// Quita de unos datos guardados antiguos los ejemplos que no se hayan tocado, y conserva lo que la usuaria haya escrito.
++export function stripDemoData(saved: any): any {
++  const out: any = { ...saved };
++  const notDemo = (list: any, demo: { id: string | number }[]) =>
++    Array.isArray(list) ? list.filter((item) => !demo.some((d) => d.id === item.id)) : list;
++
++  out.exams = notDemo(saved.exams, INITIAL_EXAMS);
++  out.shifts = notDemo(saved.shifts, INITIAL_PRACTICE_SHIFTS);
++  out.tasks = notDemo(saved.tasks, DEMO_STATE.tasks);
++  out.events = notDemo(saved.events, DEMO_STATE.events);
++  out.expenses = notDemo(saved.expenses, DEMO_STATE.expenses);
++  out.grades = Array.isArray(saved.grades)
++    ? saved.grades.filter((g: any) => !DEMO_STATE.grades.some((d) => d.id === g.id && d.name === g.name))
++    : saved.grades;
++  out.reflections = Array.isArray(saved.reflections)
++    ? saved.reflections.filter((r: any) => r.id !== 'refl-1')
++    : saved.reflections;
++
++  if (saved.ecoeScores) {
++    const scores = { ...saved.ecoeScores };
++    for (const [id, demo] of Object.entries(DEMO_STATE.ecoeScores)) {
++      const cur = scores[id];
++      if (cur && cur.lastScore === demo.lastScore && cur.bestScore === demo.bestScore && cur.passed === demo.passed) {
++        delete scores[id];
++      }
++    }
++    out.ecoeScores = scores;
++  }
++
++  const q = saved.quizStats;
++  const dq = DEMO_STATE.quizStats;
++  if (q && q.totalQuizzes >= dq.totalQuizzes && q.totalCorrect >= dq.totalCorrect && q.totalAnswered >= dq.totalAnswered) {
++    const history = Array.isArray(q.history) ? q.history : [];
++    out.quizStats = {
++      totalQuizzes: q.totalQuizzes - dq.totalQuizzes,
++      totalCorrect: q.totalCorrect - dq.totalCorrect,
++      totalAnswered: q.totalAnswered - dq.totalAnswered,
++      bestScorePercent: history.reduce((m: number, h: any) => Math.max(m, h.total ? Math.round((h.score / h.total) * 100) : 0), 0),
++      history,
++    };
++  }
++
++  if (Array.isArray(saved.pocketChecklist)) {
++    const untouched =
++      DEFAULT_POCKET_CHECKLIST.length === saved.pocketChecklist.length &&
++      DEFAULT_POCKET_CHECKLIST.every((d) => saved.pocketChecklist.find((i: any) => i.id === d.id)?.checked === d.checked);
++    if (untouched) out.pocketChecklist = blankPocket(DEFAULT_POCKET_CHECKLIST);
++  }
++
++  if (Array.isArray(saved.competencies)) {
++    const untouched =
++      INITIAL_COMPETENCIES.length === saved.competencies.length &&
++      INITIAL_COMPETENCIES.every((d) => saved.competencies.find((c: any) => c.id === d.id)?.status === d.status);
++    if (untouched) out.competencies = blankCompetencies(INITIAL_COMPETENCIES);
++  }
++
++  if (saved.clinicalProcedures) {
++    const untouched = Object.entries(DEMO_STATE.clinicalProcedures).every(([k, v]) => saved.clinicalProcedures[k] === v);
++    if (untouched) out.clinicalProcedures = zeroProcedures(DEMO_STATE.clinicalProcedures);
++  }
++
++  // La lista antigua de 10 asignaturas se sustituye por el plan completo (editable)
++  delete out.subjects;
++  Object.keys(out).forEach((k) => out[k] === undefined && delete out[k]);
++  return out;
++}
++
++// Convierte unos datos guardados en un estado completo (función pura, fácil de probar)
++export function loadSavedState(raw: string | null): CampusState {
++  if (!raw) return EMPTY_STATE;
++  const parsed = JSON.parse(raw);
++  const data = parsed.dataVersion === DATA_VERSION ? parsed : stripDemoData(parsed);
++  return {
++    ...EMPTY_STATE,
++    ...data,
++    dataVersion: DATA_VERSION,
++    studentName: 'Julia H. Carreras',
++    // Una lista vacía de asignaturas o reflexiones es válida (la usuaria las borró)
++    subjects: Array.isArray(data.subjects) ? data.subjects : EMPTY_STATE.subjects,
++    reflections: Array.isArray(data.reflections) ? data.reflections : [],
++    drugs: data.drugs?.length ? data.drugs : EMPTY_STATE.drugs,
++    terms: data.terms?.length ? data.terms : EMPTY_STATE.terms,
++    manuals: data.manuals?.length ? data.manuals : EMPTY_STATE.manuals,
++    competencies: data.competencies?.length ? data.competencies : EMPTY_STATE.competencies,
++    ecoeScores: data.ecoeScores || {},
++  };
++}
++
++// ---------- Modo Demo (solo lectura) ----------
++let demoActive = false;
++const demoListeners = new Set<() => void>();
++export const DEMO_BLOCKED_EVENT = 'campus-demo-blocked';
++export const isDemoMode = () => demoActive;
++export function setDemoMode(active: boolean) {
++  if (demoActive === active) return;
++  demoActive = active;
++  demoListeners.forEach((listener) => listener());
++}
++const subscribeDemo = (listener: () => void) => {
++  demoListeners.add(listener);
++  return () => {
++    demoListeners.delete(listener);
++  };
++};
++export const useDemoMode = () => useSyncExternalStore(subscribeDemo, isDemoMode);
++
+ export function useCampusStore() {
++  // En modo Demo se muestran los datos de ejemplo, no se guarda nada y los cambios se bloquean
++  const demoInstance = useRef(demoActive).current;
+   const [state, setState] = useState<CampusState>(() => {
++    if (demoInstance) return DEMO_STATE;
+     try {
+-      const saved = localStorage.getItem(STORAGE_KEY);
+-      if (saved) {
+-        const parsed = JSON.parse(saved);
+-        return {
+-          ...DEFAULT_STATE,
+-          ...parsed,
+-          studentName: 'Julia H. Carreras',
+-          // Ensure arrays contain the defaults if missing
+-          subjects: parsed.subjects?.length ? parsed.subjects : DEFAULT_STATE.subjects,
+-          drugs: parsed.drugs?.length ? parsed.drugs : DEFAULT_STATE.drugs,
+-          terms: parsed.terms?.length ? parsed.terms : DEFAULT_STATE.terms,
+-          manuals: parsed.manuals?.length ? parsed.manuals : DEFAULT_STATE.manuals,
+-          competencies: parsed.competencies?.length ? parsed.competencies : DEFAULT_STATE.competencies,
+-          reflections: parsed.reflections?.length ? parsed.reflections : DEFAULT_STATE.reflections,
+-          ecoeScores: parsed.ecoeScores || DEFAULT_STATE.ecoeScores,
+-        };
+-      }
++      return loadSavedState(localStorage.getItem(STORAGE_KEY));
+     } catch (e) {
+       console.warn('Error loading campus store from localStorage', e);
+     }
+-    return DEFAULT_STATE;
++    return EMPTY_STATE;
+   });
+ 
+   useEffect(() => {
++    if (demoInstance) return;
+     try {
+       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+     } catch (e) {
+@@ -182,6 +309,10 @@ export function useCampusStore() {
+   }, [state]);
+ 
+   const updateState = (updater: (prev: CampusState) => CampusState) => {
++    if (demoInstance) {
++      window.dispatchEvent(new Event(DEMO_BLOCKED_EVENT));
++      return;
++    }
+     setState((prev) => updater(prev));
+   };
+ 
+@@ -381,15 +512,33 @@ export function useCampusStore() {
+   };
+ 
+   // Academic subject status update
+-  const updateSubjectStatus = (code: string, status: Subject['status'], grade?: number) => {
++  // Subject operations (el plan de estudios es editable)
++  const addSubject = (data: Omit<Subject, 'code'> & { code?: string }) => {
++    updateState(prev => {
++      let code = (data.code || '').trim() || 'ASIG-' + Date.now();
++      while (prev.subjects.some(s => s.code === code)) code += '-2';
++      return { ...prev, subjects: [...prev.subjects, { ...data, code }] };
++    });
++  };
++
++  const updateSubject = (code: string, patch: Partial<Subject>) => {
+     updateState(prev => ({
+       ...prev,
+-      subjects: prev.subjects.map(s =>
+-        s.code === code ? { ...s, status, grade: grade !== undefined ? grade : s.grade } : s
+-      )
++      subjects: prev.subjects.map(s => (s.code === code ? { ...s, ...patch } : s))
+     }));
+   };
+ 
++  const removeSubject = (code: string) => {
++    updateState(prev => ({
++      ...prev,
++      subjects: prev.subjects.filter(s => s.code !== code)
++    }));
++  };
++
++  const updateSubjectStatus = (code: string, status: Subject['status'], grade?: number) => {
++    updateSubject(code, { status, ...(grade !== undefined ? { grade } : {}) });
++  };
++
+   return {
+     state,
+     updateState,
+@@ -411,6 +560,9 @@ export function useCampusStore() {
+     addGibbsReflection,
+     removeGibbsReflection,
+     recordEcoeScore,
+-    updateSubjectStatus
++    updateSubjectStatus,
++    addSubject,
++    updateSubject,
++    removeSubject
+   };
+ }
+diff --git a/src/views/AcademyView.tsx b/src/views/AcademyView.tsx
+index f35447e..9e07bcf 100644
+--- a/src/views/AcademyView.tsx
++++ b/src/views/AcademyView.tsx
+@@ -1,5 +1,5 @@
+ import React, { useState, useEffect } from 'react';
+-import { useCampusStore } from '../hooks/useCampusStore';
++import { useCampusStore, isDemoMode } from '../hooks/useCampusStore';
+ import { SELF_EVALUATION_QUESTIONS } from '../data/selfEvaluation';
+ import { QuizQuestion } from '../types';
+ import {
+@@ -39,6 +39,7 @@ export const AcademyView: React.FC = () => {
+   // Timer for timed exam
+   const [timeRemaining, setTimeRemaining] = useState<number>(900); // 15 min default
+   const [mistakesHistory, setMistakesHistory] = useState<string[]>(() => {
++    if (isDemoMode()) return [];
+     try {
+       const saved = localStorage.getItem('campus_mistakes_ids');
+       return saved ? JSON.parse(saved) : [];
+@@ -52,6 +53,7 @@ export const AcademyView: React.FC = () => {
+   const [isFlipped, setIsFlipped] = useState<boolean>(false);
+ 
+   useEffect(() => {
++    if (isDemoMode()) return;
+     try {
+       localStorage.setItem('campus_mistakes_ids', JSON.stringify(mistakesHistory));
+     } catch {
+diff --git a/src/views/TodayView.tsx b/src/views/TodayView.tsx
+index 5026b23..baa572e 100644
+--- a/src/views/TodayView.tsx
++++ b/src/views/TodayView.tsx
+@@ -1,5 +1,5 @@
+ import React, { useState } from 'react';
+-import { useCampusStore } from '../hooks/useCampusStore';
++import { useCampusStore, isDemoMode, setDemoMode } from '../hooks/useCampusStore';
+ import {
+   Heart,
+   Calendar,
+@@ -96,6 +96,57 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
+ 
+   return (
+     <div className="space-y-6">
++      {/* Bienvenida: solo mientras la app está vacía */}
++      {!isDemoMode() &&
++        state.exams.length === 0 &&
++        state.shifts.length === 0 &&
++        state.grades.length === 0 &&
++        state.reflections.length === 0 && (
++          <section className="rounded-3xl bg-white border border-[#d9e6dc] p-6 space-y-4">
++            <div>
++              <h2 className="text-lg font-extrabold text-stone-900">👋 ¡Bienvenida, Julia! Tu app está lista para empezar de cero</h2>
++              <p className="text-sm text-stone-600 mt-1">
++                Aún no hay nada guardado, así que empieza por lo básico. Cuando añadas tus datos, esta portada se llenará
++                sola con tus próximos exámenes y turnos.
++              </p>
++            </div>
++            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold">
++              <button
++                type="button"
++                onClick={() => onNavigate('reminders')}
++                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
++              >
++                1. Añade tus exámenes y turnos de prácticas
++              </button>
++              <button
++                type="button"
++                onClick={() => onNavigate('uclm')}
++                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
++              >
++                2. Revisa y ajusta tus asignaturas
++              </button>
++              <button
++                type="button"
++                onClick={() => onNavigate('life')}
++                className="px-4 py-3 rounded-2xl bg-[#f0f5f1] hover:bg-[#e3ede6] text-[#1f4430] text-left transition"
++              >
++                3. Apunta tus notas y tus hábitos
++              </button>
++            </div>
++            <p className="text-xs text-stone-500">
++              ¿Quieres ver cómo se ve la app cuando está llena?{' '}
++              <button
++                type="button"
++                onClick={() => setDemoMode(true)}
++                className="font-bold text-[#365e45] underline underline-offset-2"
++              >
++                Pulsa aquí para abrir la Demo
++              </button>{' '}
++              (es solo para mirar; no toca tus datos).
++            </p>
++          </section>
++        )}
++
+       {/* Grand Hero: Julia H. Carreras & Family Support */}
+       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3325] via-[#2d553e] to-[#152a1e] p-6 sm:p-8 md:p-10 text-white shadow-xl border border-emerald-500/20">
+         <div className="absolute right-0 top-0 translate-x-16 -translate-y-16 w-80 h-80 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
+diff --git a/src/views/UCLMView.tsx b/src/views/UCLMView.tsx
+index db50f85..e6d5f4c 100644
+--- a/src/views/UCLMView.tsx
++++ b/src/views/UCLMView.tsx
+@@ -1,6 +1,6 @@
+ import React, { useState } from 'react';
+ import { useCampusStore } from '../hooks/useCampusStore';
+-import { UCLM_NURSING_CURRICULUM, PREREQUISITE_RULES, TOLEDO_CAMPUS_LOCATIONS } from '../data/uclm/curriculum';
++import { PREREQUISITE_RULES, TOLEDO_CAMPUS_LOCATIONS } from '../data/uclm/curriculum';
+ import { Subject } from '../types';
+ import {
+   GraduationCap,
+@@ -14,28 +14,115 @@ import {
+   Sparkles,
+   Search,
+   Building2,
+-  ExternalLink
++  ExternalLink,
++  Plus,
++  Pencil,
++  Trash2,
++  X
+ } from 'lucide-react';
+ 
++interface SubjectForm {
++  originalCode: string | null;
++  code: string;
++  name: string;
++  year: 1 | 2 | 3 | 4;
++  sem: string;
++  ects: string;
++  type: Subject['type'];
++  professor: string;
++  status: 'Matriculada' | 'Aprobada' | 'Pendiente';
++  grade: string;
++  progress: number;
++  error: string;
++}
++
+ export const UCLMView: React.FC = () => {
+-  const { state, updateSubjectStatus } = useCampusStore();
++  const { state, updateSubjectStatus, addSubject, updateSubject, removeSubject } = useCampusStore();
+   const [selectedYear, setSelectedYear] = useState<1 | 2 | 3 | 4>(1);
+   const [activeTab, setActiveTab] = useState<'plan' | 'prerequisites' | 'campus'>('plan');
+   const [searchTerm, setSearchTerm] = useState('');
+ 
+-  // Merge curriculum with user's customized subject progress from store if any
+-  const fullCurriculum = UCLM_NURSING_CURRICULUM.map(subject => {
+-    const userSubject = state.subjects.find(s => s.code === subject.code || s.name.toLowerCase() === subject.name.toLowerCase());
+-    if (userSubject) {
+-      return {
+-        ...subject,
+-        status: userSubject.status || subject.status || 'Pendiente',
+-        grade: userSubject.grade ?? subject.grade,
+-        progress: userSubject.progress ?? subject.progress
+-      };
++  // El plan de estudios vive en los datos de la usuaria, así que se puede editar
++  const fullCurriculum = state.subjects;
++
++  // Formulario para añadir o editar una asignatura
++  const [form, setForm] = useState<SubjectForm | null>(null);
++
++  const openNewSubject = () =>
++    setForm({
++      originalCode: null,
++      code: '',
++      name: '',
++      year: selectedYear,
++      sem: '1º Semestre',
++      ects: '6',
++      type: 'Obligatoria',
++      professor: '',
++      status: 'Matriculada',
++      grade: '',
++      progress: 0,
++      error: ''
++    });
++
++  const openEditSubject = (sub: Subject) =>
++    setForm({
++      originalCode: sub.code,
++      code: sub.code,
++      name: sub.name,
++      year: sub.year,
++      sem: sub.sem,
++      ects: String(sub.ects),
++      type: sub.type,
++      professor: sub.professor || '',
++      status: sub.status || 'Pendiente',
++      grade: sub.grade !== undefined ? String(sub.grade) : '',
++      progress: sub.progress || 0,
++      error: ''
++    });
++
++  const handleSaveSubject = () => {
++    if (!form) return;
++    const name = form.name.trim();
++    const code = form.code.trim();
++    const ects = Number(form.ects.replace(',', '.'));
++    const gradeText = form.grade.trim().replace(',', '.');
++    const grade = gradeText === '' ? undefined : Number(gradeText);
++
++    let error = '';
++    if (!name) error = 'Escribe el nombre de la asignatura.';
++    else if (Number.isNaN(ects) || ects < 0 || ects > 60) error = 'Los créditos (ECTS) deben ser un número entre 0 y 60.';
++    else if (grade !== undefined && (Number.isNaN(grade) || grade < 0 || grade > 10)) error = 'La nota debe estar entre 0 y 10 (o déjala vacía).';
++    else if (code && state.subjects.some(s => s.code === code && s.code !== form.originalCode)) error = 'Ya existe otra asignatura con ese código.';
++    if (error) {
++      setForm({ ...form, error });
++      return;
++    }
++
++    const data = {
++      name,
++      year: form.year,
++      sem: form.sem,
++      ects,
++      type: form.type,
++      professor: form.professor.trim() || undefined,
++      status: form.status,
++      grade,
++      progress: form.progress
++    };
++    if (form.originalCode) {
++      updateSubject(form.originalCode, { ...data, code: code || form.originalCode });
++    } else {
++      addSubject({ ...data, code: code || undefined });
++      setSelectedYear(form.year);
++    }
++    setForm(null);
++  };
++
++  const handleDeleteSubject = (sub: Subject) => {
++    if (window.confirm(`¿Eliminar «${sub.name}» de tu lista de asignaturas?`)) {
++      removeSubject(sub.code);
+     }
+-    return subject;
+-  });
++  };
+ 
+   const yearSubjects = fullCurriculum.filter(s => s.year === selectedYear);
+   const filteredSubjects = yearSubjects.filter(s =>
+@@ -79,7 +166,7 @@ export const UCLMView: React.FC = () => {
+                 {approvedEcts} / {totalEcts} ECTS
+               </strong>
+               <span className="text-[10px] text-stone-300 block">
+-                {Math.round((approvedEcts / totalEcts) * 100)}% completado
++                {totalEcts > 0 ? Math.round((approvedEcts / totalEcts) * 100) : 0}% completado
+               </span>
+             </div>
+             <div className="w-12 h-12 rounded-xl bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-lg">
+@@ -197,6 +284,25 @@ export const UCLMView: React.FC = () => {
+             </div>
+           </div>
+ 
++          <div className="flex flex-wrap items-center justify-between gap-3">
++            <p className="text-xs text-stone-500">
++              Puedes editar, borrar o añadir las asignaturas que quieras.
++            </p>
++            <button
++              type="button"
++              onClick={openNewSubject}
++              className="px-4 py-2 rounded-xl bg-[#365e45] hover:bg-[#2c4d39] text-white text-xs font-bold transition flex items-center gap-1.5"
++            >
++              <Plus className="w-4 h-4" />
++              <span>Nueva asignatura</span>
++            </button>
++          </div>
++          {yearSubjects.length === 0 && (
++            <div className="p-10 text-center rounded-3xl bg-white border border-stone-200 text-sm text-stone-500">
++              No hay asignaturas en este curso. Pulsa «Nueva asignatura» para añadir la primera.
++            </div>
++          )}
++
+           {/* Subjects Grid */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {filteredSubjects.map((sub) => {
+@@ -276,6 +382,25 @@ export const UCLMView: React.FC = () => {
+                     )}
+                   </div>
+ 
++                  <div className="px-5 pb-3 flex justify-end gap-1">
++                    <button
++                      type="button"
++                      onClick={() => openEditSubject(sub)}
++                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-600 hover:bg-stone-100 transition flex items-center gap-1"
++                      title="Editar asignatura"
++                    >
++                      <Pencil className="w-3.5 h-3.5" /> Editar
++                    </button>
++                    <button
++                      type="button"
++                      onClick={() => handleDeleteSubject(sub)}
++                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-500 hover:text-red-700 hover:bg-red-50 transition flex items-center gap-1"
++                      title="Eliminar asignatura"
++                    >
++                      <Trash2 className="w-3.5 h-3.5" /> Borrar
++                    </button>
++                  </div>
++
+                   {/* Footer of Card: Grade & Progress */}
+                   <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+                     <div className="flex items-center gap-2">
+@@ -438,6 +563,180 @@ export const UCLMView: React.FC = () => {
+           ))}
+         </div>
+       )}
++
++      {form && (
++        <div
++          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
++          role="dialog"
++          aria-modal="true"
++          aria-labelledby="subject-form-title"
++        >
++          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl p-6 space-y-4">
++            <div className="flex items-center justify-between">
++              <h2 id="subject-form-title" className="text-lg font-extrabold text-stone-900">
++                {form.originalCode ? 'Editar asignatura' : 'Nueva asignatura'}
++              </h2>
++              <button
++                type="button"
++                onClick={() => setForm(null)}
++                className="p-1.5 rounded-lg text-stone-400 hover:bg-stone-100"
++                aria-label="Cerrar"
++              >
++                <X className="w-5 h-5" />
++              </button>
++            </div>
++
++            <div className="space-y-3 text-sm">
++              <label className="block">
++                <span className="text-xs font-bold text-stone-700">Nombre *</span>
++                <input
++                  type="text"
++                  value={form.name}
++                  onChange={(e) => setForm({ ...form, name: e.target.value })}
++                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#365e45]/40"
++                />
++              </label>
++
++              <div className="grid grid-cols-2 gap-3">
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Curso</span>
++                  <select
++                    value={form.year}
++                    onChange={(e) => setForm({ ...form, year: Number(e.target.value) as 1 | 2 | 3 | 4 })}
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  >
++                    <option value={1}>1.º curso</option>
++                    <option value={2}>2.º curso</option>
++                    <option value={3}>3.º curso</option>
++                    <option value={4}>4.º curso</option>
++                  </select>
++                </label>
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Semestre</span>
++                  <select
++                    value={form.sem}
++                    onChange={(e) => setForm({ ...form, sem: e.target.value })}
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  >
++                    <option value="1º Semestre">1.º semestre</option>
++                    <option value="2º Semestre">2.º semestre</option>
++                    <option value="Anual">Anual</option>
++                    {!['1º Semestre', '2º Semestre', 'Anual'].includes(form.sem) && (
++                      <option value={form.sem}>{form.sem}</option>
++                    )}
++                  </select>
++                </label>
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Créditos (ECTS)</span>
++                  <input
++                    type="text"
++                    inputMode="decimal"
++                    value={form.ects}
++                    onChange={(e) => setForm({ ...form, ects: e.target.value })}
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  />
++                </label>
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Código (opcional)</span>
++                  <input
++                    type="text"
++                    value={form.code}
++                    onChange={(e) => setForm({ ...form, code: e.target.value })}
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  />
++                </label>
++              </div>
++
++              <label className="block">
++                <span className="text-xs font-bold text-stone-700">Tipo</span>
++                <select
++                  value={form.type}
++                  onChange={(e) => setForm({ ...form, type: e.target.value as Subject['type'] })}
++                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                >
++                  <option value="Formación básica">Formación básica</option>
++                  <option value="Obligatoria">Obligatoria</option>
++                  <option value="Prácticas Tuteladas">Prácticas tuteladas</option>
++                  <option value="Optativa">Optativa</option>
++                  <option value="TFG">TFG</option>
++                </select>
++              </label>
++
++              <label className="block">
++                <span className="text-xs font-bold text-stone-700">Profesor/a (opcional)</span>
++                <input
++                  type="text"
++                  value={form.professor}
++                  onChange={(e) => setForm({ ...form, professor: e.target.value })}
++                  className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                />
++              </label>
++
++              <div className="grid grid-cols-2 gap-3">
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Estado</span>
++                  <select
++                    value={form.status}
++                    onChange={(e) => setForm({ ...form, status: e.target.value as SubjectForm['status'] })}
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  >
++                    <option value="Matriculada">Matriculada</option>
++                    <option value="Aprobada">Aprobada</option>
++                    <option value="Pendiente">Pendiente</option>
++                  </select>
++                </label>
++                <label className="block">
++                  <span className="text-xs font-bold text-stone-700">Nota (0-10, opcional)</span>
++                  <input
++                    type="text"
++                    inputMode="decimal"
++                    value={form.grade}
++                    onChange={(e) => setForm({ ...form, grade: e.target.value })}
++                    placeholder="Sin calificar"
++                    className="mt-1 w-full px-3 py-2 rounded-xl border border-stone-300"
++                  />
++                </label>
++              </div>
++
++              <label className="block">
++                <span className="text-xs font-bold text-stone-700">Progreso de estudio: {form.progress}%</span>
++                <input
++                  type="range"
++                  min={0}
++                  max={100}
++                  step={5}
++                  value={form.progress}
++                  onChange={(e) => setForm({ ...form, progress: Number(e.target.value) })}
++                  className="mt-1 w-full accent-[#365e45]"
++                />
++              </label>
++            </div>
++
++            {form.error && (
++              <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
++                {form.error}
++              </p>
++            )}
++
++            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
++              <button
++                type="button"
++                onClick={() => setForm(null)}
++                className="px-4 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-sm font-bold text-stone-700"
++              >
++                Cancelar
++              </button>
++              <button
++                type="button"
++                onClick={handleSaveSubject}
++                className="px-4 py-2.5 rounded-xl bg-[#365e45] hover:bg-[#2c4d39] text-white text-sm font-bold"
++              >
++                Guardar
++              </button>
++            </div>
++          </div>
++        </div>
++      )}
+     </div>
+   );
+ };
