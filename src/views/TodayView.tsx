@@ -22,7 +22,13 @@ import {
   GraduationCap,
   TestTube2,
   Bot,
-  Brain
+  Brain,
+  Compass,
+  Car,
+  ShieldAlert,
+  HeartPulse,
+  FolderLock,
+  ExternalLink
 } from 'lucide-react';
 
 interface TodayViewProps {
@@ -331,6 +337,84 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <span className="text-[10px] text-stone-500 mt-0.5">7 Profesores</span>
           </button>
         </div>
+      </div>
+
+      {/* Herramientas de Vida y Práctica Diaria */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <button
+          onClick={() => onNavigate('shortcuts')}
+          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-emerald-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#365e45] flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
+            <Compass className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-xs font-black text-stone-900 block group-hover:text-emerald-800">
+              Panel Atajos
+            </strong>
+            <span className="text-[10px] text-stone-500">appUCLM, Alsa, IA...</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('travel')}
+          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-blue-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
+            <Car className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-xs font-black text-stone-900 block group-hover:text-blue-800">
+              Viajes Granada
+            </strong>
+            <span className="text-[10px] text-stone-500">Horarios y maleta</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('emergency')}
+          className="p-3.5 rounded-2xl bg-white border border-rose-200 hover:border-rose-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
+            <ShieldAlert className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-xs font-black text-rose-900 block">
+              Emergencias 112
+            </strong>
+            <span className="text-[10px] text-rose-600 font-semibold">Ubicación WhatsApp</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('cpr')}
+          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-amber-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
+            <HeartPulse className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-xs font-black text-stone-900 block group-hover:text-amber-800">
+              Protocolo RCP
+            </strong>
+            <span className="text-[10px] text-stone-500">Metrónomo 105 bpm</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('vault')}
+          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-purple-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group col-span-2 sm:col-span-1"
+        >
+          <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
+            <FolderLock className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-xs font-black text-stone-900 block group-hover:text-purple-800">
+              Bóveda & Salud
+            </strong>
+            <span className="text-[10px] text-stone-500">DNI, citas y medicación</span>
+          </div>
+        </button>
       </div>
 
       {/* Main 2-Column Dashboard */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
+import { OFFICIAL_COURSE_DEADLINES } from '../data/courseDeadlines';
 import {
   Calendar,
   Clock,
@@ -13,7 +14,10 @@ import {
   X,
   AlertCircle,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  Download,
+  ExternalLink,
+  BookOpenCheck
 } from 'lucide-react';
 
 export const RemindersView: React.FC = () => {
@@ -29,7 +33,7 @@ export const RemindersView: React.FC = () => {
     resetPocketChecklist
   } = useCampusStore();
 
-  const [activeTab, setActiveTab] = useState<'exams' | 'shifts' | 'pocket'>('exams');
+  const [activeTab, setActiveTab] = useState<'exams' | 'shifts' | 'deadlines' | 'pocket'>('exams');
   const [showAddExamModal, setShowAddExamModal] = useState(false);
   const [showAddShiftModal, setShowAddShiftModal] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<string>('default');
@@ -102,6 +106,67 @@ export const RemindersView: React.FC = () => {
     setShowAddShiftModal(false);
   };
 
+  const generateIcsFile = () => {
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Campus Enfermeria UCLM//Julia H Carreras//ES',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:Enfermería Julia (UCLM Toledo)'
+    ];
+
+    state.exams.forEach((exam) => {
+      const dt = exam.date.replace(/-/g, '');
+      const time = (exam.time || '09:00').replace(':', '') + '00';
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:exam-${exam.id}-${dt}@enfermeriajulia.uclm`);
+      lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      lines.push(`DTSTART:${dt}T${time}`);
+      lines.push(`DTEND:${dt}T${time}`);
+      lines.push(`SUMMARY:Examen: ${exam.subject}`);
+      lines.push(`LOCATION:${exam.classroom || 'Campus Fábrica de Armas'}`);
+      lines.push(`DESCRIPTION:${exam.topics || 'Examen oficial'} · ${exam.weightPercent || 40}% peso nota`);
+      lines.push('END:VEVENT');
+    });
+
+    state.shifts.forEach((shift) => {
+      const dt = shift.date.replace(/-/g, '');
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:shift-${shift.id}-${dt}@enfermeriajulia.uclm`);
+      lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      lines.push(`DTSTART:${dt}T080000`);
+      lines.push(`DTEND:${dt}T150000`);
+      lines.push(`SUMMARY:Turno Clínico: ${shift.service} (${shift.hospital})`);
+      lines.push(`LOCATION:${shift.hospital}`);
+      lines.push(`DESCRIPTION:${shift.shiftType} · Tutora: ${shift.tutorName || 'Supervisora'}`);
+      lines.push('END:VEVENT');
+    });
+
+    OFFICIAL_COURSE_DEADLINES.forEach((dl) => {
+      const dt = dl.startDate.replace(/-/g, '');
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:dead-${dl.id}@enfermeriajulia.uclm`);
+      lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      lines.push(`DTSTART;VALUE=DATE:${dt}`);
+      lines.push(`SUMMARY:[Plazo Oficial] ${dl.title}`);
+      lines.push(`DESCRIPTION:${dl.description}`);
+      lines.push('END:VEVENT');
+    });
+
+    lines.push('END:VCALENDAR');
+
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'calendario-enfermeria-julia.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const completedPocket = state.pocketChecklist.filter((i) => i.checked).length;
 
   return (
@@ -116,11 +181,20 @@ export const RemindersView: React.FC = () => {
             Recordatorios de Exámenes y Prácticas
           </h1>
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
-            Organiza tus fechas clave, cuentas atrás, turnos hospitalarios y material de bolsillo.
+            Organiza tus fechas clave, cuentas atrás, turnos hospitalarios, plazos de beca y material de bolsillo.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={generateIcsFile}
+            className="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-900 transition flex items-center gap-1.5 shadow-2xs"
+            title="Descargar archivo .ics para Google Calendar, iPhone o Outlook"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Exportar Calendario (.ics)</span>
+          </button>
+
           <button
             onClick={handleRequestNotificationPermission}
             className="px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 transition flex items-center gap-1.5 shadow-2xs"
@@ -153,10 +227,10 @@ export const RemindersView: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-stone-200 pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('exams')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'exams'
               ? 'bg-[#365e45] text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
@@ -168,7 +242,7 @@ export const RemindersView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('shifts')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'shifts'
               ? 'bg-[#365e45] text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
@@ -179,8 +253,20 @@ export const RemindersView: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('deadlines')}
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'deadlines'
+              ? 'bg-[#365e45] text-white shadow-xs'
+              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <BookOpenCheck className="w-4 h-4" />
+          <span>Plazos del Curso (Becas, Matrícula)</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('pocket')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'pocket'
               ? 'bg-[#365e45] text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
@@ -386,7 +472,106 @@ export const RemindersView: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: POCKET CHECKLIST */}
+      {/* TAB 3: COURSE DEADLINES (Becas MEC, Matrícula, Convocatorias) */}
+      {activeTab === 'deadlines' && (
+        <div className="space-y-4">
+          <div className="p-5 rounded-3xl bg-white border border-stone-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-stone-900">Plazos Oficiales del Curso Universitario</h3>
+              <p className="text-xs text-stone-500">
+                Fechas clave de la Universidad de Castilla-La Mancha (UCLM) y convocatorias del Ministerio de Educación.
+              </p>
+            </div>
+            <button
+              onClick={generateIcsFile}
+              className="px-3.5 py-2 rounded-xl bg-[#365e45] text-white text-xs font-bold hover:bg-[#284835] transition flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Sincronizar con mi Calendario (.ics)</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {OFFICIAL_COURSE_DEADLINES.map((dl) => {
+              const diffText = getDaysDiff(dl.startDate);
+              const isUrgent = dl.urgent || diffText === '¡HOY!' || diffText === '¡Mañana!';
+              return (
+                <div
+                  key={dl.id}
+                  className={`p-5 rounded-3xl bg-white border transition shadow-xs flex flex-col justify-between ${
+                    isUrgent
+                      ? 'border-amber-300 ring-2 ring-amber-50 bg-amber-50/20'
+                      : 'border-stone-200 hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                          dl.category === 'Becas'
+                            ? 'bg-purple-100 text-purple-800'
+                            : dl.category === 'Matrícula'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {dl.category}
+                        </span>
+                        {dl.urgent && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                            Prioritario
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-[#365e45] bg-[#e8f0e8] px-2.5 py-1 rounded-xl">
+                        {diffText}
+                      </span>
+                    </div>
+
+                    <strong className="text-base font-bold text-stone-900 block">
+                      {dl.title}
+                    </strong>
+
+                    <div className="text-xs text-stone-600 flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                      <span>
+                        Desde <strong>{dl.startDate}</strong> hasta <strong>{dl.endDate}</strong>
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-stone-500 leading-relaxed">
+                      {dl.description}
+                    </p>
+                  </div>
+
+                  {dl.officialUrl && (
+                    <div className="pt-3 mt-3 border-t border-stone-100 flex items-center justify-between">
+                      <a
+                        href={dl.officialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-bold text-[#365e45] hover:underline flex items-center gap-1"
+                      >
+                        <span>Ir a la sede oficial</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                      <span className="text-[10px] text-stone-400">Verificado UCLM / MEC</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="p-4 rounded-2xl bg-[#f8faf7] border border-stone-200 text-xs text-stone-600 space-y-1">
+            <strong>💡 Cómo suscribirte desde tu móvil:</strong>
+            <p className="leading-relaxed">
+              Pulsa en <strong>«Exportar Calendario (.ics)»</strong> para descargar el archivo. Ábrelo en tu teléfono móvil (iPhone o Android) y selecciona <em>«Añadir a Calendario»</em>. Todos tus exámenes, turnos del HUT y plazos de beca quedarán registrados en tu aplicación de agenda nativa con sus alarmas automáticas.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: POCKET CHECKLIST */}
       {activeTab === 'pocket' && (
         <div className="p-6 rounded-3xl bg-white border border-stone-200 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">

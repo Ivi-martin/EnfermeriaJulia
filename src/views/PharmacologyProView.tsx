@@ -7,6 +7,7 @@ import {
   ANTIDOTES_TABLE
 } from '../data/pharmacy/compatibilities';
 import { Drug } from '../types';
+import { CimaDrugSearchView } from './CimaDrugSearchView';
 import {
   Pill,
   Calculator,
@@ -26,7 +27,7 @@ import {
 
 export const PharmacologyProView: React.FC = () => {
   const { state } = useCampusStore();
-  const [activeTab, setActiveTab] = useState<'catalog' | 'compatibility' | 'calculators' | 'antidotes'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'compatibility' | 'calculators' | 'antidotes' | 'cima'>('catalog');
 
   // Catalog search and filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,6 +185,17 @@ export const PharmacologyProView: React.FC = () => {
           >
             <ShieldCheck className="w-4 h-4" />
             <span>4. Antídotos & Reversores ({ANTIDOTES_TABLE.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('cima')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 ${
+              activeTab === 'cima'
+                ? 'bg-white text-[#244234] shadow-sm'
+                : 'bg-white/10 text-white/80 hover:bg-white/20'
+            }`}
+          >
+            <Search className="w-4 h-4 text-emerald-300" />
+            <span>5. Buscador CIMA Oficial (AEMPS)</span>
           </button>
         </div>
       </div>
@@ -682,6 +694,9 @@ export const PharmacologyProView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* SUBTAB 5: CIMA BUSCADOR OFICIAL */}
+      {activeTab === 'cima' && <CimaDrugSearchView />}
     </div>
   );
 };

@@ -15,7 +15,15 @@ import {
   X,
   TestTube2,
   Bot,
-  Brain
+  Brain,
+  Bookmark,
+  HeartPulse,
+  Flame,
+  ShieldAlert,
+  Car,
+  FolderLock,
+  Layers,
+  Compass
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useDemoMode, setDemoMode } from '../hooks/useCampusStore';
@@ -36,9 +44,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isDemo = useDemoMode();
   const navSections = [
     {
-      title: 'INICIO',
+      title: 'INICIO & ACCESOS',
       items: [
-        { id: 'today', label: 'Mi Día', icon: Sun }
+        { id: 'today', label: 'Mi Día', icon: Sun },
+        { id: 'shortcuts', label: 'Atajos (UCLM, Alsa, IA...)', icon: Compass }
       ]
     },
     {
@@ -48,19 +57,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'academy', label: '2. Academia & Exámenes', icon: Brain },
         { id: 'laboratory', label: '3. Laboratorio & ECG', icon: TestTube2 },
         { id: 'ecoe', label: '4. Simulación ECOE', icon: Stethoscope },
-        { id: 'pharmacologyPro', label: '5. Farmacología PRO', icon: Pill },
+        { id: 'pharmacologyPro', label: '5. Farmacología PRO & CIMA', icon: Pill },
         { id: 'practice360', label: '6. Prácticas 360 & Gibbs', icon: Activity },
         { id: 'tutorAI', label: '7. Tutor IA (7 Docentes)', icon: Bot }
       ]
     },
     {
-      title: 'HERRAMIENTAS AUXILIARES',
+      title: 'CLÍNICA Y ENFERMERÍA',
       items: [
+        { id: 'clinicalCases', label: 'Casos Clínicos Simulados (IA)', icon: Stethoscope },
+        { id: 'cpr', label: 'Protocolos RCP / SVA', icon: HeartPulse },
+        { id: 'anatomy', label: 'Anatomía Interactiva', icon: Activity },
+        { id: 'tools', label: 'PAE (NANDA-NOC-NIC) & SBAR', icon: Layers },
         { id: 'manuals', label: 'Manuales Clínicos (Offline)', icon: BookOpen },
-        { id: 'scales', label: 'Escalas (Braden, Glasgow)', icon: FileText },
-        { id: 'terminology', label: 'Terminología Médica', icon: BookA },
-        { id: 'reminders', label: 'Recordatorios & Exámenes', icon: Bell },
-        { id: 'life', label: 'Bienestar, Hábitos & Foco', icon: Heart }
+        { id: 'scales', label: 'Escalas (Norton, EVA, Braden)', icon: FileText },
+        { id: 'terminology', label: 'Terminología Médica', icon: BookA }
+      ]
+    },
+    {
+      title: 'VIDA DIARIA & ESTUDIANTE',
+      items: [
+        { id: 'travel', label: 'Viajes Toledo–Granada', icon: Car },
+        { id: 'emergency', label: 'Emergencias 112 & Ubicación', icon: ShieldAlert },
+        { id: 'vault', label: 'Bóveda DNI, Citas & Salud', icon: FolderLock },
+        { id: 'reminders', label: 'Agenda & Plazos del Curso', icon: Bell },
+        { id: 'life', label: 'Gastos, Menús & Pomodoro', icon: Heart }
       ]
     }
   ];

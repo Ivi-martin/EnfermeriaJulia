@@ -240,3 +240,209 @@ export interface TutorChatMessage {
   timestamp: string;
   tutorPersona: string;
 }
+
+// -------------------------------------------------------------
+// A. Atajos Rápidos
+// -------------------------------------------------------------
+export interface QuickLink {
+  id: string;
+  name: string;
+  category: 'uclm' | 'viajes' | 'estudio' | 'salud' | 'utilidades';
+  url: string;
+  description: string;
+  badge?: string;
+  iconName?: string;
+  isCustom?: boolean;
+}
+
+// -------------------------------------------------------------
+// B. Estudio Avanzado
+// -------------------------------------------------------------
+export interface SpacedCardReview {
+  id: string;
+  questionId: string;
+  box: 1 | 2 | 3 | 4; // 1: Hoy, 2: +1 día, 3: +3 días, 4: +7 días (dominada)
+  intervalDays: number;
+  repetitions: number;
+  lastReviewedDate?: string;
+  nextReviewDate: string;
+}
+
+export interface StudyPlanGoal {
+  id: string;
+  examId?: string;
+  subject: string;
+  examDate: string;
+  totalTopics: number;
+  hoursPerDay: number;
+  completedTopics: number[];
+  schedule: {
+    dayIndex: number;
+    date: string;
+    action: string;
+    isReview?: boolean;
+    done: boolean;
+  }[];
+  createdAt: string;
+}
+
+export interface SavedNoteSummary {
+  id: string;
+  title: string;
+  subject: string;
+  rawText: string;
+  executiveSummary: string;
+  keyConcepts: string[];
+  normalValuesAndTables?: string;
+  clinicalMnemonics: string[];
+  typicalExamQuestions: string[];
+  pocketTip?: string;
+  createdAt: string;
+}
+
+export interface VirtualPatientCase {
+  id: string;
+  title: string;
+  difficulty: 'Básico' | 'Intermedio' | 'Avanzado';
+  category: string;
+  summary: string;
+  patient: {
+    name: string;
+    age: number;
+    gender: 'Mujer' | 'Hombre';
+    bed: string;
+    service: string;
+    allergies: string[];
+    history: string[];
+    chiefComplaint: string;
+    initialVitals: {
+      bp: string;
+      hr: number;
+      rr: number;
+      spo2: number;
+      temp: number;
+      painEva: number;
+      glycemia?: number;
+    };
+  };
+  stages: {
+    stageIndex: number;
+    scenarioText: string;
+    vitals: {
+      bp: string;
+      hr: number;
+      rr: number;
+      spo2: number;
+      temp: number;
+      painEva: number;
+    };
+    recommendedActions: string[];
+    criticalPitfalls: string[];
+    teacherDebrief: string;
+  }[];
+}
+
+// -------------------------------------------------------------
+// C. Enfermería (CIMA, Escalas, RCP, Anatomía, NANDA)
+// -------------------------------------------------------------
+export interface CimaMedicamento {
+  nregistro: string;
+  nombre: string;
+  pactivos: string;
+  labtitular: string;
+  cpst?: boolean; // Con receta médica
+  comerc?: boolean; // Comercializado
+  triangulo?: boolean; // Seguimiento adicional
+  huerfano?: boolean;
+  fotos?: { tipo: string; url: string }[];
+  viasAdministracion?: { nombre: string }[];
+  formaFarmaceutica?: { nombre: string };
+  dosis?: string;
+  tieneFichaTecnica?: boolean;
+  tieneProspecto?: boolean;
+  urlFichaTecnica?: string;
+  urlProspecto?: string;
+}
+
+export interface NandaItem {
+  code: string;
+  domain: string;
+  domainNumber: number;
+  class: string;
+  label: string;
+  definition: string;
+  relatedFactors: string[];
+  definingCharacteristics: string[];
+  nocSuggestions: { code: string; label: string; indicators: string[] }[];
+  nicSuggestions: { code: string; label: string; activities: string[] }[];
+}
+
+// -------------------------------------------------------------
+// D. Vida Diaria (Viajes, Presupuesto, Maleta, Piso, Documentos)
+// -------------------------------------------------------------
+export interface LuggageCheckItem {
+  id: string;
+  name: string;
+  category: 'Ropa & Aseo' | 'Estudio & Tecnología' | 'Salud & Documentos' | 'Casa & Tuppers';
+  tripType: 'weekend' | 'vacation' | 'all';
+  checked: boolean;
+}
+
+export interface ExpenseSplitItem {
+  id: string;
+  concept: string;
+  title?: string;
+  amount: number;
+  paidBy: string; // 'Julia', 'Marta', 'Lucía'
+  splitWith: string[]; // ['Julia', 'Marta', 'Lucía']
+  splitAmong?: string[];
+  category: 'Alquiler' | 'Suministros (Luz/Gas/Agua)' | 'Internet/WiFi' | 'Compra Común' | 'Otros';
+  date: string;
+  settled: boolean;
+}
+
+export interface DocumentVaultItem {
+  id: string;
+  type: 'dni' | 'tarjeta_sanitaria' | 'contrato_piso' | 'carnet_uclm' | 'otro';
+  title: string;
+  identifierNumber: string;
+  holderName: string;
+  issueDate?: string;
+  expiryDate?: string;
+  issuingAuthority?: string;
+  notes?: string;
+  alertDaysBefore?: number;
+}
+
+export interface PersonalMedication {
+  id: string;
+  name: string;
+  dose: string;
+  schedule: string;
+  notes?: string;
+  active: boolean;
+  lastTakenDate?: string;
+}
+
+export interface PersonalAppointment {
+  id: string;
+  title: string;
+  doctorOrCenter: string;
+  date: string;
+  time: string;
+  location: string;
+  specialty: string;
+  notes?: string;
+  completed: boolean;
+}
+
+export interface CourseDeadline {
+  id: string;
+  title: string;
+  category: 'Becas' | 'Matrícula' | 'Prácticas' | 'Exámenes' | 'UCLM';
+  startDate: string;
+  endDate: string;
+  description: string;
+  officialUrl?: string;
+  urgent?: boolean;
+}

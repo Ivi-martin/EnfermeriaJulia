@@ -23,6 +23,14 @@ import { ScalesView } from './views/ScalesView';
 import { SubjectsView } from './views/SubjectsView';
 import { ToolsView } from './views/ToolsView';
 import { LifeView } from './views/LifeView';
+import { ShortcutsView } from './views/ShortcutsView';
+import { ClinicalCasesView } from './views/ClinicalCasesView';
+import { CPRView } from './views/CPRView';
+import { AnatomyView } from './views/AnatomyView';
+import { TravelView } from './views/TravelView';
+import { EmergencyView } from './views/EmergencyView';
+import { VaultView } from './views/VaultView';
+import { CimaDrugSearchView } from './views/CimaDrugSearchView';
 import { Footer } from './components/Footer';
 import { useDemoMode, setDemoMode, DEMO_BLOCKED_EVENT } from './hooks/useCampusStore';
 
@@ -56,6 +64,8 @@ export default function App() {
     switch (currentPage) {
       case 'today':
         return <TodayView onNavigate={setCurrentPage} />;
+      case 'shortcuts':
+        return <ShortcutsView />;
       case 'uclm':
         return <UCLMView />;
       case 'academy':
@@ -66,10 +76,24 @@ export default function App() {
         return <ECOEView />;
       case 'pharmacologyPro':
         return <PharmacologyProView />;
+      case 'cima':
+        return <CimaDrugSearchView />;
       case 'practice360':
         return <Practice360View />;
       case 'tutorAI':
         return <TutorAIView />;
+      case 'clinicalCases':
+        return <ClinicalCasesView />;
+      case 'cpr':
+        return <CPRView />;
+      case 'anatomy':
+        return <AnatomyView />;
+      case 'travel':
+        return <TravelView />;
+      case 'emergency':
+        return <EmergencyView />;
+      case 'vault':
+        return <VaultView />;
       case 'pharmacology':
         return <PharmacologyProView />;
       case 'dosage':

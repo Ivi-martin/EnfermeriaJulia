@@ -3,6 +3,13 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import dotenv from 'dotenv';
 import { handleTutorRequest, geminiConfigured } from './server/tutor.ts';
+import {
+  generateStudyMaterials,
+  handleClinicalCaseStep,
+  generateCitations,
+  summarizeNursingNotes,
+  cleanClassTranscript,
+} from './server/aiServices.ts';
 
 dotenv.config();
 
@@ -17,6 +24,36 @@ app.post('/api/ai/tutor', async (req, res) => {
   res.status(status).json(body);
 });
 
+// Generador de tests y flashcards con IA
+app.post('/api/ai/generate-study', async (req, res) => {
+  const result = await generateStudyMaterials(req.body);
+  res.json(result);
+});
+
+// Simulador de Casos Clínicos con IA
+app.post('/api/ai/clinical-case', async (req, res) => {
+  const result = await handleClinicalCaseStep(req.body);
+  res.json(result);
+});
+
+// Generador de Citas Vancouver & APA 7
+app.post('/api/ai/citations', async (req, res) => {
+  const result = await generateCitations(req.body);
+  res.json(result);
+});
+
+// Resumen de apuntes con IA
+app.post('/api/ai/summarize', async (req, res) => {
+  const result = await summarizeNursingNotes(req.body);
+  res.json(result);
+});
+
+// Limpieza de transcripciones de clase
+app.post('/api/ai/transcribe', async (req, res) => {
+  const result = await cleanClassTranscript(req.body);
+  res.json(result);
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -24,6 +61,12 @@ app.get('/api/health', (req, res) => {
     app: 'Campus Enfermería Toledo 2.0',
     geminiConfigured: geminiConfigured(),
   });
+});
+
+// Endpoint directo para descargar el parche .patch
+app.get('/api/download-patch', (req, res) => {
+  const patchPath = path.resolve(process.cwd(), 'actualizacion-completa-enfermeria-julia.patch');
+  res.download(patchPath, 'actualizacion-completa-enfermeria-julia.patch');
 });
 
 // Mount Vite or static dist
