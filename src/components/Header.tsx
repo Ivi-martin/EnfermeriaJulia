@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, Database } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
@@ -28,7 +28,15 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   scales: { title: 'Escalas de Valoración', subtitle: 'Braden, Glasgow y Barthel' },
   subjects: { title: 'Plan de Estudios', subtitle: '1.º curso Grado en Enfermería' },
   tools: { title: 'PAE & SBAR', subtitle: 'Metodología y constantes vitales' },
-  life: { title: 'Bienestar & Hábitos', subtitle: 'Modo foco, hábitos y notas' }
+  life: { title: 'Bienestar & Hábitos', subtitle: 'Modo foco, hábitos y notas' },
+  vault: { title: 'Bóveda Personal & Seguridad', subtitle: 'Documentos, medicación, citas y copia de seguridad' },
+  shortcuts: { title: 'Atajos & Enlaces Rápidos', subtitle: 'UCLM, viajes, becas y herramientas' },
+  clinicalCases: { title: 'Casos Clínicos Simulados', subtitle: 'Decisiones clínicas y constantes dinámicas' },
+  cpr: { title: 'Protocolos RCP / SVA', subtitle: 'Algoritmos ERC 2021-2025 y metrónomo 105 bpm' },
+  anatomy: { title: 'Anatomía Interactiva', subtitle: 'Pulsos, auscultación y punción Hochstetter' },
+  travel: { title: 'Viajes Toledo ↔ Granada', subtitle: 'BlaBlaCar, Alsa y checklist de maleta' },
+  emergency: { title: 'Emergencias 112 & Familia', subtitle: 'Botón de auxilio y ubicación GPS' },
+  cima: { title: 'Buscador Oficial CIMA AEMPS', subtitle: 'Fichas técnicas y prospectos autorizados' }
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -99,6 +107,15 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="hidden md:block">
           <PWAInstallButton />
         </div>
+
+        {/* Quick button to Backup / Restore (Vault) */}
+        <button
+          onClick={() => onNavigate('vault')}
+          className="p-2 text-stone-500 hover:text-emerald-800 rounded-xl hover:bg-stone-100 transition relative"
+          title="Copia de Seguridad (Exportar / Importar tus datos en JSON)"
+        >
+          <Database className="w-4 h-4 text-emerald-700" />
+        </button>
 
         {/* Quick button to Reminders */}
         <button

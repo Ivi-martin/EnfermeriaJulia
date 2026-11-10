@@ -989,9 +989,32 @@ export function useCampusStore() {
     }));
   };
 
+  const exportBackup = (): string => {
+    return JSON.stringify(state, null, 2);
+  };
+
+  const importBackup = (jsonString: string): { success: boolean; error?: string } => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!parsed || typeof parsed !== 'object') {
+        return { success: false, error: 'El archivo no contiene un formato JSON válido.' };
+      }
+      const loaded = loadSavedState(JSON.stringify(parsed));
+      if (!demoActive) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
+      }
+      setState(loaded);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Error al procesar el archivo de copia de seguridad.' };
+    }
+  };
+
   return {
     state,
     updateState,
+    exportBackup,
+    importBackup,
     addDrug,
     removeDrug,
     addExam,
@@ -1043,3 +1066,4 @@ export function useCampusStore() {
     deletePersonalAppointment,
   };
 }
+
