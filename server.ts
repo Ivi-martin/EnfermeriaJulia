@@ -63,11 +63,53 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Endpoint directo para descargar el parche .patch
-app.get('/api/download-patch', (req, res) => {
-  const patchPath = path.resolve(process.cwd(), 'actualizacion-completa-enfermeria-julia.patch');
-  res.download(patchPath, 'actualizacion-completa-enfermeria-julia.patch');
-});
+// Endpoint directo para forzar la descarga del parche .patch en cualquier navegador
+const servePatch = (req: express.Request, res: express.Response) => {
+  const patchPath = path.resolve(process.cwd(), 'enfermeria-julia-v2.patch');
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', 'attachment; filename="enfermeria-julia-v2.patch"');
+  res.sendFile(patchPath);
+};
+
+app.get('/enfermeria-julia-v2.patch', servePatch);
+app.get('/descargar-parche', servePatch);
+app.get('/descargar-parche-v2', servePatch);
+app.get('/parche', servePatch);
+app.get('/api/download-patch', servePatch);
+app.get('/actualizacion-completa-enfermeria-julia.patch', servePatch);
+
+// Endpoint directo para ver y descargar la Guía de Usuario interactiva de Julia
+const serveGuide = (req: express.Request, res: express.Response) => {
+  const guidePath = path.resolve(process.cwd(), 'public', 'guia-usuario-julia.html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(guidePath);
+};
+
+const downloadGuide = (req: express.Request, res: express.Response) => {
+  const guidePath = path.resolve(process.cwd(), 'public', 'guia-usuario-julia.html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="guia-usuario-julia.html"');
+  res.sendFile(guidePath);
+};
+
+app.get('/guia', serveGuide);
+app.get('/manual', serveGuide);
+app.get('/guia-usuario', serveGuide);
+app.get('/descargar-guia', downloadGuide);
+
+// Endpoint directo para descargar todo el proyecto completo en un único archivo ZIP
+const serveZip = (req: express.Request, res: express.Response) => {
+  const zipPath = path.resolve(process.cwd(), 'public', 'enfermeria-julia-completa.zip');
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="enfermeria-julia-completa.zip"');
+  res.sendFile(zipPath);
+};
+
+app.get('/enfermeria-julia-completa.zip', serveZip);
+app.get('/descargar-zip', serveZip);
+app.get('/descargar-codigo-completo.zip', serveZip);
+
+
 
 // Mount Vite or static dist
 async function startServer() {

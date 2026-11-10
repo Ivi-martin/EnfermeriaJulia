@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guía Completa de Usuario · Campus Enfermería Toledo · Para Julia</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2d553e;
+      --primary-dark: #1b3827;
+      --primary-light: #e8f2ec;
+      --primary-accent: #3da36b;
+      --surface: #ffffff;
+      --background: #f6f8f5;
+      --text-main: #19251e;
+      --text-muted: #5d6e64;
+      --border: #dbe4dc;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 24px rgba(45,85,62,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--background);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    aside.guide-nav {
+      width: 320px;
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .nav-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .nav-brand-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--primary);
+      color: white;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .nav-brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.2;
+    }
+
+    .nav-brand-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-search-box {
+      position: relative;
+    }
+
+    .nav-search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #fbfcfb;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .nav-search-input:focus {
+      border-color: var(--primary-accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(61,163,107,0.15);
+    }
+
+    .nav-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .nav-items-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+    }
+
+    .nav-group-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 12px 10px 6px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+
+    .nav-link.active {
+      font-weight: 700;
+    }
+
+    .nav-link-badge {
+      margin-left: auto;
+      font-size: 10px;
+      background: rgba(45,85,62,0.1);
+      color: var(--primary-dark);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    /* Main Content */
+    main.guide-main {
+      flex: 1;
+      padding: 40px 48px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Hero / Dedicated Card */
+    .hero-card {
+      background: linear-gradient(135deg, #1b3827 0%, #2d553e 60%, #152c1e 100%);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 36px;
+    }
+
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      bottom: -40px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(61,163,107,0.2) 0%, transparent 70%);
+      pointer-events-none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: #e2ede6;
+      max-width: 720px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .hero-photo-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(0,0,0,0.2);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-top: 20px;
+    }
+
+    .hero-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: var(--radius-sm);
+      object-cover: cover;
+      border: 2px solid #57cc8a;
+      flex-shrink: 0;
+    }
+
+    .hero-avatar-quote {
+      font-size: 13px;
+      font-style: italic;
+      color: #f0f7f3;
+      line-height: 1.5;
+    }
+
+    .hero-avatar-sig {
+      display: block;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 12px;
+      margin-top: 4px;
+      color: #8ce3b2;
+    }
+
+    /* Fast Action Chips Bar */
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 30px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--primary-accent);
+      color: var(--primary-dark);
+    }
+
+    .filter-chip.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Modules Section */
+    .guide-section {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s;
+    }
+
+    .guide-section:hover {
+      border-color: #c4d4c7;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .section-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.3px;
+    }
+
+    .section-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Visual Mockups & Screen Diagrams */
+    .screen-mockup {
+      background: #fbfdfb;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #edf2ee;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .mockup-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12px;
+    }
+
+    .mockup-card strong {
+      display: block;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    /* Steps list */
+    .steps-container {
+      margin: 24px 0;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .step-badge {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content strong {
+      display: block;
+      font-size: 14px;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Callout & Tips Boxes */
+    .tip-box {
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .tip-box-dad {
+      background: #fff8f0;
+      border: 1px solid #fed7aa;
+      color: #7c2d12;
+    }
+
+    .tip-box-clinical {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+    }
+
+    .tip-box-warning {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #7f1d1d;
+    }
+
+    .tip-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    table.guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    table.guide-table th {
+      background: #f7faf8;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.guide-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #edf2ee;
+      color: var(--text-main);
+    }
+
+    table.guide-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Print & Floating controls */
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-print {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-print:hover {
+      background: #f7faf8;
+      border-color: var(--primary-accent);
+    }
+
+    .btn-launch {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 2px 8px rgba(45,85,62,0.2);
+    }
+
+    .btn-launch:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-container {
+        flex-direction: column;
+      }
+      aside.guide-nav {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      main.guide-main {
+        padding: 24px 20px;
+      }
+      .hero-title {
+        font-size: 26px;
+      }
+      .nav-items-scroll {
+        max-height: 250px;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      aside.guide-nav, .top-actions, .filter-chips, .nav-search-box {
+        display: none !important;
+      }
+      body, main.guide-main {
+        background: #ffffff !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .guide-section {
+        border: 1px solid #ccc !important;
+        page-break-inside: avoid;
+        margin-bottom: 24px !important;
+        box-shadow: none !important;
+      }
+      .hero-card {
+        background: #2d553e !important;
+        color: white !important;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ASIDE: Navigation & Search -->
+  <aside class="guide-nav">
+    <div class="nav-header">
+      <div class="nav-brand">
+        <div class="nav-brand-icon">✚</div>
+        <div>
+          <div class="nav-brand-title">Campus Enfermería</div>
+          <div class="nav-brand-sub">Manual para Julia · UCLM</div>
+        </div>
+      </div>
+
+      <div class="nav-search-box">
+        <span class="nav-search-icon">🔍</span>
+        <input type="text" id="guideSearch" class="nav-search-input" placeholder="Buscar herramienta, escala, fármaco...">
+      </div>
+    </div>
+
+    <div class="nav-items-scroll" id="navItemsList">
+      <div class="nav-group-title">Introducción & Configuración</div>
+      <a href="#intro" class="nav-link active"><span>❤️</span> Carta de Papá a Julia</a>
+      <a href="#pwa" class="nav-link"><span>📱</span> Instalar la App en tu Móvil</a>
+      <a href="#demo" class="nav-link"><span>👀</span> Modo Demo vs. Datos Reales</a>
+
+      <div class="nav-group-title">Inicio & Portales</div>
+      <a href="#m-today" class="nav-link"><span>☀️</span> Mi Día (Portada & Mensaje)</a>
+      <a href="#m-shortcuts" class="nav-link"><span>🧭</span> Panel Atajos (UCLM, Alsa, IA)</a>
+
+      <div class="nav-group-title">Los 7 Módulos Oficiales</div>
+      <a href="#m-uclm" class="nav-link"><span>🎓</span> 1. Mi UCLM (Plan 4 Cursos)</a>
+      <a href="#m-academy" class="nav-link"><span>🧠</span> 2. Academia & Exámenes (IA)</a>
+      <a href="#m-lab" class="nav-link"><span>🧪</span> 3. Laboratorio, Tubos & ECG</a>
+      <a href="#m-ecoe" class="nav-link"><span>🩺</span> 4. Simulación ECOE (10 Estaciones)</a>
+      <a href="#m-pharma" class="nav-link"><span>💊</span> 5. Farmacología PRO & CIMA</a>
+      <a href="#m-practice" class="nav-link"><span>⏱️</span> 6. Prácticas 360 & Gibbs</a>
+      <a href="#m-tutor" class="nav-link"><span>🤖</span> 7. Tutor IA & Citas Vancouver</a>
+
+      <div class="nav-group-title">Clínica & Cuidados</div>
+      <a href="#m-clinicalcases" class="nav-link"><span>🏨</span> Casos Clínicos Simulados (IA)</a>
+      <a href="#m-cpr" class="nav-link"><span>⚡</span> Protocolos RCP / SVA (105 bpm)</a>
+      <a href="#m-anatomy" class="nav-link"><span>🫀</span> Anatomía Interactiva & Pulsos</a>
+      <a href="#m-pae" class="nav-link"><span>📋</span> PAE & NANDA-NOC-NIC</a>
+      <a href="#m-hospitalcheck" class="nav-link"><span>🏥</span> Checklist de Entrada al HUT</a>
+      <a href="#m-manuals" class="nav-link"><span>📖</span> Manuales Procedimientos Offline</a>
+      <a href="#m-scales" class="nav-link"><span>📊</span> Escalas (Norton, EVA, Braden)</a>
+      <a href="#m-terms" class="nav-link"><span>📚</span> Terminología Médica</a>
+
+      <div class="nav-group-title">Vida Diaria en Toledo</div>
+      <a href="#m-travel" class="nav-link"><span>🚗</span> Viajes a Granada & Maleta</a>
+      <a href="#m-emergency" class="nav-link"><span>🚨</span> Emergencias 112 & Ubicación</a>
+      <a href="#m-vault" class="nav-link"><span>🗄️</span> Bóveda DNI, Citas & Salud</a>
+      <a href="#m-calendar" class="nav-link"><span>📅</span> Calendario .ics & Plazos MEC</a>
+      <a href="#m-life" class="nav-link"><span>🍝</span> Gastos, Menús & Pomodoro</a>
+    </div>
+  </aside>
+
+  <!-- MAIN: Interactive Guide Content -->
+  <main class="guide-main">
+
+    <!-- Top Action Bar -->
+    <div class="top-actions">
+      <button class="btn-action btn-print" onclick="window.print()">
+        <span>🖨️</span> Imprimir o Guardar en PDF
+      </button>
+      <a href="/" class="btn-action btn-launch">
+        <span>🚀</span> Abrir la Aplicación de Julia
+      </a>
+    </div>
+
+    <!-- Hero Card -->
+    <section class="hero-card" id="intro">
+      <div class="hero-badge">
+        <span>✚</span> Guía Oficial de Uso · Campus Enfermería Toledo 2.0
+      </div>
+      <h1 class="hero-title">Guía de la Aplicación para mi Hija Julia</h1>
+      <p class="hero-sub">
+        Esta aplicación no es un simple programa de ordenador: es tu compañera de viaje durante los 4 años del Grado en Enfermería en la UCLM (Campus Fábrica de Armas de Toledo). Está diseñada a tu medida para que tengas a mano desde los fármacos del hospital y las analíticas, hasta el billete de autobús a Granada, las cuentas del piso y un botón directo para avisarme de que has llegado bien.
+      </p>
+
+      <div class="hero-photo-wrapper">
+        <img src="./assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png" alt="Julia H. Carreras" class="hero-avatar">
+        <div>
+          <div class="hero-avatar-quote">
+            «Julia, estudia con pasión, aprende con rigor y no olvides que cuidar a los demás empieza por cuidarte a ti misma. Aquí tienes reunido todo lo que vas a necesitar.»
+          </div>
+          <span class="hero-avatar-sig">— Con todo mi cariño, tu padre · Toledo / Granada</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Chips for Fast Exploration -->
+    <div class="filter-chips">
+      <button class="filter-chip active" data-filter="all">Todas las secciones (21)</button>
+      <button class="filter-chip" data-filter="modules">Los 7 Módulos UCLM</button>
+      <button class="filter-chip" data-filter="clinic">Enfermería & Clínica</button>
+      <button class="filter-chip" data-filter="study">Estudio con IA</button>
+      <button class="filter-chip" data-filter="life">Vida Diaria & Granada</button>
+    </div>
+
+    <!-- SECTION: PWA Installation -->
+    <article class="guide-section" id="pwa" data-category="intro">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">INSTALACIÓN</span>
+            <span class="section-tag">PWA · Sin Tiendas de Apps</span>
+          </div>
+          <h2 class="section-title">Cómo Instalar la App en tu Teléfono Móvil</h2>
+          <p class="section-desc">Instálala en tu iPhone o Android para que funcione como una aplicación nativa, a pantalla completa y sin gastar datos en el hospital.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <strong>Si tienes iPhone (Safari):</strong>
+            <p>Abre el enlace de la app en Safari. Pulsa el botón <strong>«Compartir»</strong> (el cuadrito con la flecha hacia arriba en la barra inferior) y elige la opción <strong>«Añadir a pantalla de inicio»</strong>. Tendrá su propio icono verde con la cruz enfermera.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <strong>Si tienes Android (Chrome):</strong>
+            <p>Abre la app en Chrome. Aparecerá un aviso que dice <em>«Añadir Campus Enfermería a la pantalla de inicio»</em> o pulsa los 3 puntos superiores y selecciona <strong>«Instalar aplicación»</strong>.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <strong>Funcionamiento Sin Conexión (Offline):</strong>
+            <p>La aplicación guarda en la memoria interna de tu móvil los manuales de técnicas, las escalas, las constantes y el vademécum. Aunque estés en el sótano del Hospital Universitario de Toledo sin cobertura ni WiFi, la app seguirá abriendo.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: DEMO MODE -->
+    <article class="guide-section" id="demo" data-category="intro">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MODOS</span>
+            <span class="section-tag">Seguridad de Datos</span>
+          </div>
+          <h2 class="section-title">Modo Demo vs. Tus Datos Reales</h2>
+          <p class="section-desc">Cómo explorar la aplicación sin miedo a borrar nada.</p>
+        </div>
+      </div>
+
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">
+        En la parte inferior del menú lateral verás un botón que dice <strong>«👀 Demo»</strong>. Su funcionamiento es muy sencillo:
+      </p>
+
+      <div class="mockup-grid">
+        <div class="mockup-card" style="border-left: 4px solid #3da36b;">
+          <strong>Tus Datos Reales (Por defecto)</strong>
+          <p style="font-size: 12px; color: var(--text-muted);">
+            Todo lo que escribas (tus exámenes, tus reflexiones de Gibbs, tus notas, tus gastos y tus citas) se guarda en tu propio móvil (LocalStorage). Nadie más lo ve y no se borra.
+          </p>
+        </div>
+        <div class="mockup-card" style="border-left: 4px solid #f59e0b;">
+          <strong>Modo Demo (Solo Lectura)</strong>
+          <p style="font-size: 12px; color: var(--text-muted);">
+            Te muestra la app llena de ejemplos (exámenes ficticios, turnos simulados, fármacos de prueba). Es ideal si quieres enseñarle la app a una compañera de clase sin mostrar tus notas reales.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MI DÍA -->
+    <article class="guide-section" id="m-today" data-category="modules">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">INICIO</span>
+            <span class="section-tag">Tu Portada Diaria</span>
+          </div>
+          <h2 class="section-title">Mi Día · Portada y Mensaje Especial</h2>
+          <p class="section-desc">Tu punto de partida cada mañana al despertarte en Toledo.</p>
+        </div>
+      </div>
+
+      <div class="screen-mockup">
+        <div class="mockup-header">Elementos de tu portada diaria</div>
+        <div class="mockup-grid">
+          <div class="mockup-card">
+            <strong>💌 Mensaje de Casa del Día</strong>
+            <span>Cambia automáticamente cada medianoche con palabras de ánimo, consejos de estudio y recuerdos de la familia.</span>
+          </div>
+          <div class="mockup-card">
+            <strong>📅 Próximos Exámenes & Turnos</strong>
+            <span>Cuenta atrás automática: te dice si un parcial es <em>«¡HOY!»</em>, <em>«¡Mañana!»</em> o en cuántos días cae.</span>
+          </div>
+          <div class="mockup-card">
+            <strong>🔋 Check-in de Ánimo y Energía</strong>
+            <span>Pulsa un emoji (de 😔 a 😄) y tu batería del día. Cuidar de los pacientes exige que tú estés bien.</span>
+          </div>
+          <div class="mockup-card">
+            <strong>🎒 Bolsillo de Prácticas</strong>
+            <span>Contador de material listo: fonendoscopio, tijeras, reloj de solapa y linterna.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-box tip-box-clinical">
+        <span class="tip-icon">💡</span>
+        <div>
+          <strong>Regla de oro de enfermería:</strong>
+          Si alguna vez en el hospital o en el centro de salud tienes una duda sobre una dosis, una vía o un paciente: <em>pregunta siempre a tu enfermera tutora</em>. Ningún profesional te juzgará por preguntar; preguntar salva vidas.
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: PANEL ATAJOS -->
+    <article class="guide-section" id="m-shortcuts" data-category="life">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">ACCESOS</span>
+            <span class="section-tag">Panel Atajos</span>
+          </div>
+          <h2 class="section-title">Panel Atajos Rápidos (Todo a un clic)</h2>
+          <p class="section-desc">Evita tener 40 pestañas abiertas en el navegador del móvil.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="guide-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Servicio</th>
+              <th>Para qué te sirve</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>UCLM & Becas</strong></td>
+              <td>Campus Virtual Moodle, appUCLM, prest.on, Sede Becas MEC</td>
+              <td>Ver las tareas de clase, reservar portátiles de la biblioteca y consultar el estado de tu beca de residencia.</td>
+            </tr>
+            <tr>
+              <td><strong>Viajes Toledo–Granada</strong></td>
+              <td>BlaBlaCar, Alsa, Renfe Avant+AVE</td>
+              <td>Buscar viajes directos para el fin de semana a Granada o combinar el Avant a Madrid con el AVE a Granada.</td>
+            </tr>
+            <tr>
+              <td><strong>Estudio & IA</strong></td>
+              <td>NotebookLM, Anki, Quizlet, Zotero, PubMed</td>
+              <td>Crear cuadernos de estudio con IA, repasar tarjetas de memoria y buscar artículos científicos indexados.</td>
+            </tr>
+            <tr>
+              <td><strong>Salud & Bienestar</strong></td>
+              <td>PreBurn UCLM, Gabinete Psicológico, Medscape</td>
+              <td>Apoyo ante el estrés de los exámenes y consultas médicas en Medscape.</td>
+            </tr>
+            <tr>
+              <td><strong>Movilidad</strong></td>
+              <td>Google Maps, Moovit Toledo, Cabify</td>
+              <td>Llegar en autobús urbano al Hospital Universitario de Toledo o a la Fábrica de Armas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-muted);">
+        <strong>¿Quieres añadir un enlace nuevo?</strong> Pulsa el botón blanco <em>«+ Añadir Mi Propio Atajo»</em>, ponle el nombre y la dirección web, y quedará guardado para siempre en tu panel.
+      </p>
+    </article>
+
+    <!-- SECTION: MODULO 1 UCLM -->
+    <article class="guide-section" id="m-uclm" data-category="modules">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 1</span>
+            <span class="section-tag">Plan Oficial UCLM</span>
+          </div>
+          <h2 class="section-title">Mi UCLM (Tu Plan de 4 Años y 240 ECTS)</h2>
+          <p class="section-desc">Estructura curricular de la Facultad de Fisioterapia y Enfermería de Toledo.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <strong>Primer Curso (Tus 10 Asignaturas - 60 ECTS):</strong>
+            <p>1.er Semestre: Anatomía Humana, Fisiología, Bioquímica, Fundamentos de Enfermería y Psicología de la Salud.<br>
+            2.º Semestre: Farmacología Básica, Nutrición y Dietética, Enfermería Comunitaria I, Estadística e Historia de la Enfermería.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <strong>Cómo marcar tu progreso:</strong>
+            <p>Haz clic en cualquier asignatura para cambiar su estado entre <em>«Matriculada»</em> o <em>«Aprobada»</em> y apuntar tu nota. El contador de créditos ECTS se recalculará automáticamente.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MODULO 2 ACADEMIA -->
+    <article class="guide-section" id="m-academy" data-category="study">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 2</span>
+            <span class="section-tag">Estudio con Inteligencia Artificial</span>
+          </div>
+          <h2 class="section-title">Academia, Tests y Flashcards con IA</h2>
+          <p class="section-desc">La herramienta más potente para aprobar los parciales a la primera.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>1. Simulador de Tests</strong>
+          <span>Practica con 4 modos: Rápido (10 preguntas), Examen cronometrado oficial, Modo Repaso de Fallos y Modo Maratón.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>2. Banco de Preguntas Editable</strong>
+          <span>Añade preguntas que hayan caído en clase, edita explicaciones o descarga/importa bancos en JSON.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>3. Repetición Espaciada (Leitner)</strong>
+          <span>Tus flashcards se ordenan en 4 cajas según tu memoria: lo que te sabes bien sale menos; lo que fallas sale a diario.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>4. Generador IA desde Apuntes</strong>
+          <span>Pega el texto de cualquier PDF o diapositiva de clase y pulsa generar: la IA creará al instante preguntas tipo test y tarjetas.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>5. Planificador desde Fechas</strong>
+          <span>Introduce la fecha de tu examen y te calculará cuántos temas y horas debes estudiar cada día para llegar sobrada.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>6. Resumidor de Apuntes con IA</strong>
+          <span>Extrae los puntos clave, tablas y precauciones clínicas de temas kilométricos.</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MODULO 3 LABORATORIO -->
+    <article class="guide-section" id="m-lab" data-category="modules">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 3</span>
+            <span class="section-tag">Práctica Clínica</span>
+          </div>
+          <h2 class="section-title">Laboratorio Clínico, Tubos de Sangre & ECG</h2>
+          <p class="section-desc">Para no dudar nunca delante del paciente en la sala de extracciones.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">🩸</div>
+          <div class="step-content">
+            <strong>Orden Oficial de Llenado de Tubos (Evita la contaminación cruzada de aditivos):</strong>
+            <p><strong>1.º</strong> Frascos de Hemocultivos (aerobio y anaerobio) → <strong>2.º</strong> Tubo Azul claro (Citrato sódico / Coagulación) → <strong>3.º</strong> Tubo Rojo/Amarillo (Suero / Bioquímica) → <strong>4.º</strong> Tubo Verde (Heparina) → <strong>5.º</strong> Tubo Morado (EDTA / Hemograma) → <strong>6.º</strong> Tubo Gris (Glucosa).</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">📈</div>
+          <div class="step-content">
+            <strong>Simulador de ECG y Colocación de Precordiales (V1 a V6):</strong>
+            <p><strong>V1:</strong> 4.º espacio intercostal derecho junto al esternón.<br>
+            <strong>V2:</strong> 4.º espacio intercostal izquierdo junto al esternón.<br>
+            <strong>V3:</strong> Entre V2 y V4.<br>
+            <strong>V4:</strong> 5.º espacio intercostal izquierdo, línea medioclavicular.<br>
+            <strong>V5:</strong> 5.º espacio intercostal izquierdo, línea axilar anterior.<br>
+            <strong>V6:</strong> 5.º espacio intercostal izquierdo, línea medioaxilar.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MODULO 4 ECOE -->
+    <article class="guide-section" id="m-ecoe" data-category="modules">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 4</span>
+            <span class="section-tag">Evaluación de Competencias</span>
+          </div>
+          <h2 class="section-title">Simulación ECOE (10 Estaciones Clínicas)</h2>
+          <p class="section-desc">Entrena la prueba práctica con rúbricas de evaluación de profesores de la UCLM.</p>
+        </div>
+      </div>
+
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">
+        La ECOE evalúa lo que haces en 7 minutos ante un maniquí o actor. En este módulo tienes:
+      </p>
+
+      <ul style="font-size: 13px; color: var(--text-muted); margin-left: 20px; line-height: 1.8;">
+        <li><strong>Temporizador oficial de 7 minutos</strong> con aviso al faltar 1 minuto.</li>
+        <li><strong>Lista de comprobación paso a paso:</strong> Preparación, ejecución técnica y despedida.</li>
+        <li><strong>Detección de Fallos Críticos (⚠️):</strong> Olvidar desinfectarse las manos, no comprobar la pulsera identificativa del paciente o contaminar un campo estéril suspende automáticamente la estación.</li>
+      </ul>
+    </article>
+
+    <!-- SECTION: MODULO 5 FARMACOLOGIA -->
+    <article class="guide-section" id="m-pharma" data-category="clinic">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 5</span>
+            <span class="section-tag">Seguridad del Paciente</span>
+          </div>
+          <h2 class="section-title">Farmacología PRO & Buscador Oficial CIMA</h2>
+          <p class="section-desc">Vademécum de urgencias, cálculo de goteros y prospectos de la AEMPS.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>🔍 Buscador CIMA (AEMPS Oficial)</strong>
+          <span>Consulta en tiempo real cualquier medicamento comercializado en España con su ficha técnica oficial y prospecto en PDF.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🔀 Matriz de Compatibilidad en Y</strong>
+          <span>Selecciona dos fármacos intravenosos (ej. Fentanilo + Midazolam) y comprueba si precipitan o si pueden pasar por la misma vía.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>💧 Calculadora de Goteros y Perfusión</strong>
+          <span>Calcula gotas/minuto (Volumen × 20 / tiempo en min), microgotas/minuto y velocidad de bomba en ml/hora sin equivocarte.</span>
+        </div>
+      </div>
+
+      <div class="tip-box tip-box-warning">
+        <span class="tip-icon">🛑</span>
+        <div>
+          <strong>La regla de los 10 Correctos:</strong>
+          1. Paciente correcto · 2. Medicamento correcto · 3. Dosis correcta · 4. Vía correcta · 5. Hora correcta · 6. Verificación de alergias · 7. Información al paciente · 8. Velocidad de infusión · 9. Registro inmediato · 10. Respuesta y seguimiento.
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MODULO 6 PRACTICAS Y GIBBS -->
+    <article class="guide-section" id="m-practice" data-category="modules">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 6</span>
+            <span class="section-tag">Prácticas Hospitalarias</span>
+          </div>
+          <h2 class="section-title">Prácticas 360 & Diario Reflexivo de Gibbs</h2>
+          <p class="section-desc">Tu pasaporte de habilidades en el Hospital Universitario de Toledo y centros de salud.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <strong>Pasaporte de Habilidades (4 Niveles):</strong>
+            <p>Marca tus competencias según vayas avanzando: <em>Pendiente → Observada → Practicada bajo supervisión → Evaluada y superada</em>.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <strong>El Ciclo de Reflexión de Gibbs (Exigido en el Practicum):</strong>
+            <p>1. ¿Qué ocurrió? (Descripción objetiva) → 2. ¿Qué sentiste? (Emociones) → 3. ¿Qué fue positivo y negativo? → 4. Análisis teórico → 5. ¿Qué más pudiste haber hecho? → 6. Plan de acción si vuelve a ocurrir.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: MODULO 7 TUTOR IA -->
+    <article class="guide-section" id="m-tutor" data-category="study">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">MÓDULO 7</span>
+            <span class="section-tag">Claustro Docente Virtual UCLM</span>
+          </div>
+          <h2 class="section-title">Tutor IA · 7 Profesores Especialistas & Citas Académicas</h2>
+          <p class="section-desc">Un claustro virtual especializado de 7 profesores con hilos de chat independientes, enfoques docentes personalizados y herramientas de citas Vancouver y APA 7.</p>
+        </div>
+      </div>
+
+      <div class="pro-tip" style="margin-bottom: 20px;">
+        <strong>💡 ¿Por qué hay 7 tutores y cómo funcionan?</strong>
+        <p>No se trata de un único asistente genérico: cada uno de los 7 tutores cuenta con un <em>System Prompt</em> (instrucción pedagógica del sistema) diferente, adaptado al programa docente del Grado en Enfermería de la UCLM en Toledo. Puedes preguntar cualquier duda a cualquiera de ellos, pero <strong>cada uno te responderá desde el prisma de su especialidad</strong>.</p>
+      </div>
+
+      <div class="table-container" style="margin-bottom: 20px;">
+        <table class="guide-table">
+          <thead>
+            <tr>
+              <th>Profesor / Especialista</th>
+              <th>Materia Clave</th>
+              <th>¿Cómo te responde y en qué te ayuda?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Dr. Martín Moreno</strong> (Anatomía Humana)</td>
+              <td>Estructuras, planos, inervación y vascularización</td>
+              <td>Estructura sus respuestas en 3 niveles: 1) Concepto Básico, 2) Detalle Universitario riguroso, y 3) Relevancia Clínica para Enfermería (puntos de punción venosa periférica, auscultación cardíaca y pulmonar, o referencias anatómicas).</td>
+            </tr>
+            <tr>
+              <td><strong>Dra. Isabel Carrerillas</strong> (Fisiología Humana)</td>
+              <td>Homeostasis, hemodinámica y neurofisiología</td>
+              <td>Te explica el <em>por qué</em> fisiológico de lo que le ocurre al paciente: potenciales de acción cardíacos, regulación por el sistema renina-angiotensina (SRAA), hipoxia, transporte de gases y correlación con las constantes vitales.</td>
+            </tr>
+            <tr>
+              <td><strong>Dr. Ivancito Moreno</strong> (Farmacología Clínica)</td>
+              <td>10 Correctos, diluciones, antídotos y seguridad</td>
+              <td>Enfoque estricto en seguridad del medicamento: cálculo de ritmos de perfusión en ml/h o gotas/min, incompatibilidades intravenosas en Y, antídotos de urgencia y monitorización de efectos secundarios.</td>
+            </tr>
+            <tr>
+              <td><strong>Dra. Laura Ratilla</strong> (Diagnóstico & Analíticas)</td>
+              <td>Analíticas, iones, gasometrías y ECG</td>
+              <td>Interpretación sistemática de hemogramas, bioquímica, iones, equilibrio ácido-base en gasometría arterial/venosa, lectura metódica de ECG de 12 derivaciones y orden oficial de llenado de tubos (CLSI).</td>
+            </tr>
+            <tr>
+              <td><strong>Dra. Luci Luci</strong> (Coordinadora ECOE)</td>
+              <td>Simulación clínica, bateas y técnica aséptica</td>
+              <td>Te entrena para las estaciones prácticas de la facultad. Es rigurosa señalando los <em>fallos críticos eliminatorios</em> (los que suspenden la estación al instante), el orden de preparación de bateas y la comunicación SBAR con el paciente.</td>
+            </tr>
+            <tr>
+              <td><strong>Prof. Ivi Moca</strong> (Fundamentos & PAE)</td>
+              <td>NANDA, NOC, NIC y Patrones de Gordon</td>
+              <td>Te enseña a pensar como enfermera: cómo pasar de la valoración por las 14 Necesidades de Virginia Henderson o patrones funcionales a la formulación de diagnósticos enfermeros en formato <strong>PES</strong> (Problema + Etiología + Signos/Síntomas).</td>
+            </tr>
+            <tr>
+              <td><strong>Prof. Pedri González</strong> (Orientador Académico)</td>
+              <td>Plan de estudios, asignaturas llave y tiempo</td>
+              <td>Tu tutor de carrera en el Campus de Toledo: te ayuda a organizar el calendario de estudio semanal, entender qué asignaturas de 1.º son llave para acceder al Practicum de 2.º y gestionar la tensión en semanas de exámenes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>💬 Hilos de Chat Independientes</strong>
+          <span>Al cambiar de tutor en la lista de la izquierda, cada profesor mantiene su propia conversación y saludo inicial personalizado. Puedes pulsar <em>«Reiniciar chat»</em> arriba a la derecha si deseas empezar una nueva consulta desde cero.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>📚 Citas Vancouver & APA 7</strong>
+          <span>En la pestaña superior «Citas & Bibliografía», pega el título o enlace de cualquier artículo científico o manual y la IA generará la cita lista para copiar y pegar en tus trabajos académicos de la UCLM.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🎙️ Transcripción & Notas de Clase</strong>
+          <span>En la pestaña «Transcripción», pega los apuntes en sucio o notas de voz tomadas en el aula y la IA los limpiará estructurándolos con esquemas, definiciones clave y perlas de examen.</span>
+        </div>
+      </div>
+    </article>
+
+
+    <!-- SECTION: RCP / SVA -->
+    <article class="guide-section" id="m-cpr" data-category="clinic">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">URGENCIAS</span>
+            <span class="section-tag">Algoritmos ERC 2021-2025</span>
+          </div>
+          <h2 class="section-title">Protocolos RCP / Soporte Vital Avanzado</h2>
+          <p class="section-desc">Metrónomo acústico integrado a 105 bpm y temporizadores de ciclo.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card" style="border-left: 4px solid #ef4444;">
+          <strong>Ritmos Desfibrilables (FV / TVSP)</strong>
+          <span>1 descarga (150-200 J bifásica) → 2 minutos de RCP inmediata sin parar → Comprobar ritmo. Adrenalina 1 mg tras la 3.ª descarga; Amiodarona 300 mg tras la 3.ª descarga.</span>
+        </div>
+        <div class="mockup-card" style="border-left: 4px solid #3b82f6;">
+          <strong>Ritmos No Desfibrilables (Asistolia / AESP)</strong>
+          <span>RCP ininterrumpida 30:2 → Adrenalina 1 mg IV/IO lo antes posible y repetir cada 3-5 minutos → Buscar causas reversibles (4H y 4T).</span>
+        </div>
+        <div class="mockup-card" style="border-left: 4px solid #10b981;">
+          <strong>Metrónomo Acústico (105 bpm)</strong>
+          <span>Pulsa el botón de sonido en la app para escuchar el ritmo exacto de masaje cardíaco recomendado por las guías internacionales (100-120 cpm).</span>
+        </div>
+      </div>
+
+      <div class="table-container" style="margin-top: 16px;">
+        <table class="guide-table">
+          <thead>
+            <tr>
+              <th>Las 4 H (Causas Reversibles)</th>
+              <th>Las 4 T (Causas Reversibles)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Hipoxia</strong> (Asegurar vía aérea y O2 al 100%)</td>
+              <td><strong>Tensión (Neumotórax a tensión)</strong> (Descompresión torácica)</td>
+            </tr>
+            <tr>
+              <td><strong>Hipovolemia</strong> (Reposición enérgica de volumen/sangre)</td>
+              <td><strong>Taponamiento cardíaco</strong> (Pericardiocentesis)</td>
+            </tr>
+            <tr>
+              <td><strong>Hipo/Hiperpotasemia</strong> y metabólicas</td>
+              <td><strong>Tóxicos</strong> (Fármacos, drogas o sobredosis)</td>
+            </tr>
+            <tr>
+              <td><strong>Hipotermia</strong> (Recalentamiento activo)</td>
+              <td><strong>Trombosis</strong> (Pulmonar masiva o coronaria)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <!-- SECTION: ANATOMIA -->
+    <article class="guide-section" id="m-anatomy" data-category="clinic">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">ANATOMÍA</span>
+            <span class="section-tag">Atlas Práctico</span>
+          </div>
+          <h2 class="section-title">Anatomía Interactiva: Pulsos & Inyección IM</h2>
+          <p class="section-desc">Puntos anatómicos de palpación y técnicas seguras de punción intramuscular.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>Pulsos Arteriales Palpables</strong>
+          <span>Carotídeo, braquial (fosa antecubital), radial (canal del pulso), femoral, poplíteo, tibial posterior y pedio dorsal.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>Focos de Auscultación Cardíaca</strong>
+          <span>Aórtico (2.º EIC derecho), Pulmonar (2.º EIC izquierdo), Tricúspide (4.º EIC paraesternal izquierdo) y Mitral (5.º EIC medioclavicular izquierdo).</span>
+        </div>
+        <div class="mockup-card">
+          <strong>Inyección Intramuscular de Hochstetter</strong>
+          <span>Zona ventroglútea: colocar la palma sobre el trocánter mayor, el índice hacia la espina ilíaca anterosuperior y el dedo corazón abierto. Punción en el centro de la 'V' (máxima seguridad, libre de ciático y vasos).</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: PAE Y NANDA -->
+    <article class="guide-section" id="m-pae" data-category="clinic">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">METODOLOGÍA</span>
+            <span class="section-tag">Proceso de Atención de Enfermería</span>
+          </div>
+          <h2 class="section-title">Constructor PAE (NANDA-NOC-NIC) & SBAR</h2>
+          <p class="section-desc">Formula diagnósticos oficiales en formato PES y realiza pases de relevo impecables.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">PES</div>
+          <div class="step-content">
+            <strong>Estructura del Diagnóstico Enfermero:</strong>
+            <p><strong>P (Problema):</strong> Etiqueta NANDA oficial (ej. [00132] Dolor agudo).<br>
+            <strong>E (Etiología):</strong> r/c (relacionado con) agentes lesivos físicos o incisión.<br>
+            <strong>S (Signos/Síntomas):</strong> m/p (manifestado por) informe verbal de EVA 7/10 y quejidos.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">SBAR</div>
+          <div class="step-content">
+            <strong>Entrega de Turno Estructurada (SBAR):</strong>
+            <p><strong>S (Situation):</strong> Paciente, cama y motivo de alerta.<br>
+            <strong>B (Background):</strong> Antecedentes y tratamiento relevante.<br>
+            <strong>A (Assessment):</strong> Constantes vitales actuales y tu valoración clínica.<br>
+            <strong>R (Recommendation):</strong> Lo que solicitas o recomiendas hacer.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: VIAJES TOLEDO-GRANADA -->
+    <article class="guide-section" id="m-travel" data-category="life">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">VIAJES</span>
+            <span class="section-tag">Toledo ↔ Granada</span>
+          </div>
+          <h2 class="section-title">Viajes a Casa & Maleta Inteligente</h2>
+          <p class="section-desc">Para organizar tus escapadas a Granada sin olvidar nada.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>🚗 BlaBlaCar Toledo–Granada</strong>
+          <span>Ruta directa habitual por la A-4 y A-44 (~3 h 45 min). Salidas habituales los viernes por la tarde desde Santa Bárbara o la Estación.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🚌 Autobús Alsa</strong>
+          <span>Línea regular con salidas desde la Estación de Autobuses de Toledo hasta la Estación de Granada.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🚄 Renfe Avant + AVE</strong>
+          <span>Avant Toledo–Madrid Atocha (33 min) + AVE Madrid–Granada (~3 h 15 min). La opción más cómoda y rápida en festivos.</span>
+        </div>
+      </div>
+
+      <div class="tip-box tip-box-dad">
+        <span class="tip-icon">🧳</span>
+        <div>
+          <strong>Checklist de maleta en la app:</strong>
+          Tienes un checklist inteligente con dos modos (<em>Fin de semana</em> o <em>Vacaciones</em>). Te recuerda meter el uniforme blanco de la UCLM, el fonendoscopio, el DNI, cargadores de móvil y los tuppers vacíos para que vuelvan llenos de comida casera.
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: EMERGENCIAS Y UBICACION -->
+    <article class="guide-section" id="m-emergency" data-category="life">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">SEGURIDAD</span>
+            <span class="section-tag">Tranquilidad Familiar</span>
+          </div>
+          <h2 class="section-title">Emergencias 112 & Compartir Ubicación WhatsApp</h2>
+          <p class="section-desc">Para que nunca te sientas sola en Toledo y nosotros estemos tranquilos.</p>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">🚨</div>
+          <div class="step-content">
+            <strong>Botón Directo al 112:</strong>
+            <p>Un botón rojo visible para llamar al teléfono de emergencias de Castilla-La Mancha en un segundo.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">📍</div>
+          <div class="step-content">
+            <strong>Botón «He llegado bien» con Ubicación GPS:</strong>
+            <p>Al pulsar el botón verde, la app obtiene tus coordenadas GPS exactas y abre un mensaje de WhatsApp directo a papá con un enlace de Google Maps y el texto: <em>«Hola, ya he llegado y estoy aquí»</em>. Ideal al llegar al piso tras el viaje.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">🏥</div>
+          <div class="step-content">
+            <strong>Teléfonos Sanitarios de Toledo:</strong>
+            <p>Urgencias Hospital Universitario de Toledo, Centro de Salud Palomarejos, Policía Local de Toledo y Farmacias de Guardia.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: BOVEDA DOCUMENTOS -->
+    <article class="guide-section" id="m-vault" data-category="life">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">BÓVEDA</span>
+            <span class="section-tag">Documentos & Citas</span>
+          </div>
+          <h2 class="section-title">Bóveda de Documentos, Medicación y Citas</h2>
+          <p class="section-desc">Ten a mano tus carnets y tus recetas siempre en el teléfono.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>🆔 Bóveda de Documentos</strong>
+          <span>Guarda los números y fechas de tu DNI, Tarjeta Sanitaria del SESCAM/SAS, carnet de estudiante UCLM y contrato de piso con aviso si van a caducar.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>💊 Medicación y Vitaminas</strong>
+          <span>Apunta las tomas diarias (ej. antihistamínicos, suplementos de hierro o vitaminas) y marca con un clic la toma de cada día.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🩺 Citas Médicas Propias</strong>
+          <span>Registra tus revisiones de dentista, médico de cabecera o podólogo en Toledo con fecha, hora y centro de salud.</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: GASTOS Y MENUS -->
+    <article class="guide-section" id="m-life" data-category="life">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">CONVIVENCIA</span>
+            <span class="section-tag">Economía & Autocuidado</span>
+          </div>
+          <h2 class="section-title">Cuentas del Piso (Tricount), Menús y Presupuesto</h2>
+          <p class="section-desc">Para vivir organizada con tus compañeras y comer rico sin gastar de más.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <div class="mockup-card">
+          <strong>👥 Reparto de Gastos del Piso</strong>
+          <span>Apunta las compras comunes (bombona de butano, papel higiénico, detergente, aceite). La app calcula automáticamente cuánto le debe quién a quién y permite saldar cuentas.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🥗 Menús Semanales Económicos (~25-30€/sem)</strong>
+          <span>5 propuestas de comidas rápidas pensadas para llevar en tupper al hospital (arroz con verduras y pollo, lentejas con zanahoria, pasta con atún natural, salmón al horno).</span>
+        </div>
+        <div class="mockup-card">
+          <strong>🛒 Lista de la Compra Básica</strong>
+          <span>Lista organizada por pasillos de supermercado (frutería, carnicería, legumbres y lácteos) optimizada en precio y nutrientes.</span>
+        </div>
+        <div class="mockup-card">
+          <strong>⏱️ Modo Foco Pomodoro</strong>
+          <span>Temporizador de concentración (25 min de foco + 5 min de descanso) para estudiar sin distracciones de redes sociales.</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- SECTION: FAQ & TRICKS -->
+    <article class="guide-section" id="faq" data-category="intro">
+      <div class="section-header">
+        <div>
+          <div class="section-meta">
+            <span class="section-num">PREGUNTAS FRECUENTES</span>
+            <span class="section-tag">Dudas Resueltas</span>
+          </div>
+          <h2 class="section-title">Preguntas Frecuentes de Julia</h2>
+        </div>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-badge">❓</div>
+          <div class="step-content">
+            <strong>¿Dónde se guardan mis notas y exámenes?</strong>
+            <p>Se guardan directamente en el almacenamiento seguro de tu propio móvil o navegador (LocalStorage). Aunque cierres la pestaña o apagues el teléfono, tus datos siguen ahí al volver a abrir la app.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">❓</div>
+          <div class="step-content">
+            <strong>¿Cómo sincronizo mis exámenes con el calendario de mi iPhone/Android?</strong>
+            <p>Entra en <strong>«Recordatorios»</strong> y pulsa el botón verde <strong>«Exportar Calendario (.ics)»</strong>. El archivo descargado se abrirá en la app de Calendario de tu móvil y añadirá automáticamente todos tus exámenes y turnos.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-badge">❓</div>
+          <div class="step-content">
+            <strong>¿Puedo usar la app en el ordenador y en el móvil a la vez?</strong>
+            <p>Sí, la web es 100% responsiva y se adapta tanto a la pantalla de tu portátil en la biblioteca de la Fábrica de Armas como a la pantalla del móvil cuando estés en el hospital.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<!-- Interactive Search & Filtering JavaScript -->
+<script>
+  // Real-time Search functionality
+  const searchInput = document.getElementById('guideSearch');
+  const sections = document.querySelectorAll('.guide-section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const filterChips = document.querySelectorAll('.filter-chip');
+
+  searchInput.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase().trim();
+    
+    sections.forEach(sec => {
+      const text = sec.innerText.toLowerCase();
+      if (!term || text.includes(term)) {
+        sec.style.display = 'block';
+      } else {
+        sec.style.display = 'none';
+      }
+    });
+
+    navLinks.forEach(link => {
+      const text = link.innerText.toLowerCase();
+      if (!term || text.includes(term)) {
+        link.style.display = 'flex';
+      } else {
+        link.style.display = 'none';
+      }
+    });
+  });
+
+  // Filter chips functionality
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      filterChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const filter = chip.getAttribute('data-filter');
+
+      sections.forEach(sec => {
+        const cat = sec.getAttribute('data-category');
+        if (filter === 'all' || cat === filter) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Highlight active link on scroll
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      const sectionTop = sec.offsetTop;
+      if (pageYOffset >= sectionTop - 120) {
+        current = sec.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -33,19 +33,21 @@ interface TutorPersona {
   icon: any;
   color: string;
   bgLight: string;
+  welcomeMessage: string;
   suggestedPrompts: string[];
 }
 
 const TUTOR_PERSONAS: TutorPersona[] = [
   {
     id: 'anatomia',
-    name: 'Prof. Anatomía',
-    title: 'Dr. M. Sánchez (Anatomía Humana)',
+    name: 'Dr. Martín Moreno',
+    title: 'Dr. Martín Moreno (Anatomía Humana)',
     specialty: 'Estructuras, planos, inervación y vascularización',
     description: 'Especialista en conectar la anatomía descriptiva con la punción venosa, auscultación y exploración.',
     icon: Brain,
     color: 'text-indigo-700',
     bgLight: 'bg-indigo-50 border-indigo-200',
+    welcomeMessage: '¡Hola, Julia! 🧠 Soy el Dr. Martín Moreno, tu profesor de Anatomía Humana en la UCLM. Estoy aquí para ayudarte a dominar planos, huesos, músculos, inervación y vascularización, conectándolos siempre con la práctica enfermera (vías venosas, zonas de inyección y exploración física). ¿Qué estructura anatómica estamos repasando hoy?',
     suggestedPrompts: [
       'Explícame la diferencia entre el sistema nervioso simpático y parasimpático con ejemplos clínicos.',
       '¿Cuáles son las referencias anatómicas para localizar el pulso carotídeo y femoral?',
@@ -54,13 +56,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'fisiologia',
-    name: 'Dra. Fisiología',
-    title: 'Dra. E. Gómez (Fisiología Humana)',
+    name: 'Dra. Isabel Carrerillas',
+    title: 'Dra. Isabel Carrerillas (Fisiología Humana)',
     specialty: 'Homeostasis, hemodinámica y neurofisiología',
     description: 'Te ayuda a comprender cómo responde el cuerpo humano ante la hipoxia, el dolor y la deshidratación.',
     icon: Sparkles,
     color: 'text-sky-700',
     bgLight: 'bg-sky-50 border-sky-200',
+    welcomeMessage: '¡Hola, Julia! ⚡ Soy la Dra. Isabel Carrerillas, tutora de Fisiología Humana. Mi objetivo es que comprendas el "por qué" de las respuestas del cuerpo humano: potenciales de acción, regulación homeostática, transporte de gases y equilibrio hemodinámico. Cuéntame qué mecanismo o ciclo fisiológico quieres que analicemos.',
     suggestedPrompts: [
       'Explícame paso a paso el sistema Renina-Angiotensina-Aldosterona (SRAA).',
       '¿Qué ocurre en el potencial de acción del miocardio durante la fase de meseta?',
@@ -69,13 +72,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'farmacologia',
-    name: 'Prof. Farmacología',
-    title: 'Dr. R. Alarcón (Farmacología Clínica)',
+    name: 'Dr. Ivancito Moreno',
+    title: 'Dr. Ivancito Moreno (Farmacología Clínica)',
     specialty: 'Mecanismos, 10 Correctos, diluciones y antídotos',
     description: 'Enfoque de máxima seguridad: cálculos de goteo, incompatibilidades y precauciones.',
     icon: Pill,
     color: 'text-emerald-700',
     bgLight: 'bg-emerald-50 border-emerald-200',
+    welcomeMessage: '¡Hola, Julia! 💊 Soy el Dr. Ivancito Moreno, especialista en Farmacología Clínica y Seguridad del Medicamento. Conmigo repasaremos los 10 Correctos, diluciones, ritmos de perfusión en bomba, antídotos e incompatibilidades intravenosas en Y. ¡La seguridad del paciente es nuestra máxima prioridad! ¿Qué fármaco o cálculo de dosis tienes entre manos?',
     suggestedPrompts: [
       '¿Por qué la Furosemida y la Morfina son incompatibles en Y?',
       '¿Cómo calculo la dosis pediátrica de paracetamol para un niño de 18 kg?',
@@ -84,13 +88,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'laboratorio',
-    name: 'Prof. Laboratorio',
-    title: 'Dra. C. Vega (Diagnóstico & Analíticas)',
+    name: 'Dra. Laura Ratilla',
+    title: 'Dra. Laura Ratilla (Diagnóstico & Analíticas)',
     specialty: 'Interpretación analítica, iones y gasometrías',
     description: 'Lectura sistemática de ECG de 12 derivaciones, orden de llenado de tubos y equilibrio ácido-base.',
     icon: TestTube2,
     color: 'text-teal-700',
     bgLight: 'bg-teal-50 border-teal-200',
+    welcomeMessage: '¡Hola, Julia! 🧪 Soy la Dra. Laura Ratilla, responsable de Laboratorio Clínico y Diagnóstico. Te enseñaré a interpretar analíticas de sangre, gasometrías arteriales, orden de llenado de tubos según el CLSI y lectura sistemática del ECG de 12 derivaciones. ¿Qué resultado analítico o trazado quieres examinar?',
     suggestedPrompts: [
       '¿Cómo interpreto una gasometría arterial con pH 7.28, pCO2 55 y HCO3 25?',
       '¿Cuál es el orden oficial de llenado de tubos según el CLSI y por qué?',
@@ -99,13 +104,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'ecoe',
-    name: 'Coord. ECOE',
-    title: 'Dra. P. Morales (Simulación Clínica)',
+    name: 'Dra. Luci Luci',
+    title: 'Dra. Luci Luci (Coordinadora ECOE / Simulación)',
     specialty: 'Técnica aséptica, bateas y errores críticos',
     description: 'Entrenamiento riguroso para las estaciones de evaluación práctica de la facultad.',
     icon: Stethoscope,
     color: 'text-rose-700',
     bgLight: 'bg-rose-50 border-rose-200',
+    welcomeMessage: '¡Hola, Julia! 🩺 Soy la Dra. Luci Luci, coordinadora de Simulación Clínica y Estaciones ECOE. Mi labor es prepararte para superar con solvencia tus evaluaciones prácticas: técnica aséptica estricta, orden de batea, comunicación con el paciente y cero errores críticos eliminatorios. ¿Qué estación práctica vamos a simular?',
     suggestedPrompts: [
       'Simula conmigo la estación de canalización de vía venosa periférica paso a paso.',
       '¿Cuáles son los 3 errores críticos que suspenden automáticamente una estación ECOE?',
@@ -114,13 +120,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'fundamentos',
-    name: 'Prof. Metodología PAE',
-    title: 'Prof. L. Navas (Fundamentos del Cuidado)',
+    name: 'Prof. Ivi Moca',
+    title: 'Prof. Ivi Moca (Fundamentos & Metodología PAE)',
     specialty: 'NANDA, NOC, NIC y patrones de Gordon',
     description: 'Formulación diagnóstica en formato PES, planificación y pensamiento enfermero.',
     icon: BookOpen,
     color: 'text-purple-700',
     bgLight: 'bg-purple-50 border-purple-200',
+    welcomeMessage: '¡Hola, Julia! 📋 Soy el Prof. Ivi Moca, docente de Fundamentos de Enfermería y Metodología del Cuidado. Juntos trabajaremos el PAE, las 14 Necesidades de Virginia Henderson, los Patrones Funcionales de Gordon y la formulación diagnóstica NANDA-NOC-NIC en formato PES. ¿Qué caso o diagnóstico enfermero estás elaborando?',
     suggestedPrompts: [
       'Ayúdame a formular un diagnóstico NANDA para un paciente con dolor agudo postquirúrgico.',
       '¿Cómo se relacionan los 11 Patrones Funcionales de Gordon con el PAE?',
@@ -129,13 +136,14 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'academico',
-    name: 'Tutor Grado UCLM',
-    title: 'Prof. J. M. Toledo (Orientador Académico)',
+    name: 'Prof. Pedri González',
+    title: 'Prof. Pedri González (Orientador Académico)',
     specialty: 'Plan de estudios, asignaturas llave y tiempo',
     description: 'Orientación para planificar tu curso, compatibilizar estudio y superar primero con serenidad.',
     icon: GraduationCap,
     color: 'text-amber-700',
     bgLight: 'bg-amber-50 border-amber-200',
+    welcomeMessage: '¡Hola, Julia! 🎓 Soy el Prof. Pedri González, tu Orientador Académico del Grado en Enfermería en Toledo. Estoy aquí para ayudarte a organizar tu tiempo, planificar el estudio de tus 10 asignaturas de primero, entender las asignaturas llave para pasar a segundo y gestionar las semanas de exámenes con serenidad. ¿En qué puedo orientarte hoy?',
     suggestedPrompts: [
       '¿Qué asignaturas de 1.º son llave para poder ir a las prácticas de 2.º curso?',
       'Dame un plan de estudio semanal de 2 horas al día para compaginar Anatomía y Fundamentos.',
@@ -148,28 +156,50 @@ export const TutorAIView: React.FC = () => {
   const { state } = useCampusStore();
   const [activeTab, setActiveTab] = useState<'chat' | 'citations' | 'transcription'>('chat');
 
-  // --- Tutor Chat State ---
+  // --- Tutor Chat State: Hilos de conversación independientes por cada tutor docente ---
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>('anatomia');
-  const [messages, setMessages] = useState<TutorChatMessage[]>([
-    {
-      id: 'welcome-msg',
-      sender: 'tutor',
-      text: `¡Hola, Julia! 🩺 Soy tu Tutor Académico de Enfermería de la UCLM. Estoy aquí para acompañarte en tus asignaturas de primero.
-Puedes consultarme dudas sobre cualquiera de tus materias, simular casos o pedirme que te resuma conceptos complejos.`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      tutorPersona: 'anatomia'
-    }
-  ]);
+  const [threads, setThreads] = useState<Record<string, TutorChatMessage[]>>(() => {
+    const initial: Record<string, TutorChatMessage[]> = {};
+    TUTOR_PERSONAS.forEach((p) => {
+      initial[p.id] = [
+        {
+          id: `welcome-${p.id}`,
+          sender: 'tutor',
+          text: p.welcomeMessage,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tutorPersona: p.id
+        }
+      ];
+    });
+    return initial;
+  });
+
   const [inputText, setInputText] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activePersona = TUTOR_PERSONAS.find(p => p.id === selectedPersonaId) || TUTOR_PERSONAS[0];
+  const currentMessages = threads[selectedPersonaId] || [];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [currentMessages, isLoading]);
+
+  const handleResetCurrentTutor = () => {
+    setThreads(prev => ({
+      ...prev,
+      [selectedPersonaId]: [
+        {
+          id: `welcome-${selectedPersonaId}-${Date.now()}`,
+          sender: 'tutor',
+          text: activePersona.welcomeMessage,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tutorPersona: selectedPersonaId
+        }
+      ]
+    }));
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
@@ -183,11 +213,14 @@ Puedes consultarme dudas sobre cualquiera de tus materias, simular casos o pedir
       tutorPersona: selectedPersonaId
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setThreads(prev => ({
+      ...prev,
+      [selectedPersonaId]: [...(prev[selectedPersonaId] || []), userMsg]
+    }));
     setInputText('');
     setIsLoading(true);
 
-    const history = messages.slice(-8).map(m => ({
+    const history = currentMessages.slice(-8).map(m => ({
       role: m.sender === 'user' ? 'user' : 'model',
       text: m.text
     }));
@@ -219,7 +252,10 @@ Puedes consultarme dudas sobre cualquiera de tus materias, simular casos o pedir
         tutorPersona: selectedPersonaId
       };
 
-      setMessages(prev => [...prev, tutorMsg]);
+      setThreads(prev => ({
+        ...prev,
+        [selectedPersonaId]: [...(prev[selectedPersonaId] || []), tutorMsg]
+      }));
     } catch (err) {
       const fallbackMsg: TutorChatMessage = {
         id: 'fallback-' + Date.now(),
@@ -228,7 +264,10 @@ Puedes consultarme dudas sobre cualquiera de tus materias, simular casos o pedir
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         tutorPersona: selectedPersonaId
       };
-      setMessages(prev => [...prev, fallbackMsg]);
+      setThreads(prev => ({
+        ...prev,
+        [selectedPersonaId]: [...(prev[selectedPersonaId] || []), fallbackMsg]
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -407,11 +446,19 @@ Puedes consultarme dudas sobre cualquiera de tus materias, simular casos o pedir
                   <p className="text-[11px] text-stone-500">{activePersona.specialty}</p>
                 </div>
               </div>
+              <button
+                onClick={handleResetCurrentTutor}
+                title="Reiniciar conversación con este tutor"
+                className="text-stone-400 hover:text-stone-700 px-3 py-1.5 rounded-xl border border-stone-200 hover:bg-stone-100 transition text-xs flex items-center gap-1.5 font-semibold"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reiniciar chat</span>
+              </button>
             </div>
 
             {/* Messages scroll area */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-              {messages.map((m) => {
+              {currentMessages.map((m) => {
                 const isUser = m.sender === 'user';
                 return (
                   <div key={m.id} className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
