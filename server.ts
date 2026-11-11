@@ -65,14 +65,20 @@ app.get('/api/health', (req, res) => {
 
 // Endpoint directo para forzar la descarga del parche .patch en cualquier navegador
 const servePatch = (req: express.Request, res: express.Response) => {
-  const patchPath = path.resolve(process.cwd(), 'enfermeria-julia-v2.patch');
+  const filename = req.path.includes('v3') || req.path.includes('actualizacion-completa-julia')
+    ? 'actualizacion-completa-julia.patch'
+    : 'enfermeria-julia-v3.patch';
+  const patchPath = path.resolve(process.cwd(), 'enfermeria-julia-v3.patch');
   res.setHeader('Content-Type', 'application/octet-stream');
-  res.setHeader('Content-Disposition', 'attachment; filename="enfermeria-julia-v2.patch"');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.sendFile(patchPath);
 };
 
+app.get('/enfermeria-julia-v3.patch', servePatch);
 app.get('/enfermeria-julia-v2.patch', servePatch);
+app.get('/actualizacion-completa-julia.patch', servePatch);
 app.get('/descargar-parche', servePatch);
+app.get('/descargar-parche-v3', servePatch);
 app.get('/descargar-parche-v2', servePatch);
 app.get('/parche', servePatch);
 app.get('/api/download-patch', servePatch);

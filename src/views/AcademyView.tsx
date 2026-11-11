@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useCampusStore, isDemoMode } from '../hooks/useCampusStore';
+import { useCampusStore } from '../hooks/useCampusStore';
 import { QuizQuestion, StudyPlanGoal, SavedNoteSummary } from '../types';
 import {
   Sparkles,
@@ -68,7 +68,6 @@ export const AcademyView: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<number>(900); // 15 min default
 
   const [mistakesHistory, setMistakesHistory] = useState<string[]>(() => {
-    if (isDemoMode()) return [];
     try {
       const saved = localStorage.getItem('campus_mistakes_ids');
       return saved ? JSON.parse(saved) : [];
@@ -78,7 +77,6 @@ export const AcademyView: React.FC = () => {
   });
 
   useEffect(() => {
-    if (isDemoMode()) return;
     try {
       localStorage.setItem('campus_mistakes_ids', JSON.stringify(mistakesHistory));
     } catch {

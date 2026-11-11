@@ -20,7 +20,7 @@ export const DEFAULT_LUGGAGE_CHECKLIST: LuggageCheckItem[] = [
   { id: 'lug-uniforme', name: 'Uniforme de prácticas limpio para la vuelta', category: 'Ropa & Aseo', tripType: 'all', checked: false },
 
   // Casa, Comida & Tuppers
-  { id: 'lug-tuppers-vacios', name: 'Tuppers vacíos limpios para que mamá/papá los rellenen', category: 'Casa & Tuppers', tripType: 'weekend', checked: false },
+  { id: 'lug-tuppers-vacios', name: 'Tuppers vacíos limpios para que mamá e Ivi los rellenen', category: 'Casa & Tuppers', tripType: 'weekend', checked: false },
   { id: 'lug-bolsa-termica', name: 'Bolsa térmica para transportar comida a Toledo', category: 'Casa & Tuppers', tripType: 'weekend', checked: false },
   { id: 'lug-cerrar-luces', name: 'Apagar calefacción, cerrar luces y grifo general del piso', category: 'Casa & Tuppers', tripType: 'vacation', checked: false },
   { id: 'lug-basura', name: 'Bajar la basura del piso antes de salir a la estación', category: 'Casa & Tuppers', tripType: 'all', checked: false },

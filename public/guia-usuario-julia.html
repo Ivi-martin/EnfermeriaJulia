@@ -647,9 +647,9 @@
 
     <div class="nav-items-scroll" id="navItemsList">
       <div class="nav-group-title">Introducción & Configuración</div>
-      <a href="#intro" class="nav-link active"><span>❤️</span> Carta de Papá a Julia</a>
+      <a href="#intro" class="nav-link active"><span>❤️</span> Carta de Ivi para Julia</a>
       <a href="#pwa" class="nav-link"><span>📱</span> Instalar la App en tu Móvil</a>
-      <a href="#demo" class="nav-link"><span>👀</span> Modo Demo vs. Datos Reales</a>
+      <a href="#backup" class="nav-link"><span>💾</span> Copias de Seguridad (Exportar / Importar)</a>
 
       <div class="nav-group-title">Inicio & Portales</div>
       <a href="#m-today" class="nav-link"><span>☀️</span> Mi Día (Portada & Mensaje)</a>
@@ -701,7 +701,7 @@
       <div class="hero-badge">
         <span>✚</span> Guía Oficial de Uso · Campus Enfermería Toledo 2.0
       </div>
-      <h1 class="hero-title">Guía de la Aplicación para mi Hija Julia</h1>
+      <h1 class="hero-title">Guía de la Aplicación para Julia · Mi Amore</h1>
       <p class="hero-sub">
         Esta aplicación no es un simple programa de ordenador: es tu compañera de viaje durante los 4 años del Grado en Enfermería en la UCLM (Campus Fábrica de Armas de Toledo). Está diseñada a tu medida para que tengas a mano desde los fármacos del hospital y las analíticas, hasta el billete de autobús a Granada, las cuentas del piso y un botón directo para avisarme de que has llegado bien.
       </p>
@@ -710,9 +710,9 @@
         <img src="./assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png" alt="Julia H. Carreras" class="hero-avatar">
         <div>
           <div class="hero-avatar-quote">
-            «Julia, estudia con pasión, aprende con rigor y no olvides que cuidar a los demás empieza por cuidarte a ti misma. Aquí tienes reunido todo lo que vas a necesitar.»
+            «Julia, mi amore, estudia con pasión, aprende con rigor y no olvides que cuidar a los demás empieza por cuidarte a ti misma. Aquí tienes reunido todo lo que vas a necesitar.»
           </div>
-          <span class="hero-avatar-sig">— Con todo mi cariño, tu padre · Toledo / Granada</span>
+          <span class="hero-avatar-sig">— Con todo mi cariño, Ivi · Toledo / Granada</span>
         </div>
       </div>
     </section>
@@ -764,34 +764,34 @@
       </div>
     </article>
 
-    <!-- SECTION: DEMO MODE -->
-    <article class="guide-section" id="demo" data-category="intro">
+    <!-- SECTION: BACKUP & RESTORE -->
+    <article class="guide-section" id="backup" data-category="intro">
       <div class="section-header">
         <div>
           <div class="section-meta">
-            <span class="section-num">MODOS</span>
-            <span class="section-tag">Seguridad de Datos</span>
+            <span class="section-num">SEGURIDAD</span>
+            <span class="section-tag">Tus Datos a Salvo</span>
           </div>
-          <h2 class="section-title">Modo Demo vs. Tus Datos Reales</h2>
-          <p class="section-desc">Cómo explorar la aplicación sin miedo a borrar nada.</p>
+          <h2 class="section-title">Copias de Seguridad (Exportar / Importar JSON)</h2>
+          <p class="section-desc">Cómo cambiar de ordenador o dispositivo sin perder absolutamente nada de tus apuntes, notas o turnos.</p>
         </div>
       </div>
 
       <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">
-        En la parte inferior del menú lateral verás un botón que dice <strong>«👀 Demo»</strong>. Su funcionamiento es muy sencillo:
+        Todos tus datos se guardan de forma privada e instantánea en tu dispositivo. Para que puedas cambiar de ordenador, usar la app en tu portátil y en tu móvil, o simplemente tener un respaldo seguro, tienes un sistema de copia de seguridad en <strong>El Baúl / Caja Fuerte</strong> y en el icono de base de datos de la barra superior:
       </p>
 
       <div class="mockup-grid">
-        <div class="mockup-card" style="border-left: 4px solid #3da36b;">
-          <strong>Tus Datos Reales (Por defecto)</strong>
+        <div class="mockup-card" style="border-left: 4px solid #10b981;">
+          <strong>📥 Exportar Copia (.json)</strong>
           <p style="font-size: 12px; color: var(--text-muted);">
-            Todo lo que escribas (tus exámenes, tus reflexiones de Gibbs, tus notas, tus gastos y tus citas) se guarda en tu propio móvil (LocalStorage). Nadie más lo ve y no se borra.
+            Descarga al instante un archivo llamado <code>campus-enfermeria-backup-....json</code> con todas tus notas, reflexiones de Gibbs, citas médicas, planes de estudio y configuración. Puedes guardarlo en tu Google Drive, enviártelo por email o guardarlo en un pendrive.
           </p>
         </div>
-        <div class="mockup-card" style="border-left: 4px solid #f59e0b;">
-          <strong>Modo Demo (Solo Lectura)</strong>
+        <div class="mockup-card" style="border-left: 4px solid #0d9488;">
+          <strong>📤 Importar Copia (.json)</strong>
           <p style="font-size: 12px; color: var(--text-muted);">
-            Te muestra la app llena de ejemplos (exámenes ficticios, turnos simulados, fármacos de prueba). Es ideal si quieres enseñarle la app a una compañera de clase sin mostrar tus notas reales.
+            Si abres la aplicación en un nuevo ordenador o navegador, solo tienes que pulsar «Importar Copia de Seguridad», seleccionar tu archivo <code>.json</code> y la app restaurará al instante el 100% de tu información con todas tus asignaturas y registros al día.
           </p>
         </div>
       </div>
@@ -1368,7 +1368,7 @@
           <div class="step-badge">📍</div>
           <div class="step-content">
             <strong>Botón «He llegado bien» con Ubicación GPS:</strong>
-            <p>Al pulsar el botón verde, la app obtiene tus coordenadas GPS exactas y abre un mensaje de WhatsApp directo a papá con un enlace de Google Maps y el texto: <em>«Hola, ya he llegado y estoy aquí»</em>. Ideal al llegar al piso tras el viaje.</p>
+            <p>Al pulsar el botón verde, la app obtiene tus coordenadas GPS exactas y abre un mensaje de WhatsApp directo a Ivi con un enlace de Google Maps y el texto: <em>«Hola, ya he llegado y estoy aquí»</em>. Ideal al llegar al piso tras el viaje.</p>
           </div>
         </div>
         <div class="step-item">

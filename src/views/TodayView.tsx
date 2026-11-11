@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useCampusStore, isDemoMode, setDemoMode } from '../hooks/useCampusStore';
+import { useCampusStore } from '../hooks/useCampusStore';
 import { getMessageForDate } from '../utils/dailyMessage';
 import {
   Heart,
@@ -110,14 +110,13 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-6">
       {/* Bienvenida: solo mientras la app está vacía */}
-      {!isDemoMode() &&
-        state.exams.length === 0 &&
+      {state.exams.length === 0 &&
         state.shifts.length === 0 &&
         state.grades.length === 0 &&
         state.reflections.length === 0 && (
           <section className="rounded-3xl bg-white border border-[#d9e6dc] p-6 space-y-4">
             <div>
-              <h2 className="text-lg font-extrabold text-stone-900">👋 ¡Bienvenida, Julia! Tu app está lista para empezar de cero</h2>
+              <h2 className="text-lg font-extrabold text-stone-900">👋 ¡Bienvenida, Julia! Tu app está lista para empezar</h2>
               <p className="text-sm text-stone-600 mt-1">
                 Aún no hay nada guardado, así que empieza por lo básico. Cuando añadas tus datos, esta portada se llenará
                 sola con tus próximos exámenes y turnos.
@@ -146,16 +145,17 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
                 3. Apunta tus notas y tus hábitos
               </button>
             </div>
-            <p className="text-xs text-stone-500">
-              ¿Quieres ver cómo se ve la app cuando está llena?{' '}
-              <button
-                type="button"
-                onClick={() => setDemoMode(true)}
-                className="font-bold text-[#365e45] underline underline-offset-2"
+            <p className="text-xs text-stone-600 flex items-center gap-2 pt-1 border-t border-stone-100">
+              <span>📖 ¿Tienes dudas sobre cómo usar alguna herramienta?</span>
+              <a
+                href="/guia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-extrabold text-[#2d553e] hover:underline flex items-center gap-1"
               >
-                Pulsa aquí para abrir la Demo
-              </button>{' '}
-              (es solo para mirar; no toca tus datos).
+                <span>Abrir la Guía Interactiva Completa</span>
+                <span className="text-[10px] bg-emerald-100 px-1.5 py-0.5 rounded text-emerald-900">↗</span>
+              </a>
             </p>
           </section>
         )}

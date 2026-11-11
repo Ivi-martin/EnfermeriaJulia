@@ -19,7 +19,7 @@ export const EmergencyView: React.FC = () => {
 
   const emergencyContacts = [
     {
-      title: 'Papá (Contacto SOS 1)',
+      title: 'Ivi (Contacto SOS 1)',
       name: 'Ivi Martín',
       number: '+34600000000',
       isFamily: true,
@@ -96,9 +96,9 @@ export const EmergencyView: React.FC = () => {
       : 'https://maps.google.com/?q=Toledo';
 
     if (type === 'arrived_toledo') {
-      text = `📍 ¡Hola papá! Ya he llegado bien a Toledo. Todo en orden. ${mapsLink}`;
+      text = `📍 ¡Hola Ivi! Ya he llegado bien a Toledo. Todo en orden. ${mapsLink}`;
     } else if (type === 'arrived_granada') {
-      text = `📍 ¡Hola papá! Ya he llegado bien a Granada. ¡Nos vemos en nada! ${mapsLink}`;
+      text = `📍 ¡Hola Ivi! Ya he llegado bien a Granada. ¡Nos vemos en nada! ${mapsLink}`;
     } else {
       text = `📍 Hola, voy de camino ahora mismo. Te comparto mi ubicación en tiempo real: ${mapsLink}`;
     }
@@ -120,7 +120,7 @@ export const EmergencyView: React.FC = () => {
               Contactos de Emergencia & Compartir Ubicación
             </h1>
             <p className="text-rose-100 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Botón directo al 112 con tus coordenadas en pantalla, aviso a papá por WhatsApp con un solo clic («He llegado bien») y directorio telefónico de Toledo y Granada.
+              Botón directo al 112 con tus coordenadas en pantalla, aviso a Ivi por WhatsApp con un solo clic («He llegado bien») y directorio telefónico de Toledo y Granada.
             </p>
           </div>
 
@@ -177,7 +177,7 @@ export const EmergencyView: React.FC = () => {
           >
             <div>
               <span className="block text-sm">«Ya he llegado a Toledo»</span>
-              <span className="text-[10px] font-normal text-stone-600">Aviso rápido para papá</span>
+              <span className="text-[10px] font-normal text-stone-600">Aviso rápido para Ivi</span>
             </div>
             <Send className="w-4 h-4 group-hover:translate-x-0.5 transition" />
           </a>
@@ -239,7 +239,7 @@ export const EmergencyView: React.FC = () => {
 
             <div className="p-3 bg-rose-50/80 rounded-xl border border-rose-200 text-rose-950">
               <span className="text-[10px] font-bold uppercase block text-rose-800">Contacto Familiar Prioritario:</span>
-              <strong className="block font-black mt-0.5">Papá (Ivi Martín)</strong>
+              <strong className="block font-black mt-0.5">Ivi (Ivi Martín)</strong>
               <span className="text-[11px] font-semibold text-rose-900">Teléfono registrado en la app</span>
             </div>
           </div>

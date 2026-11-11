@@ -20,7 +20,8 @@ import {
   Upload,
   Database,
   FileJson,
-  RefreshCw
+  RefreshCw,
+  Package
 } from 'lucide-react';
 
 export const VaultView: React.FC = () => {
@@ -587,6 +588,32 @@ export const VaultView: React.FC = () => {
                 <FileJson className="w-4 h-4 text-emerald-700" />
                 <span>Seleccionar Archivo .JSON para Restaurar</span>
               </button>
+            </div>
+
+            {/* Card 3: Download Complete Project ZIP (Para Ivi / Actualizaciones) */}
+            <div className="md:col-span-2 bg-gradient-to-br from-[#1b3427] to-[#28503b] text-white p-6 sm:p-7 rounded-3xl border border-emerald-900 shadow-md space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold uppercase tracking-wider">
+                    <Package className="w-3.5 h-3.5" />
+                    <span>Código Fuente Actualizado</span>
+                  </div>
+                  <h3 className="text-xl font-black text-white">
+                    Descargar Proyecto Completo (.ZIP)
+                  </h3>
+                  <p className="text-xs sm:text-sm text-emerald-100/80 max-w-2xl leading-relaxed">
+                    Descarga directa de todo el código de la app listo para descomprimir en tu ordenador, subir a tu GitHub con <code className="bg-black/30 px-1.5 py-0.5 rounded text-emerald-200">git push</code> y desplegar en Vercel sin errores de parches.
+                  </p>
+                </div>
+                <a
+                  href="/descargar-zip"
+                  download="enfermeria-julia-completa.zip"
+                  className="shrink-0 py-3.5 px-6 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-[#0f241a] text-xs sm:text-sm font-black transition flex items-center justify-center gap-2.5 shadow-md active:scale-95"
+                >
+                  <Download className="w-5 h-5 text-[#0f241a]" />
+                  <span>Descargar .ZIP Completo (2.9 MB)</span>
+                </a>
+              </div>
             </div>
           </div>
 

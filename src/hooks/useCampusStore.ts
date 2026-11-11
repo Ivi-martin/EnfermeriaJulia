@@ -149,7 +149,7 @@ const DEMO_STATE: CampusState = {
     { id: 4, name: 'Descanso y desconexión antes de dormir' }
   ],
   habitLogs: {},
-  parentMessage: 'Estoy inmensamente orgulloso de ti y de tu vocación por la enfermería. Con constancia, empatía y calma vas a ser una profesional maravillosa. Un día a la vez. ¡Te quiero muchísimo! 💚',
+  parentMessage: 'Estoy inmensamente orgulloso de ti, mi amore, y de tu vocación por la enfermería. Con constancia, empatía y calma vas a ser una profesional maravillosa. Un día a la vez. ¡Te quiero muchísimo! 💚 — Ivi',
   studentName: 'Julia H. Carreras',
   budget: 300,
   expenses: [
