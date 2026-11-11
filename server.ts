@@ -99,6 +99,8 @@ const downloadGuide = (req: express.Request, res: express.Response) => {
 };
 
 app.get('/guia', serveGuide);
+app.get('/guia/', serveGuide);
+app.get('/guia-usuario-julia.html', serveGuide);
 app.get('/manual', serveGuide);
 app.get('/guia-usuario', serveGuide);
 app.get('/descargar-guia', downloadGuide);

@@ -185,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Footer with PWA Install Prompt & IviMOCA */}
         <div className="p-4 border-t border-stone-100 bg-[#fafbfa] space-y-3">
           <a
-            href="/guia"
+            href="/guia-usuario-julia.html"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full px-3 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-xs font-extrabold transition flex items-center justify-between shadow-2xs group"

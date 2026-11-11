@@ -148,7 +148,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <p className="text-xs text-stone-600 flex items-center gap-2 pt-1 border-t border-stone-100">
               <span>📖 ¿Tienes dudas sobre cómo usar alguna herramienta?</span>
               <a
-                href="/guia"
+                href="/guia-usuario-julia.html"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-extrabold text-[#2d553e] hover:underline flex items-center gap-1"

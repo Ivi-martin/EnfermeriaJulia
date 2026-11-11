@@ -1,5 +1,14 @@
 {
   "framework": "vite",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/guia", "destination": "/guia/index.html" },
+    { "source": "/guia/", "destination": "/guia/index.html" },
+    { "source": "/manual", "destination": "/guia/index.html" },
+    { "source": "/descargar-guia", "destination": "/guia-usuario-julia.html" },
+    { "source": "/descargar-zip", "destination": "/enfermeria-julia-completa.zip" },
+    { "source": "/descargar-parche", "destination": "/enfermeria-julia-v3.patch" },
+    { "source": "/((?!api/|.*\\..*).*)", "destination": "/index.html" }
+  ]
 }
