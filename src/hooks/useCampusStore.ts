@@ -364,6 +364,32 @@ export function stripDemoData(saved: any): any {
   return out;
 }
 
+// Fusiona los atajos guardados con los atajos oficiales actualizados (para que no queden enlaces obsoletos)
+function mergeQuickLinks(saved: any[]): QuickLink[] {
+  if (!Array.isArray(saved) || !saved.length) return INITIAL_QUICK_LINKS;
+  const initialMap = new Map(INITIAL_QUICK_LINKS.map(l => [l.id, l]));
+  // 1. Actualiza enlaces del sistema con sus URLs oficiales corregidas
+  const updated = saved.map(l => {
+    if (!l.isCustom && initialMap.has(l.id)) {
+      const init = initialMap.get(l.id)!;
+      return {
+        ...l,
+        name: init.name,
+        url: init.url,
+        description: init.description,
+        badge: init.badge,
+        category: init.category,
+        iconName: init.iconName,
+      };
+    }
+    return l;
+  });
+  // 2. Incorpora los nuevos atajos oficiales que aún no estuvieran en el dispositivo (ej: Facultad de Enfermería)
+  const existingIds = new Set(updated.map(l => l.id));
+  const missing = INITIAL_QUICK_LINKS.filter(l => !existingIds.has(l.id));
+  return [...missing, ...updated];
+}
+
 // Convierte unos datos guardados en un estado completo (función pura, fácil de probar)
 export function loadSavedState(raw: string | null): CampusState {
   if (!raw) return EMPTY_STATE;
@@ -387,7 +413,7 @@ export function loadSavedState(raw: string | null): CampusState {
     studyStreak: data.studyStreak || { currentStreak: 0, longestStreak: 0, lastStudyDate: '', totalStudyMinutes: 0 },
     studyPlans: Array.isArray(data.studyPlans) ? data.studyPlans : [],
     savedSummaries: Array.isArray(data.savedSummaries) ? data.savedSummaries : [],
-    quickLinks: Array.isArray(data.quickLinks) && data.quickLinks.length ? data.quickLinks : INITIAL_QUICK_LINKS,
+    quickLinks: mergeQuickLinks(data.quickLinks),
     luggageChecklist: Array.isArray(data.luggageChecklist) && data.luggageChecklist.length ? data.luggageChecklist : DEFAULT_LUGGAGE_CHECKLIST,
     roommates: Array.isArray(data.roommates) && data.roommates.length ? data.roommates : ['Julia', 'Marta', 'Lucía'],
     roommateExpenses: Array.isArray(data.roommateExpenses) ? data.roommateExpenses : [],
@@ -862,6 +888,13 @@ export function useCampusStore() {
     }));
   };
 
+  const resetQuickLinks = () => {
+    updateState(prev => ({
+      ...prev,
+      quickLinks: INITIAL_QUICK_LINKS,
+    }));
+  };
+
   // --- Luggage Checklist ---
   const toggleLuggageItem = (id: string) => {
     updateState(prev => ({
@@ -1050,6 +1083,7 @@ export function useCampusStore() {
     deleteNoteSummary,
     addQuickLink,
     deleteQuickLink,
+    resetQuickLinks,
     toggleLuggageItem,
     resetLuggageChecklist,
     addRoommateExpense,

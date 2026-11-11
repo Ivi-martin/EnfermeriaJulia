@@ -22,11 +22,14 @@ import {
   FileText,
   Laptop,
   Check,
-  Compass
+  Compass,
+  Building2,
+  Smartphone,
+  RotateCcw
 } from 'lucide-react';
 
 export const ShortcutsView: React.FC = () => {
-  const { state, addQuickLink, deleteQuickLink } = useCampusStore();
+  const { state, addQuickLink, deleteQuickLink, resetQuickLinks } = useCampusStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -77,6 +80,45 @@ export const ShortcutsView: React.FC = () => {
     }
   };
 
+  const getLinkIcon = (link: QuickLink) => {
+    switch (link.iconName) {
+      case 'Building2':
+        return <Building2 className="w-5 h-5 text-emerald-700" />;
+      case 'Smartphone':
+        return <Smartphone className="w-5 h-5 text-emerald-700" />;
+      case 'Laptop':
+        return <Laptop className="w-5 h-5 text-emerald-700" />;
+      case 'BookOpen':
+        return <BookOpen className="w-5 h-5 text-emerald-700" />;
+      case 'FileText':
+        return <FileText className="w-5 h-5 text-emerald-700" />;
+      case 'GraduationCap':
+        return <GraduationCap className="w-5 h-5 text-emerald-700" />;
+      case 'Car':
+        return <Car className="w-5 h-5 text-blue-700" />;
+      case 'Bus':
+        return <Bus className="w-5 h-5 text-blue-700" />;
+      case 'Train':
+        return <Train className="w-5 h-5 text-blue-700" />;
+      case 'Brain':
+        return <Brain className="w-5 h-5 text-purple-700" />;
+      case 'Sparkles':
+        return <Sparkles className="w-5 h-5 text-purple-700" />;
+      case 'Heart':
+        return <Heart className="w-5 h-5 text-rose-600" />;
+      case 'Smile':
+        return <Smile className="w-5 h-5 text-rose-600" />;
+      case 'MapPin':
+        return <MapPin className="w-5 h-5 text-amber-700" />;
+      case 'Bookmark':
+        return <Bookmark className="w-5 h-5 text-purple-700" />;
+      case 'Stethoscope':
+        return <Stethoscope className="w-5 h-5 text-teal-700" />;
+      default:
+        return getCategoryIcon(link.category);
+    }
+  };
+
   const handleCopy = (id: string, url: string) => {
     navigator.clipboard.writeText(url);
     setCopiedId(id);
@@ -121,17 +163,32 @@ export const ShortcutsView: React.FC = () => {
               Atajos y Enlaces Rápidos
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Todos los portales imprescindibles para el día a día de Julia: Campus Virtual, préstamos de portátiles, sede de becas, BlaBlaCar y Alsa Toledo–Granada, Anki, Zotero, apoyo psicológico y transporte urbano.
+              Todos los portales imprescindibles para el día a día de Julia: Facultad de Enfermería (FAFETO), Campus Virtual, appUCLM Móvil, prest.on y portátiles, sede de becas MEC, BlaBlaCar y Alsa Toledo–Granada, Anki, Zotero y transporte urbano.
             </p>
           </div>
 
-          <button
-            onClick={() => setIsAddingLink(true)}
-            className="px-4 py-3 rounded-2xl bg-white text-[#1f422f] hover:bg-emerald-50 text-xs font-extrabold transition flex items-center justify-center gap-2 shrink-0 shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Añadir Mi Propio Atajo</span>
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => {
+                if (window.confirm('¿Quieres restaurar los enlaces oficiales de la UCLM a sus URLs oficiales actualizadas?')) {
+                  resetQuickLinks();
+                }
+              }}
+              title="Restaurar enlaces oficiales de la UCLM"
+              className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 border border-white/20"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="hidden sm:inline">Restaurar Oficiales</span>
+            </button>
+
+            <button
+              onClick={() => setIsAddingLink(true)}
+              className="px-4 py-3 rounded-2xl bg-white text-[#1f422f] hover:bg-emerald-50 text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Añadir Atajo</span>
+            </button>
+          </div>
         </div>
 
         {/* Categories Bar */}
@@ -182,7 +239,7 @@ export const ShortcutsView: React.FC = () => {
             <div>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="w-10 h-10 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                  {getCategoryIcon(link.category)}
+                  {getLinkIcon(link)}
                 </div>
                 <div className="flex items-center gap-1.5">
                   {link.badge && (
