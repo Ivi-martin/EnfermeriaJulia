@@ -35,3 +35,13 @@
   }
 }
 
+
+/* A concise, printable learning portfolio without the global application chrome. */
+@media print {
+  body, #root { background: #fff !important; color: #111 !important; }
+  aside, header, footer, nav, .no-print { display: none !important; }
+  main { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  section { box-shadow: none !important; break-inside: avoid; border-color: #ddd !important; }
+  input, textarea, select, button { display: none !important; }
+  a { color: #111 !important; text-decoration: none !important; }
+}

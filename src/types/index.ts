@@ -90,6 +90,9 @@ export interface ClinicalCompetency {
   status: 'Pendiente' | 'Observada' | 'Practicada' | 'Evaluada';
   observations?: string;
   evaluatedBy?: string;
+  tutorFeedback?: string;
+  selfAssessment?: 'Por valorar' | 'Necesito apoyo' | 'En progreso' | 'Con confianza';
+  nextGoal?: string;
   updatedAt?: string;
 }
 
@@ -445,4 +448,155 @@ export interface CourseDeadline {
   description: string;
   officialUrl?: string;
   urgent?: boolean;
+}
+
+// -------------------------------------------------------------
+// Nuevas herramientas de aprendizaje y organización (v4)
+// -------------------------------------------------------------
+export interface StudyBlock {
+  id: string;
+  title: string;
+  subject: string;
+  date: string;
+  startTime: string;
+  durationMinutes: number;
+  kind: 'Estudio' | 'Descanso' | 'Personal';
+  done: boolean;
+  notes?: string;
+}
+
+export interface ScientificReference {
+  id: string;
+  title: string;
+  authors: string;
+  year: string;
+  journal: string;
+  doi: string;
+  pmid: string;
+  url: string;
+  database: string;
+  consultedAt: string;
+  summary: string;
+  tags: string[];
+}
+
+export interface PICOQuestion {
+  id: string;
+  title: string;
+  population: string;
+  intervention: string;
+  comparison: string;
+  outcome: string;
+  question: string;
+  keywords: string;
+  createdAt: string;
+}
+
+export interface CriticalAppraisal {
+  id: string;
+  referenceId: string;
+  design: string;
+  objective: string;
+  sample: string;
+  results: string;
+  limitations: string;
+  bias: string;
+  applicability: string;
+  confidence: 'Alta' | 'Moderada' | 'Baja' | 'No valorada';
+  createdAt: string;
+}
+
+export interface PracticeRotation {
+  id: string;
+  title: string;
+  area: string;
+  startDate: string;
+  endDate: string;
+  objectives: string;
+  hoursCompleted?: number;
+  status: 'Planificada' | 'En curso' | 'Finalizada';
+}
+
+export interface PracticeLearningEntry {
+  id: string;
+  rotationId: string;
+  date: string;
+  context: string;
+  learned: string;
+  difficulties: string;
+  nextSteps: string;
+  competencyId?: string;
+  privacyConfirmed: boolean;
+}
+
+export interface EcoeTrainingResult {
+  id: string;
+  stationId: string;
+  date: string;
+  score: number;
+  maxScore: number;
+  reviewedItems: number;
+  totalItems: number;
+  criticalIssues: string[];
+  improvementNotes: string;
+}
+
+export interface ClinicalSourceRecord {
+  id: string;
+  name: string;
+  organization: string;
+  url: string;
+  documentType: string;
+  publishedAt: string;
+  version: string;
+  lastCheckedAt: string;
+  nextReviewAt: string;
+  status: 'Pendiente de revisión' | 'Verificada' | 'Necesita revisión' | 'Sustituida' | 'Retirada';
+  license: string;
+  reviewer: string;
+  topics: string;
+  notes: string;
+}
+
+export interface TFGProject {
+  id: string;
+  title: string;
+  area: string;
+  tutor: string;
+  startDate: string;
+  dueDate: string;
+  description: string;
+  status: 'Idea' | 'En preparación' | 'En desarrollo' | 'En revisión' | 'Entregado';
+  question: string;
+  objectives: string;
+  keywords: string;
+  inclusionCriteria: string;
+  exclusionCriteria: string;
+  referenceIds?: string[];
+}
+
+export interface TFGMilestone {
+  id: string;
+  projectId: string;
+  title: string;
+  dueDate: string;
+  completed: boolean;
+  notes: string;
+}
+
+export interface TFGMeeting {
+  id: string;
+  projectId: string;
+  date: string;
+  topic: string;
+  actions: string;
+  nextMeeting: string;
+}
+
+export interface DestinationShortcut {
+  id: string;
+  name: string;
+  category: 'Universidad' | 'Transporte' | 'Prácticas' | 'Personal';
+  address: string;
+  notes: string;
 }

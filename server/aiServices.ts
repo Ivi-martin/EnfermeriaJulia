@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from '@google/genai';
+import { containsPotentialPatientIdentifiers, PATIENT_DATA_BLOCK_MESSAGE } from './privacy.js';
 
 let genAI: GoogleGenAI | null = null;
 function getGenAI() {
@@ -27,6 +28,8 @@ export async function generateStudyMaterials(input: {
   subject?: string;
 }) {
   const { text, type, count = 5, subject = 'Enfermería General' } = input;
+  if (containsPotentialPatientIdentifiers(text)) return { success: false, error: PATIENT_DATA_BLOCK_MESSAGE };
+  const safeCount = Math.min(20, Math.max(1, Math.floor(Number(count) || 5)));
   const ai = getGenAI();
 
   if (!text || text.trim().length < 15) {
@@ -72,7 +75,7 @@ export async function generateStudyMaterials(input: {
             explanation: `La vigilancia activa de enfermería permite la detección precoz de cualquier deterioro hemodinámico o complicación.`,
             clinicalTip: `Cualquier anomalía debe registrarse en la gráfica del paciente y comunicarse según técnica SBAR.`,
           },
-        ].slice(0, count),
+        ].slice(0, safeCount),
         isOfflineFallback: true,
       };
     } else {
@@ -91,7 +94,7 @@ export async function generateStudyMaterials(input: {
             front: `Actuación Prioritaria de Enfermería`,
             back: `Verificar constantes vitales, asegurar la asepsia y registrar cualquier incidencia en la historia clínica.`,
           },
-        ].slice(0, count),
+        ].slice(0, safeCount),
         isOfflineFallback: true,
       };
     }
@@ -102,8 +105,9 @@ export async function generateStudyMaterials(input: {
       const response = await ai.models.generateContent({
         model: MODEL_NAME,
         contents: `Eres un docente universitario experto de la Facultad de Enfermería de la UCLM.
-Analiza el siguiente texto de apuntes pegado por la alumna Julia H. Carreras y genera exactamente ${count} preguntas tipo test rigurosas, enfocadas en conceptos clave y preguntas típicas de examen de Grado en Enfermería.
+Analiza el siguiente texto de apuntes pegado por la alumna Julia y genera exactamente ${safeCount} preguntas tipo test rigurosas, enfocadas en conceptos clave y preguntas típicas de examen de Grado en Enfermería.
 Materia: ${subject}.
+No incluyas dosis, cálculos de medicación, diluciones, pautas, preparación o administración de medicamentos ni instrucciones operativas paso a paso de procedimientos clínicos. Limítate a conceptos académicos generales y vocabulario.
 
 Texto de los apuntes:
 """
@@ -160,7 +164,7 @@ Devuelve un JSON con el siguiente formato:
       const response = await ai.models.generateContent({
         model: MODEL_NAME,
         contents: `Eres un profesor de Enfermería de la UCLM.
-Genera exactamente ${count} tarjetas flashcards (anverso: pregunta o concepto clave; reverso: respuesta concisa y de alto valor docente) a partir de este texto para Julia H. Carreras:
+Genera exactamente ${safeCount} tarjetas flashcards (anverso: pregunta o concepto clave; reverso: respuesta concisa y de alto valor docente) a partir de este texto para Julia:
 
 """
 ${text.slice(0, 5000)}
@@ -218,6 +222,7 @@ export async function handleClinicalCaseStep(input: {
   previousHistory?: { role: string; text: string }[];
 }) {
   const { caseTitle, patientData, actionTaken, previousHistory = [] } = input;
+  if (containsPotentialPatientIdentifiers({ caseTitle, patientData, actionTaken, previousHistory })) return { success: false, error: PATIENT_DATA_BLOCK_MESSAGE };
   const ai = getGenAI();
 
   if (!ai) {
@@ -240,7 +245,7 @@ Has actuado con criterio de seguridad clínica. Recuerda siempre mantener la cal
   }
 
   try {
-    const prompt = `Eres un Médico Adjunto e Instructor de Simulación Clínica Avanzada en el Hospital Universitario de Toledo, evaluando a la alumna de enfermería Julia H. Carreras.
+    const prompt = `Eres un Médico Adjunto e Instructor de Simulación Clínica Avanzada en el Hospital Universitario de Toledo, evaluando a la alumna de enfermería Julia.
 Caso clínico en curso: "${caseTitle}".
 Datos basales del paciente:
 ${JSON.stringify(patientData, null, 2)}
@@ -297,6 +302,7 @@ export async function generateCitations(input: {
   sourceType?: string;
 }) {
   const { sourceText, sourceType = 'Artículo científico' } = input;
+  if (containsPotentialPatientIdentifiers(sourceText)) return { success: false, error: PATIENT_DATA_BLOCK_MESSAGE };
   const ai = getGenAI();
 
   if (!sourceText || sourceText.trim().length < 5) {
@@ -317,7 +323,7 @@ export async function generateCitations(input: {
 
   try {
     const prompt = `Eres una bibliotecaria médica y experta en metodología de la investigación de Enfermería.
-A partir de estos datos o texto de una fuente bibliográfica (${sourceType}):
+A partir de estos datos bibliográficos (${sourceType}), crea una referencia provisional y no inventes ningún campo ausente. Marca expresamente los datos no proporcionados para que la estudiante los contraste en el registro original:
 """
 ${sourceText}
 """
@@ -361,6 +367,7 @@ export async function summarizeNursingNotes(input: {
   subject?: string;
 }) {
   const { text, subject = 'Enfermería' } = input;
+  if (containsPotentialPatientIdentifiers(text)) return { success: false, error: PATIENT_DATA_BLOCK_MESSAGE };
   const ai = getGenAI();
 
   if (!text || text.trim().length < 20) {
@@ -385,8 +392,8 @@ export async function summarizeNursingNotes(input: {
 
   try {
     const prompt = `Eres un Catedrático y Tutor de Apoyo de la Facultad de Enfermería de la UCLM.
-Tu alumna es Julia H. Carreras.
-Resume los siguientes apuntes de la asignatura "${subject}" de forma visual, pedagógica y de alto impacto para aprobar sus exámenes y rotatorios:
+Tu alumna es Julia.
+Resume los siguientes apuntes de la asignatura "${subject}" con enfoque académico y visual. No incluyas dosis, cálculos de medicación, diluciones, pautas, administración de fármacos ni instrucciones operativas de procedimientos clínicos. Si aparecen en el texto, omítelos y señala que deben consultarse únicamente en materiales docentes supervisados:
 
 """
 ${text.slice(0, 7000)}
@@ -397,7 +404,7 @@ Estructura tu respuesta en formato JSON con:
   "title": "Título conciso y claro del tema",
   "executiveSummary": "Resumen ejecutivo de 3-4 párrafos estructurados con negritas y viñetas",
   "keyConcepts": ["Concepto clave 1 con explicación breve", "Concepto clave 2...", "Concepto clave 3..."],
-  "normalValuesAndTables": "Tabla o lista de constantes, calibres, dosis o valores de referencia relevantes para enfermería",
+  "normalValuesAndTables": "Tabla conceptual general; no incluir dosis, pautas, valores para tomar decisiones clínicas ni instrucciones operativas",
   "clinicalMnemonics": ["Regla nemotécnica 1", "Regla nemotécnica 2"],
   "typicalExamQuestions": [
     "Pregunta típica de examen que suelen poner los profesores de la UCLM sobre este tema",
@@ -432,6 +439,7 @@ export async function cleanClassTranscript(input: {
   professor?: string;
 }) {
   const { rawTranscript, subject = 'Clase de Enfermería', professor = 'Profesor/a' } = input;
+  if (containsPotentialPatientIdentifiers({ rawTranscript, professor })) return { success: false, error: PATIENT_DATA_BLOCK_MESSAGE };
   const ai = getGenAI();
 
   if (!rawTranscript || rawTranscript.trim().length < 15) {
@@ -459,7 +467,7 @@ ${rawTranscript
   }
 
   try {
-    const prompt = `Eres un asistente de estudio para Julia H. Carreras, estudiante de 1.º de Enfermería en la UCLM Toledo.
+    const prompt = `Eres un asistente de estudio para Julia, estudiante de 1.º de Enfermería en la UCLM Toledo.
 A continuación tienes la transcripción en bruto (o notas de voz dictadas) de una clase de "${subject}" impartida por ${professor}:
 
 """
@@ -468,7 +476,7 @@ ${rawTranscript.slice(0, 6000)}
 
 Tu tarea es:
 1. Eliminar muletillas, repeticiones y frases incompletas.
-2. Estructurar el contenido en títulos, subtítulos, listas con viñetas y términos en negrita.
+2. Estructurar el contenido en títulos, subtítulos, listas con viñetas y términos en negrita, sin reproducir dosis ni instrucciones operativas de procedimientos clínicos.
 3. Extraer una sección especial: "⚠️ Posibles Preguntas de Examen (Avisos del profesor)".
 4. Extraer "💊 Perlas y Cuidados de Enfermería".
 

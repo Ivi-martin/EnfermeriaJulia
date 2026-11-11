@@ -222,7 +222,7 @@ export const EmergencyView: React.FC = () => {
           <div className="space-y-3 text-xs">
             <div>
               <span className="text-[10px] uppercase font-bold text-stone-400 block">Titular:</span>
-              <strong className="text-stone-900 text-sm block">Julia H. Carreras</strong>
+              <strong className="text-stone-900 text-sm block">Julia</strong>
               <span className="text-[11px] text-stone-500">Estudiante 1.º Grado en Enfermería UCLM</span>
             </div>
 

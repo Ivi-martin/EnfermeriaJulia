@@ -260,10 +260,10 @@ export const UCLMView: React.FC = () => {
               </div>
               <div>
                 <strong className="text-sm font-extrabold text-stone-900 block">
-                  {selectedYear === 1 ? 'Primer Curso: Fundamentos Básicos y Ciencias de la Salud' :
-                   selectedYear === 2 ? 'Segundo Curso: Fisiopatología, Farmacología y Estancias Clínicas I' :
-                   selectedYear === 3 ? 'Tercer Curso: Materno-Infantil, Salud Mental y Prácticas II-III' :
-                   'Cuarto Curso: Urgencias, Críticos, Prácticas IV-V y TFG'}
+                  {selectedYear === 1 ? 'Primer curso: bases científicas y Fundamentos de Enfermería' :
+                   selectedYear === 2 ? 'Segundo curso: enfermería comunitaria, médico-quirúrgica y estancias clínicas' :
+                   selectedYear === 3 ? 'Tercer curso: áreas especializadas, estancias clínicas y optativa' :
+                   'Cuarto curso: Practicum y Trabajo Fin de Grado'}
                 </strong>
                 <span className="text-xs text-stone-500">
                   Total del curso: {yearEcts} ECTS · Superados: {yearApprovedEcts} ECTS
@@ -429,6 +429,26 @@ export const UCLMView: React.FC = () => {
               );
             })}
           </div>
+          {state.legacySubjects.length > 0 && (
+            <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+              <div className="flex items-start gap-3">
+                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-amber-950">Datos conservados del plan anterior</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-900">Estas asignaturas no tienen una equivalencia individual confirmada en el plan oficial actual. Se conservan aquí para que no se pierdan las notas y el progreso antiguos. No computan en los 240 ECTS ni se consideran asignaturas oficiales; revisa cualquier equivalencia con la UCLM.</p>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                {state.legacySubjects.map((legacy, index) => (
+                  <div key={`${legacy.code}-${index}`} className="rounded-xl border border-amber-200 bg-white/80 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm text-stone-800">{legacy.name}</strong><span className="font-mono text-[10px] text-stone-500">{legacy.code}</span></div>
+                    <p className="mt-1 text-xs text-stone-500">{legacy.year}.º curso · {legacy.ects} ECTS históricos · {legacy.sem}</p>
+                    <p className="mt-1 text-xs text-stone-600">Estado guardado: {legacy.status || 'Sin estado'} · Progreso: {legacy.progress || 0}%{legacy.grade !== undefined ? ` · Nota guardada: ${legacy.grade.toFixed(1)}` : ''}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
@@ -439,15 +459,19 @@ export const UCLMView: React.FC = () => {
             <KeyRound className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <strong className="text-sm font-extrabold text-amber-900 block">
-                ¿Qué son las Asignaturas Llave en el Grado de Enfermería de Toledo?
+                Requisitos académicos y asignaturas llave
               </strong>
               <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                Son materias troncales cuyos créditos deben estar oficialmente superados antes de poder matricularte en las rotaciones clínicas con pacientes reales o en cursos superiores. Garantizan la seguridad asistencial del paciente en centros sanitarios.
+                Solo deben mostrarse aquí requisitos confirmados en la normativa, la guía docente o la información oficial vigente de la UCLM. No se infieren requisitos a partir del orden de las asignaturas.
               </p>
             </div>
           </div>
 
-          <div className="space-y-4">
+          {PREREQUISITE_RULES.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-5 text-sm text-stone-600">
+              La UCLM publica un requisito previo de Fundamentos de Enfermería para Estancias Clínicas 1 y 2. Como la página consultada no especifica aquí el código exacto de la asignatura llave, confirma su interpretación con la guía docente y la Secretaría antes de tomar decisiones de matrícula.
+            </div>
+          ) : <div className="space-y-4">
             {PREREQUISITE_RULES.map((rule, idx) => (
               <div key={idx} className="bg-white rounded-2xl p-5 border border-stone-200 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
@@ -476,7 +500,7 @@ export const UCLMView: React.FC = () => {
                       Materias Requeridas Previas:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {rule.requiredCodes.map(code => {
+                      {rule.requiredCodes.length === 0 ? <span className="text-xs text-stone-500">Fundamentos de Enfermería (código exacto pendiente de confirmación)</span> : rule.requiredCodes.map(code => {
                         const reqSub = fullCurriculum.find(s => s.code === code);
                         const isPassed = reqSub?.status === 'Aprobada';
                         return (
@@ -502,7 +526,7 @@ export const UCLMView: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
         </div>
       )}
 

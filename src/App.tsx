@@ -32,6 +32,7 @@ import { EmergencyView } from './views/EmergencyView';
 import { VaultView } from './views/VaultView';
 import { CimaDrugSearchView } from './views/CimaDrugSearchView';
 import { Footer } from './components/Footer';
+import { SmartWeekView, ScientificEvidenceView, PracticePassportView, ECOETrainerView, ClinicalSourcesView, ToledoPocketView, TFGManagerView } from './views/NewCampusViews';
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('today');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -40,6 +41,20 @@ export default function App() {
     switch (currentPage) {
       case 'today':
         return <TodayView onNavigate={setCurrentPage} />;
+      case 'smartWeek':
+        return <SmartWeekView />;
+      case 'evidence':
+        return <ScientificEvidenceView />;
+      case 'practicePassport':
+        return <PracticePassportView />;
+      case 'ecoeTrainer':
+        return <ECOETrainerView />;
+      case 'clinicalSources':
+        return <ClinicalSourcesView />;
+      case 'toledoPocket':
+        return <ToledoPocketView />;
+      case 'tfg':
+        return <TFGManagerView />;
       case 'shortcuts':
         return <ShortcutsView />;
       case 'uclm':

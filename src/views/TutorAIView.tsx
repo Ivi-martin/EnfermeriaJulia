@@ -39,116 +39,60 @@ interface TutorPersona {
 
 const TUTOR_PERSONAS: TutorPersona[] = [
   {
-    id: 'anatomia',
-    name: 'Dr. Martín Moreno',
-    title: 'Dr. Martín Moreno (Anatomía Humana)',
-    specialty: 'Estructuras, planos, inervación y vascularización',
-    description: 'Especialista en conectar la anatomía descriptiva con la punción venosa, auscultación y exploración.',
-    icon: Brain,
-    color: 'text-indigo-700',
-    bgLight: 'bg-indigo-50 border-indigo-200',
-    welcomeMessage: '¡Hola, Julia! 🧠 Soy el Dr. Martín Moreno, tu profesor de Anatomía Humana en la UCLM. Estoy aquí para ayudarte a dominar planos, huesos, músculos, inervación y vascularización, conectándolos siempre con la práctica enfermera (vías venosas, zonas de inyección y exploración física). ¿Qué estructura anatómica estamos repasando hoy?',
-    suggestedPrompts: [
-      'Explícame la diferencia entre el sistema nervioso simpático y parasimpático con ejemplos clínicos.',
-      '¿Cuáles son las referencias anatómicas para localizar el pulso carotídeo y femoral?',
-      '¿En qué espacios intercostales se colocan las derivaciones precordiales V1 a V6 del ECG?'
-    ]
+    id: 'anatomia', name: 'Dr. Martín Moreno', title: 'Dr. Martín Moreno · Anatomía Humana',
+    specialty: 'Estructuras, planos, órganos y relaciones anatómicas',
+    description: 'Apoyo conceptual para comprender la organización del cuerpo humano y su vocabulario.',
+    icon: Brain, color: 'text-indigo-700', bgLight: 'bg-indigo-50 border-indigo-200',
+    welcomeMessage: '¡Hola, Julia! Soy Dr. Martín Moreno, un personaje ficticio de tutoría virtual para apoyo académico en Anatomía Humana. No soy una persona real, profesor ni representante de la UCLM. Puedo ayudarte a comprender conceptos, organizar apuntes y preparar preguntas de repaso. Contrasta siempre el contenido con tus materiales docentes.',
+    suggestedPrompts: ['Compara los planos anatómicos y pon ejemplos teóricos.', 'Explícame la diferencia entre sistema nervioso simpático y parasimpático.', 'Ayúdame a crear una tabla de términos anatómicos para estudiar.']
   },
   {
-    id: 'fisiologia',
-    name: 'Dra. Isabel Carrerillas',
-    title: 'Dra. Isabel Carrerillas (Fisiología Humana)',
+    id: 'fisiologia', name: 'Dra. Isabel Carrerillas', title: 'Dra. Isabel Carrerillas · Fisiología Humana',
     specialty: 'Homeostasis, hemodinámica y neurofisiología',
-    description: 'Te ayuda a comprender cómo responde el cuerpo humano ante la hipoxia, el dolor y la deshidratación.',
-    icon: Sparkles,
-    color: 'text-sky-700',
-    bgLight: 'bg-sky-50 border-sky-200',
-    welcomeMessage: '¡Hola, Julia! ⚡ Soy la Dra. Isabel Carrerillas, tutora de Fisiología Humana. Mi objetivo es que comprendas el "por qué" de las respuestas del cuerpo humano: potenciales de acción, regulación homeostática, transporte de gases y equilibrio hemodinámico. Cuéntame qué mecanismo o ciclo fisiológico quieres que analicemos.',
-    suggestedPrompts: [
-      'Explícame paso a paso el sistema Renina-Angiotensina-Aldosterona (SRAA).',
-      '¿Qué ocurre en el potencial de acción del miocardio durante la fase de meseta?',
-      '¿Por qué en un paciente retenedor crónico de CO2 no debemos subir bruscamente la FiO2?'
-    ]
+    description: 'Explicaciones conceptuales de los mecanismos fisiológicos con ejemplos académicos.',
+    icon: Sparkles, color: 'text-sky-700', bgLight: 'bg-sky-50 border-sky-200',
+    welcomeMessage: '¡Hola, Julia! Soy la Dra. Isabel Carrerillas, un personaje ficticio de tutoría virtual para apoyo académico en Fisiología Humana. No soy una persona real, docente ni representante de la UCLM. Puedo explicar mecanismos como la homeostasis, el potencial de acción o el transporte de gases desde un enfoque teórico y ayudarte a autoevaluarte.',
+    suggestedPrompts: ['Explícame el concepto de homeostasis con un ejemplo sencillo.', 'Resume las fases del potencial de acción celular.', 'Crea cinco preguntas de repaso sobre transporte de gases.']
   },
   {
-    id: 'farmacologia',
-    name: 'Dr. Ivancito Moreno',
-    title: 'Dr. Ivancito Moreno (Farmacología Clínica)',
-    specialty: 'Mecanismos, 10 Correctos, diluciones y antídotos',
-    description: 'Enfoque de máxima seguridad: cálculos de goteo, incompatibilidades y precauciones.',
-    icon: Pill,
-    color: 'text-emerald-700',
-    bgLight: 'bg-emerald-50 border-emerald-200',
-    welcomeMessage: '¡Hola, Julia! 💊 Soy el Dr. Ivancito Moreno, especialista en Farmacología Clínica y Seguridad del Medicamento. Conmigo repasaremos los 10 Correctos, diluciones, ritmos de perfusión en bomba, antídotos e incompatibilidades intravenosas en Y. ¡La seguridad del paciente es nuestra máxima prioridad! ¿Qué fármaco o cálculo de dosis tienes entre manos?',
-    suggestedPrompts: [
-      '¿Por qué la Furosemida y la Morfina son incompatibles en Y?',
-      '¿Cómo calculo la dosis pediátrica de paracetamol para un niño de 18 kg?',
-      'Explícame los antídotos de la heparina, las benzodiacepinas y los opioides.'
-    ]
+    id: 'farmacologia', name: 'Dr. Ivancito Moreno', title: 'Dr. Ivancito Moreno · Farmacología Clínica',
+    specialty: 'Conceptos, familias farmacológicas y vocabulario',
+    description: 'Apoyo teórico para estudiar mecanismos generales y terminología farmacológica.',
+    icon: Pill, color: 'text-emerald-700', bgLight: 'bg-emerald-50 border-emerald-200',
+    welcomeMessage: '¡Hola, Julia! Soy el Dr. Ivancito Moreno, un personaje ficticio de tutoría virtual para apoyo académico en Farmacología Clínica. No soy una persona real, profesional sanitario ni docente de la UCLM. Puedo ayudarte con conceptos generales, clasificación y vocabulario. No proporciono dosis, diluciones, pautas, cálculos para administrar medicamentos ni instrucciones de uso; esas materias requieren materiales docentes oficiales y supervisión cualificada.',
+    suggestedPrompts: ['Diferencia farmacocinética y farmacodinámica.', 'Crea un glosario de conceptos básicos de farmacología.', 'Explica de forma general qué significa agonista y antagonista.']
   },
   {
-    id: 'laboratorio',
-    name: 'Dra. Laura Ratilla',
-    title: 'Dra. Laura Ratilla (Diagnóstico & Analíticas)',
-    specialty: 'Interpretación analítica, iones y gasometrías',
-    description: 'Lectura sistemática de ECG de 12 derivaciones, orden de llenado de tubos y equilibrio ácido-base.',
-    icon: TestTube2,
-    color: 'text-teal-700',
-    bgLight: 'bg-teal-50 border-teal-200',
-    welcomeMessage: '¡Hola, Julia! 🧪 Soy la Dra. Laura Ratilla, responsable de Laboratorio Clínico y Diagnóstico. Te enseñaré a interpretar analíticas de sangre, gasometrías arteriales, orden de llenado de tubos según el CLSI y lectura sistemática del ECG de 12 derivaciones. ¿Qué resultado analítico o trazado quieres examinar?',
-    suggestedPrompts: [
-      '¿Cómo interpreto una gasometría arterial con pH 7.28, pCO2 55 y HCO3 25?',
-      '¿Cuál es el orden oficial de llenado de tubos según el CLSI y por qué?',
-      '¿Qué significa una elevación de troponinas junto a un descenso del segmento ST?'
-    ]
+    id: 'laboratorio', name: 'Dra. Laura Ratilla', title: 'Dra. Laura Ratilla · Diagnóstico & Analíticas',
+    specialty: 'Terminología de laboratorio y conceptos de fisiopatología',
+    description: 'Ayuda a comprender para qué sirven las pruebas y qué conceptos estudian, sin interpretar resultados reales.',
+    icon: TestTube2, color: 'text-teal-700', bgLight: 'bg-teal-50 border-teal-200',
+    welcomeMessage: '¡Hola, Julia! Soy la Dra. Laura Ratilla, un personaje ficticio de tutoría virtual para apoyo académico en Diagnóstico & Analíticas. No soy una persona real, docente ni representante de la UCLM. Puedo explicar qué estudia una prueba y su terminología general. No interpreto resultados de personas reales ni sustituyo la valoración de profesionales o las indicaciones docentes.',
+    suggestedPrompts: ['¿Qué información general aporta un hemograma?', 'Explica los conceptos de pH, ácido y base.', 'Crea preguntas teóricas sobre los componentes de la sangre.']
   },
   {
-    id: 'ecoe',
-    name: 'Dra. Luci Luci',
-    title: 'Dra. Luci Luci (Coordinadora ECOE / Simulación)',
-    specialty: 'Técnica aséptica, bateas y errores críticos',
-    description: 'Entrenamiento riguroso para las estaciones de evaluación práctica de la facultad.',
-    icon: Stethoscope,
-    color: 'text-rose-700',
-    bgLight: 'bg-rose-50 border-rose-200',
-    welcomeMessage: '¡Hola, Julia! 🩺 Soy la Dra. Luci Luci, coordinadora de Simulación Clínica y Estaciones ECOE. Mi labor es prepararte para superar con solvencia tus evaluaciones prácticas: técnica aséptica estricta, orden de batea, comunicación con el paciente y cero errores críticos eliminatorios. ¿Qué estación práctica vamos a simular?',
-    suggestedPrompts: [
-      'Simula conmigo la estación de canalización de vía venosa periférica paso a paso.',
-      '¿Cuáles son los 3 errores críticos que suspenden automáticamente una estación ECOE?',
-      '¿Cómo presento un informe clínico según la metodología SBAR?'
-    ]
+    id: 'ecoe', name: 'Dra. Luci Luci', title: 'Dra. Luci Luci · Coordinadora ECOE / Simulación',
+    specialty: 'Comunicación, reflexión y preparación académica',
+    description: 'Ayuda a organizar el estudio de estaciones simuladas y a reflexionar sobre objetivos docentes.',
+    icon: Stethoscope, color: 'text-rose-700', bgLight: 'bg-rose-50 border-rose-200',
+    welcomeMessage: '¡Hola, Julia! Soy la Dra. Luci Luci, un personaje ficticio de tutoría virtual para preparar el estudio de ECOE y la simulación. No soy una persona real ni coordino las evaluaciones de la universidad ni puedo certificar competencias. Puedo ayudarte a estructurar objetivos, comunicación y reflexión. La práctica de cualquier procedimiento debe aprenderse exclusivamente con docentes y supervisión presencial.',
+    suggestedPrompts: ['Ayúdame a organizar una reflexión después de una estación simulada.', '¿Qué es la comunicación SBAR a nivel conceptual?', 'Cómo preparar una lista de dudas para comentar con el profesorado.']
   },
   {
-    id: 'fundamentos',
-    name: 'Prof. Ivi Moca',
-    title: 'Prof. Ivi Moca (Fundamentos & Metodología PAE)',
-    specialty: 'NANDA, NOC, NIC y patrones de Gordon',
-    description: 'Formulación diagnóstica en formato PES, planificación y pensamiento enfermero.',
-    icon: BookOpen,
-    color: 'text-purple-700',
-    bgLight: 'bg-purple-50 border-purple-200',
-    welcomeMessage: '¡Hola, Julia! 📋 Soy el Prof. Ivi Moca, docente de Fundamentos de Enfermería y Metodología del Cuidado. Juntos trabajaremos el PAE, las 14 Necesidades de Virginia Henderson, los Patrones Funcionales de Gordon y la formulación diagnóstica NANDA-NOC-NIC en formato PES. ¿Qué caso o diagnóstico enfermero estás elaborando?',
-    suggestedPrompts: [
-      'Ayúdame a formular un diagnóstico NANDA para un paciente con dolor agudo postquirúrgico.',
-      '¿Cómo se relacionan los 11 Patrones Funcionales de Gordon con el PAE?',
-      'Diferencia entre un diagnóstico enfermero real y uno de riesgo.'
-    ]
+    id: 'fundamentos', name: 'Prof. Ivi Moca', title: 'Prof. Ivi Moca · Fundamentos & Metodología PAE',
+    specialty: 'Proceso de atención, modelos y razonamiento académico',
+    description: 'Apoyo conceptual para estudiar modelos de cuidados y metodología enfermera.',
+    icon: BookOpen, color: 'text-purple-700', bgLight: 'bg-purple-50 border-purple-200',
+    welcomeMessage: '¡Hola, Julia! Soy el Prof. Ivi Moca, un personaje ficticio de tutoría virtual para apoyo académico en Fundamentos de Enfermería y Metodología PAE. No soy una persona real, docente ni representante de la UCLM. Puedo ayudarte a comprender modelos teóricos, fases del proceso de atención y vocabulario. Comprueba siempre el uso de taxonomías protegidas y sigue las instrucciones de tu asignatura.',
+    suggestedPrompts: ['Compara los modelos de Henderson y Gordon a nivel teórico.', 'Explica las fases generales del proceso de atención de enfermería.', 'Diferencia un objetivo general de uno específico.']
   },
   {
-    id: 'academico',
-    name: 'Prof. Pedri González',
-    title: 'Prof. Pedri González (Orientador Académico)',
-    specialty: 'Plan de estudios, asignaturas llave y tiempo',
-    description: 'Orientación para planificar tu curso, compatibilizar estudio y superar primero con serenidad.',
-    icon: GraduationCap,
-    color: 'text-amber-700',
-    bgLight: 'bg-amber-50 border-amber-200',
-    welcomeMessage: '¡Hola, Julia! 🎓 Soy el Prof. Pedri González, tu Orientador Académico del Grado en Enfermería en Toledo. Estoy aquí para ayudarte a organizar tu tiempo, planificar el estudio de tus 10 asignaturas de primero, entender las asignaturas llave para pasar a segundo y gestionar las semanas de exámenes con serenidad. ¿En qué puedo orientarte hoy?',
-    suggestedPrompts: [
-      '¿Qué asignaturas de 1.º son llave para poder ir a las prácticas de 2.º curso?',
-      'Dame un plan de estudio semanal de 2 horas al día para compaginar Anatomía y Fundamentos.',
-      '¿Cómo se estructuran los exámenes parciales y finales en la UCLM?'
-    ]
+    id: 'academico', name: 'Prof. Pedri González', title: 'Prof. Pedri González · Orientador Académico',
+    specialty: 'Planificación del estudio, tareas y gestión del tiempo',
+    description: 'Ayuda a dividir objetivos académicos en tareas alcanzables y revisar la carga semanal.',
+    icon: GraduationCap, color: 'text-amber-700', bgLight: 'bg-amber-50 border-amber-200',
+    welcomeMessage: '¡Hola, Julia! Soy el Prof. Pedri González, un personaje ficticio de tutoría virtual y orientación académica. No soy una persona real ni represento a la UCLM ni puedo confirmar requisitos oficiales. Puedo ayudarte a planificar el estudio y organizar entregas; verifica las fechas, guías docentes y prerrequisitos en los canales universitarios.',
+    suggestedPrompts: ['Ayúdame a repartir tres asignaturas en una semana de estudio.', 'Divide un tema extenso en sesiones cortas de repaso.', 'Diseña una plantilla semanal para priorizar tareas y descanso.']
   }
 ];
 
@@ -156,7 +100,7 @@ export const TutorAIView: React.FC = () => {
   const { state } = useCampusStore();
   const [activeTab, setActiveTab] = useState<'chat' | 'citations' | 'transcription'>('chat');
 
-  // --- Tutor Chat State: Hilos de conversación independientes por cada tutor docente ---
+  // --- Tutor Chat State: hilos independientes para perfiles virtuales ficticios ---
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>('anatomia');
   const [threads, setThreads] = useState<Record<string, TutorChatMessage[]>>(() => {
     const initial: Record<string, TutorChatMessage[]> = {};
@@ -175,6 +119,9 @@ export const TutorAIView: React.FC = () => {
   });
 
   const [inputText, setInputText] = useState<string>('');
+  const [privacyConfirmed, setPrivacyConfirmed] = useState(false);
+  const [citationPrivacyConfirmed, setCitationPrivacyConfirmed] = useState(false);
+  const [transcriptPrivacyConfirmed, setTranscriptPrivacyConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -204,6 +151,7 @@ export const TutorAIView: React.FC = () => {
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text || isLoading) return;
+    if (!privacyConfirmed) { alert('Antes de enviar, confirma que el texto no contiene datos personales ni información identificable de pacientes.'); return; }
 
     const userMsg: TutorChatMessage = {
       id: 'msg-' + Date.now(),
@@ -218,6 +166,7 @@ export const TutorAIView: React.FC = () => {
       [selectedPersonaId]: [...(prev[selectedPersonaId] || []), userMsg]
     }));
     setInputText('');
+    setPrivacyConfirmed(false);
     setIsLoading(true);
 
     const history = currentMessages.slice(-8).map(m => ({
@@ -233,15 +182,14 @@ export const TutorAIView: React.FC = () => {
           message: text,
           history,
           tutor: selectedPersonaId,
-          subject: activePersona.name
+          subject: `${activePersona.name} · ${activePersona.title}`
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Error en servidor: ${response.status}`);
-      }
-
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `Error en servidor: ${response.status}`);
+      }
       const tutorReplyText = data.reply || 'No se pudo generar respuesta.';
 
       const tutorMsg: TutorChatMessage = {
@@ -260,7 +208,8 @@ export const TutorAIView: React.FC = () => {
       const fallbackMsg: TutorChatMessage = {
         id: 'fallback-' + Date.now(),
         sender: 'tutor',
-        text: `[${activePersona.title}]\n\nHola Julia, sobre tu consulta de "${text}":\n\n1. **Concepto Clínico**: Recuerda que en ${activePersona.specialty} la clave es relacionar la teoría fisiológica con la seguridad directa del paciente.\n2. **Punto Crítico**: En las evaluaciones de la UCLM, se valora tanto la precisión teórica como la justificación de cada cuidado de enfermería.\n3. **Revisión**: Consulta este bloque temático en las guías docentes de Fábrica de Armas y practica con nuestras estaciones de simulación ECOE y el banco de preguntas.`,
+        text: err instanceof Error ? err.message : 'No se pudo conectar con el tutor virtual. Revisa tus materiales docentes y vuelve a intentarlo más tarde.',
+
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         tutorPersona: selectedPersonaId
       };
@@ -286,6 +235,7 @@ export const TutorAIView: React.FC = () => {
 
   const handleGenerateCitation = async () => {
     if (!citationSourceText.trim()) return;
+    if (!citationPrivacyConfirmed) { alert('Confirma que solo has incluido datos bibliográficos y que no hay datos personales o de pacientes.'); return; }
     setIsGeneratingCitation(true);
     try {
       const res = await fetch('/api/ai/citations', {
@@ -317,6 +267,7 @@ export const TutorAIView: React.FC = () => {
       alert('Pega al menos 15 caracteres de transcripción o notas de clase.');
       return;
     }
+    if (!transcriptPrivacyConfirmed) { alert('Confirma que el texto no contiene información personal ni datos identificables de pacientes.'); return; }
     setIsTranscribing(true);
     try {
       const res = await fetch('/api/ai/transcribe', {
@@ -348,10 +299,10 @@ export const TutorAIView: React.FC = () => {
               <span>ASISTENTE INTELIGENTE PARA CIENCIAS DE LA SALUD</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Tutor IA · Docentes, Citas & Transcripción de Clases
+              Tutor IA · Apoyo académico, citas y transcripción
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Resuelve dudas con 7 profesores especialistas, genera referencias bibliográficas automáticas en formato Vancouver y APA 7, y convierte grabaciones o notas de voz en apuntes limpios.
+              Siete perfiles virtuales ficticios te ayudan a estudiar. No son docentes ni representantes de la UCLM. Contrasta la información y no introduzcas datos de pacientes ni información personal.
             </p>
           </div>
         </div>
@@ -365,7 +316,7 @@ export const TutorAIView: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4" />
-            <span>7 Tutores Universitarios (Chat)</span>
+            <span>7 tutores virtuales (Chat)</span>
           </button>
           <button
             onClick={() => setActiveTab('citations')}
@@ -396,7 +347,7 @@ export const TutorAIView: React.FC = () => {
           {/* Persona selector sidebar (1 col) */}
           <div className="space-y-3">
             <span className="text-xs font-black uppercase tracking-wider text-stone-500 px-1 block">
-              Elige tu Tutor Docente:
+              Elige un perfil temático:
             </span>
             <div className="space-y-2">
               {TUTOR_PERSONAS.map((persona) => {
@@ -500,7 +451,7 @@ export const TutorAIView: React.FC = () => {
                   </div>
                   <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-500 flex items-center gap-2">
                     <RotateCcw className="w-3.5 h-3.5 animate-spin text-emerald-700" />
-                    <span>El profesor está formulando su respuesta pedagógica...</span>
+                    <span>El tutor virtual está preparando una explicación académica...</span>
                   </div>
                 </div>
               )}
@@ -512,7 +463,7 @@ export const TutorAIView: React.FC = () => {
               {activePersona.suggestedPrompts.map((p, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSendMessage(p)}
+                  onClick={() => { setInputText(p); setPrivacyConfirmed(false); }}
                   className="px-3 py-1 rounded-xl bg-white border border-stone-200 hover:border-emerald-500 text-[11px] text-stone-700 whitespace-nowrap transition"
                 >
                   {p}
@@ -521,22 +472,25 @@ export const TutorAIView: React.FC = () => {
             </div>
 
             {/* Input bar */}
-            <div className="p-4 border-t border-stone-100 bg-white flex items-center gap-2">
+            <div className="p-4 border-t border-stone-100 bg-white space-y-3">
+              <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-950"><input type="checkbox" className="mt-0.5 accent-emerald-700" checked={privacyConfirmed} onChange={e => setPrivacyConfirmed(e.target.checked)} /><span>Confirmo que no incluyo nombres, iniciales, fechas de nacimiento, teléfonos, identificadores, números de historia ni ningún dato que permita identificar a pacientes. Este texto puede enviarse a un proveedor externo de IA.</span></label>
+              <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => { setInputText(e.target.value); setPrivacyConfirmed(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={`Pregunta a ${activePersona.name}...`}
+                placeholder={`Escribe una pregunta académica para ${activePersona.name}...`}
                 className="flex-1 px-4 py-2.5 rounded-2xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
               />
               <button
                 onClick={() => handleSendMessage()}
-                disabled={isLoading || !inputText.trim()}
+                disabled={isLoading || !inputText.trim() || !privacyConfirmed}
                 className="px-5 py-2.5 rounded-2xl bg-[#365e45] text-white text-xs font-bold hover:bg-[#284935] transition shadow-xs disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </button>
+              </div>
             </div>
           </div>
         </div>
@@ -556,7 +510,7 @@ export const TutorAIView: React.FC = () => {
                 </h2>
               </div>
               <p className="text-xs text-stone-500 mt-1">
-                Pega el título del artículo, DOI, autores o fragmento de un libro o guía clínica. La IA generará la referencia bibliográfica exacta para tus trabajos de la UCLM.
+                Introduce solo datos bibliográficos: título, DOI, autores o publicación. La IA puede equivocarse; verifica cada dato en el registro original antes de citarlo. No pegues informes, historias clínicas ni datos personales.
               </p>
             </div>
 
@@ -567,16 +521,17 @@ export const TutorAIView: React.FC = () => {
               <textarea
                 rows={3}
                 value={citationSourceText}
-                onChange={(e) => setCitationSourceText(e.target.value)}
+                onChange={(e) => { setCitationSourceText(e.target.value); setCitationPrivacyConfirmed(false); }}
                 placeholder="ej. Kozier & Erb Fundamentos de Enfermería 9ª edición / o pega: Title: Flebitis Zero, Author: Ministerio de Sanidad..."
                 className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono"
               />
             </div>
 
+            <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[11px] text-amber-950"><input type="checkbox" className="mt-0.5 accent-emerald-700" checked={citationPrivacyConfirmed} onChange={e => setCitationPrivacyConfirmed(e.target.checked)} /><span>Confirmo que solo son datos bibliográficos y que no incluyen información personal ni de pacientes. El contenido se enviará a un servicio externo de IA.</span></label>
             <div className="flex justify-end">
               <button
                 onClick={handleGenerateCitation}
-                disabled={isGeneratingCitation || !citationSourceText.trim()}
+                disabled={isGeneratingCitation || !citationSourceText.trim() || !citationPrivacyConfirmed}
                 className="px-6 py-2.5 rounded-xl bg-[#365e45] text-white text-xs font-extrabold hover:bg-[#284935] transition shadow-xs flex items-center gap-2 disabled:opacity-50"
               >
                 {isGeneratingCitation ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -657,7 +612,7 @@ export const TutorAIView: React.FC = () => {
                 </h2>
               </div>
               <p className="text-xs text-stone-500 mt-1">
-                Pega la transcripción en bruto del dictado de clase o tus notas de voz. La IA eliminará muletillas, ordenará el tema por epígrafes y destacará los avisos del profesor sobre preguntas de examen.
+                Pega únicamente apuntes docentes o una transcripción autorizada. El texto se envía a un proveedor externo de IA. No incluyas nombres, casos reales, historias clínicas ni información que identifique a pacientes o terceras personas.
               </p>
             </div>
 
@@ -677,17 +632,18 @@ export const TutorAIView: React.FC = () => {
                 <textarea
                   rows={5}
                   value={transcriptRaw}
-                  onChange={(e) => setTranscriptRaw(e.target.value)}
+                  onChange={(e) => { setTranscriptRaw(e.target.value); setTranscriptPrivacyConfirmed(false); }}
                   placeholder="Pega aquí el texto del dictado o grabación de la clase..."
                   className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono"
                 />
               </div>
             </div>
 
+            <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[11px] text-amber-950"><input type="checkbox" className="mt-0.5 accent-emerald-700" checked={transcriptPrivacyConfirmed} onChange={e => setTranscriptPrivacyConfirmed(e.target.checked)} /><span>Confirmo que son apuntes o transcripción docente autorizada y no contienen datos personales ni información identificable de pacientes o terceras personas. El texto se enviará a un servicio externo de IA.</span></label>
             <div className="flex justify-end">
               <button
                 onClick={handleCleanTranscript}
-                disabled={isTranscribing || transcriptRaw.trim().length < 15}
+                disabled={isTranscribing || transcriptRaw.trim().length < 15 || !transcriptPrivacyConfirmed}
                 className="px-6 py-2.5 rounded-xl bg-[#365e45] text-white text-xs font-extrabold hover:bg-[#284935] transition shadow-xs flex items-center gap-2 disabled:opacity-50"
               >
                 {isTranscribing ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}

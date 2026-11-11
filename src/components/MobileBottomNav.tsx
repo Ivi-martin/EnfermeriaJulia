@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, GraduationCap, Brain, TestTube2, Stethoscope, Pill, Bot } from 'lucide-react';
+import { Sun, CalendarDays, Library, ClipboardCheck, MapPin } from 'lucide-react';
 
 interface MobileBottomNavProps {
   currentPage: string;
@@ -12,12 +12,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const quickItems = [
     { id: 'today', label: 'Mi Día', icon: Sun },
-    { id: 'uclm', label: 'Mi UCLM', icon: GraduationCap },
-    { id: 'academy', label: 'Academia', icon: Brain },
-    { id: 'laboratory', label: 'Laboratorio', icon: TestTube2 },
-    { id: 'ecoe', label: 'ECOE', icon: Stethoscope },
-    { id: 'pharmacologyPro', label: 'Fármacos', icon: Pill },
-    { id: 'tutorAI', label: 'Tutor IA', icon: Bot }
+    { id: 'smartWeek', label: 'Semana', icon: CalendarDays },
+    { id: 'evidence', label: 'Aprender', icon: Library },
+    { id: 'practicePassport', label: 'Prácticas', icon: ClipboardCheck },
+    { id: 'toledoPocket', label: 'Toledo', icon: MapPin },
   ];
 
   return (

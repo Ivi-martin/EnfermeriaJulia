@@ -25,6 +25,8 @@ import {
   PersonalMedication,
   PersonalAppointment,
   CourseDeadline,
+  StudyBlock, ScientificReference, PICOQuestion, CriticalAppraisal, PracticeRotation, PracticeLearningEntry,
+  EcoeTrainingResult, ClinicalSourceRecord, TFGProject, TFGMilestone, TFGMeeting, DestinationShortcut,
 } from '../types';
 import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
 import { INITIAL_DRUGS } from '../data/pharmacology';
@@ -39,11 +41,12 @@ import { OFFICIAL_COURSE_DEADLINES } from '../data/courseDeadlines';
 
 const STORAGE_KEY = 'campusEnfermeriaToledo_v2';
 // Versión de los datos guardados. Los guardados con una versión anterior se "limpian" de ejemplos al cargarse.
-const DATA_VERSION = 3;
+const DATA_VERSION = 4;
 
 export interface CampusState {
   dataVersion?: number;
   subjects: Subject[];
+  legacySubjects: Subject[];
   drugs: Drug[];
   terms: MedicalTerm[];
   exams: ExamReminder[];
@@ -92,6 +95,19 @@ export interface CampusState {
   personalMeds: PersonalMedication[];
   personalAppointments: PersonalAppointment[];
   courseDeadlines: CourseDeadline[];
+  studyBlocks: StudyBlock[];
+  scientificReferences: ScientificReference[];
+  picoQuestions: PICOQuestion[];
+  criticalAppraisals: CriticalAppraisal[];
+  practiceRotations: PracticeRotation[];
+  practiceLearningEntries: PracticeLearningEntry[];
+  ecoeTrainingResults: EcoeTrainingResult[];
+  clinicalSources: ClinicalSourceRecord[];
+  tfgProjects: TFGProject[];
+  tfgMilestones: TFGMilestone[];
+  tfgMeetings: TFGMeeting[];
+  destinationShortcuts: DestinationShortcut[];
+  toledoChecklist: Record<string, boolean>;
 }
 
 function getInitialDatePlus(days: number): string {
@@ -103,6 +119,7 @@ function getInitialDatePlus(days: number): string {
 // Datos de EJEMPLO: es lo que se ve en el modo Demo (solo lectura)
 const DEMO_STATE: CampusState = {
   subjects: UCLM_NURSING_CURRICULUM,
+  legacySubjects: [],
   drugs: INITIAL_DRUGS,
   terms: MEDICAL_TERMINOLOGY,
   exams: INITIAL_EXAMS,
@@ -150,7 +167,7 @@ const DEMO_STATE: CampusState = {
   ],
   habitLogs: {},
   parentMessage: 'Estoy inmensamente orgulloso de ti, mi amore, y de tu vocación por la enfermería. Con constancia, empatía y calma vas a ser una profesional maravillosa. Un día a la vez. ¡Te quiero muchísimo! 💚 — Ivi',
-  studentName: 'Julia H. Carreras',
+  studentName: 'Julia',
   budget: 300,
   expenses: [
     { id: 1, concept: 'Fonendoscopio Littmann y tijeras de mayo', amount: 85.0, category: 'Material', date: getInitialDatePlus(-5) },
@@ -223,7 +240,7 @@ const DEMO_STATE: CampusState = {
       type: 'dni',
       title: 'DNI Español',
       identifierNumber: '00000000X',
-      holderName: 'Julia H. Carreras',
+      holderName: 'Julia',
       expiryDate: '2030-05-15',
       issuingAuthority: 'Policía Nacional',
     },
@@ -232,14 +249,14 @@ const DEMO_STATE: CampusState = {
       type: 'tarjeta_sanitaria',
       title: 'Tarjeta Sanitaria (SESCAM)',
       identifierNumber: 'CLM000000000',
-      holderName: 'Julia H. Carreras',
+      holderName: 'Julia',
     },
     {
       id: 'doc-3',
       type: 'carnet_uclm',
       title: 'Carnet de Estudiante UCLM',
       identifierNumber: 'EXP-ENF-TO-2026',
-      holderName: 'Julia H. Carreras',
+      holderName: 'Julia',
       notes: 'Campus de Toledo Fábrica de Armas',
     },
   ],
@@ -266,6 +283,9 @@ const DEMO_STATE: CampusState = {
     },
   ],
   courseDeadlines: OFFICIAL_COURSE_DEADLINES,
+  studyBlocks: [], scientificReferences: [], picoQuestions: [], criticalAppraisals: [],
+  practiceRotations: [], practiceLearningEntries: [], ecoeTrainingResults: [],
+  clinicalSources: [], tfgProjects: [], tfgMilestones: [], tfgMeetings: [], destinationShortcuts: [], toledoChecklist: {},
 };
 
 // ---------- Estado VACÍO: lo que ve una usuaria nueva ----------
@@ -274,7 +294,7 @@ const blankSubject = (subject: Subject): Subject => {
   return { ...rest, status: subject.year === 1 ? 'Matriculada' : 'Pendiente', progress: 0 };
 };
 const blankCompetencies = (list: ClinicalCompetency[]): ClinicalCompetency[] =>
-  list.map((c) => ({ ...c, status: 'Pendiente', observations: undefined, evaluatedBy: undefined, updatedAt: undefined }));
+  list.map((c) => ({ ...c, status: 'Pendiente', observations: undefined, evaluatedBy: undefined, tutorFeedback: undefined, selfAssessment: undefined, nextGoal: undefined, updatedAt: undefined }));
 const blankPocket = (list: PocketCheckItem[]): PocketCheckItem[] => list.map((i) => ({ ...i, checked: false }));
 const zeroProcedures = (p: Record<string, number>) => Object.fromEntries(Object.keys(p).map((k) => [k, 0]));
 
@@ -289,6 +309,10 @@ export const EMPTY_STATE: CampusState = {
   events: [],
   grades: [],
   expenses: [],
+  personalMeds: [],
+  personalAppointments: [],
+  documentVault: [],
+  courseDeadlines: [],
   clinicalProcedures: zeroProcedures(DEMO_STATE.clinicalProcedures),
   competencies: blankCompetencies(INITIAL_COMPETENCIES),
   reflections: [],
@@ -301,27 +325,29 @@ export { DEMO_STATE };
 export function stripDemoData(saved: any): any {
   const out: any = { ...saved };
   const notDemo = (list: any, demo: { id: string | number }[]) =>
-    Array.isArray(list) ? list.filter((item) => !demo.some((d) => d.id === item.id)) : list;
+    Array.isArray(list)
+      ? list.filter((item) => !demo.some((d) => d.id === item.id && JSON.stringify(item) === JSON.stringify(d)))
+      : list;
 
   out.exams = notDemo(saved.exams, INITIAL_EXAMS);
   out.shifts = notDemo(saved.shifts, INITIAL_PRACTICE_SHIFTS);
   out.tasks = notDemo(saved.tasks, DEMO_STATE.tasks);
   out.events = notDemo(saved.events, DEMO_STATE.events);
   out.expenses = notDemo(saved.expenses, DEMO_STATE.expenses);
-  out.grades = Array.isArray(saved.grades)
-    ? saved.grades.filter((g: any) => !DEMO_STATE.grades.some((d) => d.id === g.id && d.name === g.name))
-    : saved.grades;
-  out.reflections = Array.isArray(saved.reflections)
-    ? saved.reflections.filter((r: any) => r.id !== 'refl-1')
-    : saved.reflections;
+  // Quita únicamente los registros personales ficticios que siguen intactos.
+  // Si Julia modificó uno, se conserva para no perder sus cambios.
+  out.documentVault = notDemo(saved.documentVault, DEMO_STATE.documentVault);
+  out.personalMeds = notDemo(saved.personalMeds, DEMO_STATE.personalMeds);
+  out.personalAppointments = notDemo(saved.personalAppointments, DEMO_STATE.personalAppointments);
+  out.courseDeadlines = notDemo(saved.courseDeadlines, DEMO_STATE.courseDeadlines);
+  out.grades = notDemo(saved.grades, DEMO_STATE.grades);
+  out.reflections = notDemo(saved.reflections, DEMO_STATE.reflections);
 
   if (saved.ecoeScores) {
     const scores = { ...saved.ecoeScores };
     for (const [id, demo] of Object.entries(DEMO_STATE.ecoeScores)) {
       const cur = scores[id];
-      if (cur && cur.lastScore === demo.lastScore && cur.bestScore === demo.bestScore && cur.passed === demo.passed) {
-        delete scores[id];
-      }
+      if (cur && JSON.stringify(cur) === JSON.stringify(demo)) delete scores[id];
     }
     out.ecoeScores = scores;
   }
@@ -358,50 +384,94 @@ export function stripDemoData(saved: any): any {
     if (untouched) out.clinicalProcedures = zeroProcedures(DEMO_STATE.clinicalProcedures);
   }
 
-  // La lista antigua de 10 asignaturas se sustituye por el plan completo (editable)
-  delete out.subjects;
+  // Las asignaturas antiguas se migran por código/nombre al plan oficial vigente.
   Object.keys(out).forEach((k) => out[k] === undefined && delete out[k]);
   return out;
 }
 
-// Fusiona los atajos guardados con los atajos oficiales actualizados (para que no queden enlaces obsoletos)
-function mergeQuickLinks(saved: any[]): QuickLink[] {
-  if (!Array.isArray(saved) || !saved.length) return INITIAL_QUICK_LINKS;
-  const initialMap = new Map(INITIAL_QUICK_LINKS.map(l => [l.id, l]));
-  // 1. Actualiza enlaces del sistema con sus URLs oficiales corregidas
-  const updated = saved.map(l => {
-    if (!l.isCustom && initialMap.has(l.id)) {
-      const init = initialMap.get(l.id)!;
-      return {
-        ...l,
-        name: init.name,
-        url: init.url,
-        description: init.description,
-        badge: init.badge,
-        category: init.category,
-        iconName: init.iconName,
-      };
+// Migra solo equivalencias claras. Los cursos antiguos que no tienen correspondencia 1:1
+// se archivan para no perder notas/progreso ni asignarlos a una asignatura oficial incorrecta.
+function migrateLegacySubjects(savedSubjects: any): { subjects: Subject[]; legacySubjects: Subject[] } {
+  if (!Array.isArray(savedSubjects)) return { subjects: UCLM_NURSING_CURRICULUM, legacySubjects: [] };
+  if (savedSubjects.length === 0) return { subjects: [], legacySubjects: [] };
+  const aliases: Record<string, string> = {
+    'ENF-101': '15300', 'ENF-102': '15307', 'ENF-103': '15302', 'ENF-104': '15303',
+    'ENF-106': '15306', 'ENF-107': '15304', 'ENF-108': '15310', 'ENF-109': '15308',
+    'ENF-110': '15305', 'ENF-201': '15312', 'ENF-205': '15309', 'ENF-302': '15315',
+    'ENF-306': '15325', 'ENF-405': '15346',
+  };
+  const officialByCode = new Map(UCLM_NURSING_CURRICULUM.map(item => [item.code, item]));
+  const byOfficialCode = new Map<string, any>();
+  const legacySubjects: Subject[] = [];
+  const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const nameAliases: Record<string, string> = {
+    'anatomia humana': '15300',
+    'fisiologia humana': '15307',
+    'bioquimica y biologia molecular': '15302',
+    'fundamentos de enfermeria i': '15303',
+    'salud publica y comunitaria': '15306',
+    'bioestadistica y metodologia': '15304',
+    'fundamentos de enfermeria ii (habilidades clinicas)': '15310',
+    'nutricion y dietetica': '15308',
+    'diversidad cultural y cuidados de salud': '15305',
+    'farmacologia clinica': '15312',
+    'etica y legislacion sanitaria': '15309',
+    'enfermeria de salud mental': '15315',
+    'gestion y liderazgo de cuidados': '15325',
+    'enfermeria en urgencias y catastrofes (optativa)': '15346',
+  };
+  savedSubjects.forEach((old: any) => {
+    const oldCode = String(old?.code || '');
+    const candidateCode = aliases[oldCode] || (officialByCode.has(oldCode) ? oldCode : nameAliases[normalize(String(old?.name || ''))]);
+    const official = candidateCode ? officialByCode.get(candidateCode) : undefined;
+    if (official && Number(old?.ects) === official.ects) {
+      byOfficialCode.set(official.code, old);
+      return;
     }
-    return l;
+    // No se copian campos de profesorado o prerrequisitos procedentes de datos demostrativos antiguos.
+    const year = [1, 2, 3, 4].includes(Number(old?.year)) ? Number(old.year) as 1 | 2 | 3 | 4 : 1;
+    const status = ['Matriculada', 'Aprobada', 'Pendiente'].includes(old?.status) ? old.status : 'Pendiente';
+    const type = ['Formación básica', 'Obligatoria', 'Prácticas Tuteladas', 'Optativa', 'TFG'].includes(old?.type) ? old.type : 'Obligatoria';
+    if (old?.name) legacySubjects.push({
+      code: oldCode || `LEGACY-${legacySubjects.length + 1}`,
+      name: String(old.name), year, sem: String(old.sem || 'Sin semestre'),
+      ects: Number.isFinite(Number(old.ects)) ? Number(old.ects) : 0,
+      type, progress: Number.isFinite(Number(old.progress)) ? Math.max(0, Math.min(100, Number(old.progress))) : 0,
+      status,
+      ...(Number.isFinite(Number(old.grade)) ? { grade: Number(old.grade) } : {}),
+      ...(Array.isArray(old.topics) ? { topics: old.topics.filter((t: unknown) => typeof t === 'string') } : {}),
+    });
   });
-  // 2. Incorpora los nuevos atajos oficiales que aún no estuvieran en el dispositivo (ej: Facultad de Enfermería)
-  const existingIds = new Set(updated.map(l => l.id));
-  const missing = INITIAL_QUICK_LINKS.filter(l => !existingIds.has(l.id));
-  return [...missing, ...updated];
+  const subjects = UCLM_NURSING_CURRICULUM.map((official) => {
+    const old = byOfficialCode.get(official.code);
+    if (!old) return { ...official };
+    return {
+      ...official,
+      status: ['Matriculada', 'Aprobada', 'Pendiente'].includes(old.status) ? old.status : official.status,
+      progress: Number.isFinite(old.progress) ? Math.max(0, Math.min(100, old.progress)) : official.progress,
+      ...(Number.isFinite(old.grade) ? { grade: old.grade } : {}),
+    };
+  });
+  return { subjects, legacySubjects };
 }
 
 // Convierte unos datos guardados en un estado completo (función pura, fácil de probar)
 export function loadSavedState(raw: string | null): CampusState {
   if (!raw) return EMPTY_STATE;
   const parsed = JSON.parse(raw);
-  const data = parsed.dataVersion === DATA_VERSION ? parsed : stripDemoData(parsed);
+  const isLegacyVersion = parsed.dataVersion !== DATA_VERSION;
+  const data = isLegacyVersion ? stripDemoData(parsed) : parsed;
+  const subjectMigration = isLegacyVersion
+    ? migrateLegacySubjects(data.subjects)
+    : { subjects: Array.isArray(data.subjects) ? data.subjects : EMPTY_STATE.subjects, legacySubjects: Array.isArray(data.legacySubjects) ? data.legacySubjects : [] };
   return {
     ...EMPTY_STATE,
     ...data,
     dataVersion: DATA_VERSION,
-    studentName: 'Julia H. Carreras',
+    studentName: 'Julia',
     // Una lista vacía de asignaturas o reflexiones es válida (la usuaria las borró)
-    subjects: Array.isArray(data.subjects) ? data.subjects : EMPTY_STATE.subjects,
+    subjects: subjectMigration.subjects,
+    legacySubjects: subjectMigration.legacySubjects,
     reflections: Array.isArray(data.reflections) ? data.reflections : [],
     drugs: data.drugs?.length ? data.drugs : EMPTY_STATE.drugs,
     terms: data.terms?.length ? data.terms : EMPTY_STATE.terms,
@@ -413,14 +483,27 @@ export function loadSavedState(raw: string | null): CampusState {
     studyStreak: data.studyStreak || { currentStreak: 0, longestStreak: 0, lastStudyDate: '', totalStudyMinutes: 0 },
     studyPlans: Array.isArray(data.studyPlans) ? data.studyPlans : [],
     savedSummaries: Array.isArray(data.savedSummaries) ? data.savedSummaries : [],
-    quickLinks: mergeQuickLinks(data.quickLinks),
+    quickLinks: Array.isArray(data.quickLinks) && data.quickLinks.length ? data.quickLinks : INITIAL_QUICK_LINKS,
     luggageChecklist: Array.isArray(data.luggageChecklist) && data.luggageChecklist.length ? data.luggageChecklist : DEFAULT_LUGGAGE_CHECKLIST,
-    roommates: Array.isArray(data.roommates) && data.roommates.length ? data.roommates : ['Julia', 'Marta', 'Lucía'],
+    roommates: Array.isArray(data.roommates) ? data.roommates : [],
     roommateExpenses: Array.isArray(data.roommateExpenses) ? data.roommateExpenses : [],
     documentVault: Array.isArray(data.documentVault) ? data.documentVault : [],
     personalMeds: Array.isArray(data.personalMeds) ? data.personalMeds : [],
     personalAppointments: Array.isArray(data.personalAppointments) ? data.personalAppointments : [],
-    courseDeadlines: Array.isArray(data.courseDeadlines) && data.courseDeadlines.length ? data.courseDeadlines : OFFICIAL_COURSE_DEADLINES,
+    courseDeadlines: Array.isArray(data.courseDeadlines) ? data.courseDeadlines : [],
+    studyBlocks: Array.isArray(data.studyBlocks) ? data.studyBlocks : [],
+    scientificReferences: Array.isArray(data.scientificReferences) ? data.scientificReferences : [],
+    picoQuestions: Array.isArray(data.picoQuestions) ? data.picoQuestions : [],
+    criticalAppraisals: Array.isArray(data.criticalAppraisals) ? data.criticalAppraisals : [],
+    practiceRotations: Array.isArray(data.practiceRotations) ? data.practiceRotations : [],
+    practiceLearningEntries: Array.isArray(data.practiceLearningEntries) ? data.practiceLearningEntries : [],
+    ecoeTrainingResults: Array.isArray(data.ecoeTrainingResults) ? data.ecoeTrainingResults : [],
+    clinicalSources: Array.isArray(data.clinicalSources) ? data.clinicalSources : [],
+    tfgProjects: Array.isArray(data.tfgProjects) ? data.tfgProjects : [],
+    tfgMilestones: Array.isArray(data.tfgMilestones) ? data.tfgMilestones : [],
+    tfgMeetings: Array.isArray(data.tfgMeetings) ? data.tfgMeetings : [],
+    destinationShortcuts: Array.isArray(data.destinationShortcuts) ? data.destinationShortcuts : [],
+    toledoChecklist: data.toledoChecklist && typeof data.toledoChecklist === 'object' ? data.toledoChecklist : {},
   };
 }
 
@@ -888,13 +971,6 @@ export function useCampusStore() {
     }));
   };
 
-  const resetQuickLinks = () => {
-    updateState(prev => ({
-      ...prev,
-      quickLinks: INITIAL_QUICK_LINKS,
-    }));
-  };
-
   // --- Luggage Checklist ---
   const toggleLuggageItem = (id: string) => {
     updateState(prev => ({
@@ -1083,7 +1159,6 @@ export function useCampusStore() {
     deleteNoteSummary,
     addQuickLink,
     deleteQuickLink,
-    resetQuickLinks,
     toggleLuggageItem,
     resetLuggageChecklist,
     addRoommateExpense,

@@ -160,7 +160,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
           </section>
         )}
 
-      {/* Grand Hero: Julia H. Carreras & Family Support */}
+      {/* Grand Hero: Julia & Family Support */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3325] via-[#2d553e] to-[#152a1e] p-6 sm:p-8 md:p-10 text-white shadow-xl border border-emerald-500/20">
         <div className="absolute right-0 top-0 translate-x-16 -translate-y-16 w-80 h-80 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-12 w-96 h-96 rounded-full bg-white/5 blur-3xl pointer-events-none" />
@@ -171,7 +171,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-3xl overflow-hidden border-4 border-white/95 shadow-2xl ring-4 ring-emerald-400/50 bg-white/10 transition-transform duration-300 group-hover:scale-[1.02]">
               <img
                 src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
-                alt="Julia H. Carreras - Estudiante de Enfermería"
+                alt="Julia - Estudiante de Enfermería"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -191,7 +191,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
 
             <div className="space-y-1">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-none drop-shadow-sm">
-                Julia H. Carreras
+                Julia
               </h1>
               <p className="text-emerald-100 text-sm sm:text-base font-semibold">
                 1.º Curso · Facultad de Fisioterapia y Enfermería (Campus Fábrica de Armas)

@@ -9,13 +9,13 @@ export const Footer: React.FC = () => {
         <div className="flex items-center gap-3 text-center sm:text-left">
           <img
             src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
-            alt="Julia H. Carreras"
+            alt="Julia"
             className="w-9 h-9 rounded-full object-cover border-2 border-emerald-500 shadow-xs shrink-0"
           />
           <div>
             <div className="flex items-center justify-center sm:justify-start gap-1.5 font-bold text-stone-800">
               <span>Aplicación personalizada para</span>
-              <strong className="text-[#203a2b]">Julia H. Carreras</strong>
+              <strong className="text-[#203a2b]">Julia</strong>
               <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 inline" />
             </div>
             <p className="text-[11px] text-stone-400">

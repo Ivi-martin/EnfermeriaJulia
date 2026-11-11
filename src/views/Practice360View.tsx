@@ -124,7 +124,7 @@ export const Practice360View: React.FC = () => {
               Prácticas 360 · Turnos, Competencias & Diario
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Gestión completa de estancias clínicas para Julia H. Carreras en el Hospital Universitario de Toledo (HUT) y Hospital de Parapléjicos. Registro de horas, pasaporte de 4 niveles de competencia y diario reflexivo de Gibbs.
+              Gestión completa de estancias clínicas para Julia en el Hospital Universitario de Toledo (HUT) y Hospital de Parapléjicos. Registro de horas, pasaporte de 4 niveles de competencia y diario reflexivo de Gibbs.
             </p>
           </div>
 

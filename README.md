@@ -1,20 +1,32 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Campus Enfermería Toledo · Julia
 
-# Run and deploy your AI Studio app
+Aplicación PWA de apoyo académico y organización personal para el Grado en Enfermería de la UCLM (Toledo).
 
-This contains everything you need to run your app locally.
+## Desarrollo local
 
-View your app in AI Studio: https://ai.studio/apps/2946f982-e762-4ed0-91b5-e46365ceffe9
+Requisitos: Node.js 22.16 o superior compatible con la versión de Vite del proyecto.
 
-## Run Locally
+```bash
+npm ci
+npm run lint
+npm run build
+npm run dev
+```
 
-**Prerequisites:**  Node.js
+Configura las claves exclusivamente en variables de entorno del servidor siguiendo `.env.example`. No publiques claves API en el frontend.
 
+## Módulos principales
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- Mi Día y Mi Semana Inteligente.
+- Plan UCLM y Academia.
+- Biblioteca / Buscador de Evidencia Científica.
+- Tutor IA con perfiles virtuales ficticios.
+- Entrenador ECOE y recursos clínicos con estado de revisión.
+- Prácticas 360 y Pasaporte de Prácticas.
+- Toledo en mi Bolsillo y Gestor del TFG.
+
+## Datos y privacidad
+
+La aplicación conserva almacenamiento local en `localStorage`, que no está cifrado. No introduzcas datos identificables de pacientes ni guardes documentos sanitarios o identificadores personales reales en la bóveda. Los filtros de texto de IA son heurísticos y no sustituyen la desidentificación.
+
+Consulta `IMPLEMENTACION.md` para el detalle de migraciones, límites conocidos, endpoints de Vercel y pruebas realizadas.

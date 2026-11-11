@@ -848,7 +848,7 @@ export const AcademyView: React.FC = () => {
                   ¡Examen Finalizado!
                 </h2>
                 <p className="text-xs sm:text-sm text-stone-500 mt-1">
-                  Resultados registrados en tu perfil de Julia H. Carreras
+                  Resultados registrados en tu perfil de Julia
                 </p>
               </div>
 

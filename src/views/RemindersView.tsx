@@ -110,7 +110,7 @@ export const RemindersView: React.FC = () => {
     const lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Campus Enfermeria UCLM//Julia H Carreras//ES',
+      'PRODID:-//Campus Enfermeria UCLM//Julia//ES',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       'X-WR-CALNAME:Enfermería Julia (UCLM Toledo)'

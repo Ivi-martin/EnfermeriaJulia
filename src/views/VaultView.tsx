@@ -62,7 +62,7 @@ export const VaultView: React.FC = () => {
       URL.revokeObjectURL(url);
       setBackupStatus({
         type: 'success',
-        message: `¡Copia de seguridad descargada con éxito! Archivo: "${filename}". Guárdalo en tu ordenador, pendrive o envíatelo por correo.`
+        message: `¡Copia de seguridad descargada con éxito! Archivo: "${filename}". El archivo JSON no está cifrado. Guárdalo solo en un dispositivo cifrado y no lo compartas sin protección.`
       });
     } catch (e: any) {
       setBackupStatus({
@@ -110,7 +110,7 @@ export const VaultView: React.FC = () => {
     type: 'dni' as DocumentVaultItem['type'],
     title: '',
     identifierNumber: '',
-    holderName: 'Julia H. Carreras',
+    holderName: '',
     expiryDate: '',
     issuingAuthority: '',
     notes: '',
@@ -147,6 +147,8 @@ export const VaultView: React.FC = () => {
 
   const handleSaveDoc = (e: React.FormEvent) => {
     e.preventDefault();
+    setBackupStatus({ type: 'error', message: 'La bóveda no está preparada para guardar identificadores reales: el almacenamiento actual del navegador no cifra estos datos. No guardes documentos ni identificadores personales.' });
+    return;
     if (!docFormData.title.trim() || !docFormData.identifierNumber.trim()) return;
     addDocumentVaultItem(docFormData);
     setIsDocModalOpen(false);
@@ -154,7 +156,7 @@ export const VaultView: React.FC = () => {
       type: 'dni',
       title: '',
       identifierNumber: '',
-      holderName: 'Julia H. Carreras',
+      holderName: '',
       expiryDate: '',
       issuingAuthority: '',
       notes: '',
@@ -163,6 +165,8 @@ export const VaultView: React.FC = () => {
 
   const handleSaveMed = (e: React.FormEvent) => {
     e.preventDefault();
+    setBackupStatus({ type: 'error', message: 'El almacenamiento personal no está habilitado para datos sanitarios. Gestiona la información de medicación en los canales sanitarios adecuados y con supervisión profesional.' });
+    return;
     if (!medFormData.name.trim()) return;
     addPersonalMed({
       ...medFormData,
@@ -179,6 +183,8 @@ export const VaultView: React.FC = () => {
 
   const handleSaveApp = (e: React.FormEvent) => {
     e.preventDefault();
+    setBackupStatus({ type: 'error', message: 'La bóveda no está preparada para guardar citas o notas que puedan revelar información sanitaria. No introduzcas datos médicos en esta versión.' });
+    return;
     if (!appFormData.title.trim()) return;
     addPersonalAppointment(appFormData);
     setIsAppModalOpen(false);
@@ -201,13 +207,13 @@ export const VaultView: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold mb-3">
               <Lock className="w-4 h-4 text-emerald-300" />
-              <span>BÓVEDA PRIVADA & SALUD PERSONAL</span>
+              <span>ALMACENAMIENTO LOCAL NO CIFRADO</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Bóveda de Documentos, Medicación y Citas Propias
+              Bóveda personal · acceso restringido
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Guarda tus números de DNI, Tarjeta Sanitaria (SESCAM/SAS), carnet de estudiante UCLM y contrato del piso. Gestiona tus medicamentos de uso personal y citas médicas.
+              Esta versión conserva el estado en el navegador mediante localStorage, sin cifrado específico. No introduzcas DNI, tarjetas sanitarias, documentos, datos de medicación ni citas médicas reales. La bóveda requiere una futura implementación de autenticación y almacenamiento seguro.
             </p>
           </div>
 
@@ -226,12 +232,10 @@ export const VaultView: React.FC = () => {
             </button>
             {activeTab !== 'backup' && (
               <button
-                onClick={() => {
-                  if (activeTab === 'documents') setIsDocModalOpen(true);
-                  else if (activeTab === 'medication') setIsMedModalOpen(true);
-                  else setIsAppModalOpen(true);
-                }}
-                className="px-4 py-3 rounded-2xl bg-white text-[#1b3427] hover:bg-emerald-50 text-xs font-extrabold transition flex items-center gap-2 shadow-xs"
+                onClick={() => setBackupStatus({ type: 'error', message: 'La creación de registros de la bóveda está temporalmente deshabilitada hasta disponer de almacenamiento seguro.' })}
+                disabled
+                title="Deshabilitado hasta implementar almacenamiento seguro"
+                className="px-4 py-3 rounded-2xl bg-white/50 text-[#1b3427]/60 text-xs font-extrabold transition flex items-center gap-2 shadow-xs cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 <span>
@@ -240,6 +244,9 @@ export const VaultView: React.FC = () => {
               </button>
             )}
           </div>
+        </div>
+        <div className="relative z-10 mt-5 rounded-2xl border border-amber-200/40 bg-amber-100/10 p-3 text-xs leading-relaxed text-amber-50">
+          <strong>Importante:</strong> el botón para crear nuevos registros está deshabilitado. Los datos guardados por versiones anteriores pueden seguir en este navegador; no se han eliminado automáticamente. Las copias JSON tampoco están cifradas: no las envíes por correo, mensajería ni almacenamiento compartido sin protegerlas primero.
         </div>
 
         {/* Tab switcher */}
@@ -632,7 +639,7 @@ export const VaultView: React.FC = () => {
               <div className="bg-white p-4 rounded-2xl border border-stone-200/70 space-y-1.5 shadow-2xs">
                 <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center">2</span>
                 <strong className="block text-stone-900">Guarda o envía el archivo</strong>
-                <p className="text-stone-500">Envíate el archivo por WhatsApp Web, email a ti misma o súbelo a Google Drive.</p>
+                <p className="text-stone-500">El archivo JSON no está cifrado. Guárdalo únicamente en un dispositivo o volumen cifrado y no lo compartas por mensajería, correo o carpetas compartidas.</p>
               </div>
               <div className="bg-white p-4 rounded-2xl border border-stone-200/70 space-y-1.5 shadow-2xs">
                 <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center">3</span>

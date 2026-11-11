@@ -10,7 +10,14 @@ interface HeaderProps {
 }
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
-  today: { title: 'Mi Día', subtitle: 'Espacio personal de Julia H. Carreras' },
+  today: { title: 'Mi Día', subtitle: 'Espacio personal de Julia' },
+  smartWeek: { title: 'Mi semana inteligente', subtitle: 'Agenda, tareas, exámenes y bloques de estudio integrados' },
+  evidence: { title: 'Evidencia científica', subtitle: 'Preguntas PICO, búsquedas bibliográficas y lectura crítica' },
+  practicePassport: { title: 'Pasaporte de prácticas', subtitle: 'Rotaciones, competencias y diario de aprendizaje' },
+  ecoeTrainer: { title: 'Entrenador ECOE', subtitle: 'Autoevaluación formativa e historial de entrenamiento' },
+  clinicalSources: { title: 'Fuentes clínicas verificadas', subtitle: 'Trazabilidad, versiones y revisión de recursos' },
+  toledoPocket: { title: 'Toledo en mi bolsillo', subtitle: 'Movilidad, campus y servicios de apoyo' },
+  tfg: { title: 'Trabajo Fin de Grado', subtitle: 'Proyecto, hitos, bibliografía y tutorías' },
   uclm: { title: 'Mi UCLM', subtitle: 'Plan 4 cursos, 240 ECTS y campus Toledo' },
   academy: { title: 'Academia', subtitle: 'Estudio, simulador 4 modos y flashcards' },
   laboratory: { title: 'Laboratorio Clínico', subtitle: 'Analíticas, gasometrías, tubos y ECG' },
@@ -80,16 +87,16 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => onNavigate('today')}
           className="flex items-center gap-2 p-1 pl-1 sm:pl-1.5 pr-2.5 rounded-full bg-stone-50 hover:bg-[#e8f0e8] transition border border-stone-200/80 group shadow-2xs"
-          title="Ver perfil de Julia H. Carreras"
+          title="Ver perfil de Julia"
         >
           <img
             src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
-            alt="Julia H. Carreras"
+            alt="Julia"
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-emerald-500/70 shrink-0 shadow-xs"
           />
           <div className="text-left hidden sm:block">
             <span className="text-xs font-bold text-stone-900 group-hover:text-[#203a2b] block leading-tight">
-              Julia H. Carreras
+              Julia
             </span>
             <span className="text-[10px] text-emerald-700 font-semibold block leading-none">
               Estudiante UCLM

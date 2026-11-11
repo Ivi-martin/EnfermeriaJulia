@@ -23,7 +23,13 @@ import {
   Car,
   FolderLock,
   Layers,
-  Compass
+  Compass,
+  CalendarDays,
+  Library,
+  ClipboardCheck,
+  ShieldCheck,
+  MapPin,
+  ScrollText
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -42,46 +48,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navSections = [
     {
-      title: 'INICIO & ACCESOS',
+      title: 'MI DÍA',
       items: [
         { id: 'today', label: 'Mi Día', icon: Sun },
-        { id: 'shortcuts', label: 'Atajos (UCLM, Alsa, IA...)', icon: Compass }
+        { id: 'smartWeek', label: 'Mi semana inteligente', icon: CalendarDays },
+        { id: 'reminders', label: 'Agenda & plazos', icon: Bell },
       ]
     },
     {
-      title: 'LOS 7 MÓDULOS · CAMPUS 2.0',
+      title: 'APRENDER',
       items: [
-        { id: 'uclm', label: '1. Mi UCLM (Plan Oficial)', icon: GraduationCap },
-        { id: 'academy', label: '2. Academia & Exámenes', icon: Brain },
-        { id: 'laboratory', label: '3. Laboratorio & ECG', icon: TestTube2 },
-        { id: 'ecoe', label: '4. Simulación ECOE', icon: Stethoscope },
-        { id: 'pharmacologyPro', label: '5. Farmacología PRO & CIMA', icon: Pill },
-        { id: 'practice360', label: '6. Prácticas 360 & Gibbs', icon: Activity },
-        { id: 'tutorAI', label: '7. Tutor IA (7 Docentes)', icon: Bot }
+        { id: 'uclm', label: 'Mi UCLM · Plan de estudios', icon: GraduationCap },
+        { id: 'academy', label: 'Academia & Exámenes', icon: Brain },
+        { id: 'evidence', label: 'Biblioteca científica', icon: Library },
+        { id: 'tfg', label: 'Trabajo Fin de Grado', icon: ScrollText },
+        { id: 'tutorAI', label: 'Tutor IA', icon: Bot },
+        { id: 'anatomy', label: 'Anatomía interactiva', icon: Activity },
+        { id: 'terminology', label: 'Terminología médica', icon: BookA },
       ]
     },
     {
-      title: 'CLÍNICA Y ENFERMERÍA',
+      title: 'ENTRENAR',
       items: [
-        { id: 'clinicalCases', label: 'Casos Clínicos Simulados (IA)', icon: Stethoscope },
-        { id: 'cpr', label: 'Protocolos RCP / SVA', icon: HeartPulse },
-        { id: 'anatomy', label: 'Anatomía Interactiva', icon: Activity },
-        { id: 'tools', label: 'PAE (NANDA-NOC-NIC) & SBAR', icon: Layers },
-        { id: 'manuals', label: 'Manuales Clínicos (Offline)', icon: BookOpen },
-        { id: 'scales', label: 'Escalas (Norton, EVA, Braden)', icon: FileText },
-        { id: 'terminology', label: 'Terminología Médica', icon: BookA }
+        { id: 'ecoe', label: 'Simulación ECOE', icon: Stethoscope },
+        { id: 'ecoeTrainer', label: 'Entrenador ECOE', icon: ClipboardCheck },
+        { id: 'laboratory', label: 'Laboratorio & ECG', icon: TestTube2 },
+        { id: 'pharmacologyPro', label: 'Farmacología PRO & CIMA', icon: Pill },
+        { id: 'clinicalCases', label: 'Casos clínicos simulados', icon: Stethoscope },
+        { id: 'cpr', label: 'RCP / SVA · material docente', icon: HeartPulse },
+        { id: 'tools', label: 'PAE & SBAR', icon: Layers },
+        { id: 'manuals', label: 'Manuales clínicos', icon: BookOpen },
+        { id: 'scales', label: 'Escalas de valoración', icon: FileText },
+        { id: 'clinicalSources', label: 'Fuentes clínicas verificadas', icon: ShieldCheck },
       ]
     },
     {
-      title: 'VIDA DIARIA & ESTUDIANTE',
+      title: 'MIS PRÁCTICAS',
       items: [
-        { id: 'travel', label: 'Viajes Toledo–Granada', icon: Car },
-        { id: 'emergency', label: 'Emergencias 112 & Ubicación', icon: ShieldAlert },
-        { id: 'vault', label: 'Bóveda DNI, Citas & Salud', icon: FolderLock },
-        { id: 'reminders', label: 'Agenda & Plazos del Curso', icon: Bell },
-        { id: 'life', label: 'Gastos, Menús & Pomodoro', icon: Heart }
+        { id: 'practice360', label: 'Prácticas 360', icon: Activity },
+        { id: 'practicePassport', label: 'Mi pasaporte de prácticas', icon: ClipboardCheck },
       ]
-    }
+    },
+    {
+      title: 'MI VIDA EN TOLEDO',
+      items: [
+        { id: 'toledoPocket', label: 'Toledo en mi bolsillo', icon: MapPin },
+        { id: 'travel', label: 'Viajes', icon: Car },
+        { id: 'emergency', label: 'Emergencias 112', icon: ShieldAlert },
+        { id: 'life', label: 'Gastos, menús & hábitos', icon: Heart },
+        { id: 'shortcuts', label: 'Atajos y enlaces', icon: Compass },
+        { id: 'vault', label: 'Bóveda personal', icon: FolderLock },
+      ]
+    },
   ];
 
   const handleNavClick = (id: string) => {
@@ -129,11 +147,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Julia H. Carreras Profile Chip in Sidebar */}
+        {/* Julia Profile Chip in Sidebar */}
         <div className="p-3 mx-3 mt-3 rounded-2xl bg-[#f6f9f6] border border-emerald-200/80 flex items-center gap-3 shadow-2xs">
           <img
             src={`${import.meta.env.BASE_URL}assets/aistudio/Ilustraci_n_alegre_de_estudiante_de_enfermer_a_aa60d2b2.png`}
-            alt="Julia H. Carreras"
+            alt="Julia"
             className="w-11 h-11 rounded-xl object-cover border-2 border-emerald-500 shadow-xs shrink-0"
           />
           <div className="min-w-0 flex-1">
@@ -141,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ESTUDIANTE
             </span>
             <strong className="text-xs font-bold text-stone-900 truncate block leading-tight">
-              Julia H. Carreras
+              Julia
             </strong>
             <span className="text-[11px] text-stone-500 block truncate">
               1.º Grado en Enfermería
