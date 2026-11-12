@@ -1119,9 +1119,29 @@ export function useCampusStore() {
     }
   };
 
+  const updateWellbeing = (
+    dateStr: string,
+    patch: { mood?: number; energy?: number; sleep?: string; note?: string }
+  ) => {
+    updateState((prev) => {
+      const current = prev.wellbeing[dateStr] || {};
+      return {
+        ...prev,
+        wellbeing: {
+          ...prev.wellbeing,
+          [dateStr]: {
+            ...current,
+            ...patch,
+          },
+        },
+      };
+    });
+  };
+
   return {
     state,
     updateState,
+    updateWellbeing,
     exportBackup,
     importBackup,
     addDrug,

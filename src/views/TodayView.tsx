@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
 import { getMessageForDate } from '../utils/dailyMessage';
+import { getLocalDateString } from '../utils/dateUtils';
+import { WellbeingDashboard } from '../components/WellbeingDashboard';
 import {
   Heart,
   Calendar,
@@ -28,7 +30,9 @@ import {
   ShieldAlert,
   HeartPulse,
   FolderLock,
-  ExternalLink
+  ExternalLink,
+  Wrench,
+  UtensilsCrossed
 } from 'lucide-react';
 
 interface TodayViewProps {
@@ -51,7 +55,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
   }, []);
   const dailyMessage = getMessageForDate(today);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalDateString(today);
   const todayWb = state.wellbeing[todayStr] || {};
 
   // Next upcoming exams (not completed, sorted by date)
@@ -334,13 +338,45 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             </div>
             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Módulo 7</span>
             <strong className="text-xs font-black text-stone-900 group-hover:text-amber-800 transition line-clamp-1">Tutor IA</strong>
-            <span className="text-[10px] text-stone-500 mt-0.5">7 Profesores</span>
+            <span className="text-[10px] text-stone-500 mt-0.5">9 Asistentes</span>
           </button>
         </div>
       </div>
 
-      {/* Herramientas de Vida y Práctica Diaria */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* Herramientas de Vida, Hogar y Práctica Diaria */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <button
+          onClick={() => onNavigate('manitas')}
+          className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200 hover:border-amber-400 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition shadow-2xs">
+            <Wrench className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-100/80 px-1 rounded">Hogar IA</span>
+            <strong className="text-xs font-black text-amber-950 block group-hover:text-amber-800 mt-0.5">
+              El Manitas
+            </strong>
+            <span className="text-[10px] text-stone-600">Fontanería & luz</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('chefNutri')}
+          className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50/60 border border-orange-200 hover:border-orange-400 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition shadow-2xs">
+            <UtensilsCrossed className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-black uppercase tracking-wider text-orange-700 bg-orange-100/80 px-1 rounded">Cocina IA</span>
+            <strong className="text-xs font-black text-orange-950 block group-hover:text-orange-800 mt-0.5">
+              Chef & Tupper
+            </strong>
+            <span className="text-[10px] text-stone-600">Recetas con tu nevera</span>
+          </div>
+        </button>
+
         <button
           onClick={() => onNavigate('shortcuts')}
           className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-emerald-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
@@ -352,7 +388,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <strong className="text-xs font-black text-stone-900 block group-hover:text-emerald-800">
               Panel Atajos
             </strong>
-            <span className="text-[10px] text-stone-500">appUCLM, Alsa, IA...</span>
+            <span className="text-[10px] text-stone-500">appUCLM, Alsa...</span>
           </div>
         </button>
 
@@ -397,13 +433,13 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <strong className="text-xs font-black text-stone-900 block group-hover:text-amber-800">
               Protocolo RCP
             </strong>
-            <span className="text-[10px] text-stone-500">Metrónomo 105 bpm</span>
+            <span className="text-[10px] text-stone-500">105 bpm metrónomo</span>
           </div>
         </button>
 
         <button
           onClick={() => onNavigate('vault')}
-          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-purple-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group col-span-2 sm:col-span-1"
+          className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-purple-500 shadow-2xs hover:shadow-sm transition text-left flex flex-col justify-between group"
         >
           <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold mb-1.5 group-hover:scale-110 transition">
             <FolderLock className="w-4 h-4" />
@@ -412,7 +448,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             <strong className="text-xs font-black text-stone-900 block group-hover:text-purple-800">
               Bóveda & Salud
             </strong>
-            <span className="text-[10px] text-stone-500">DNI, citas y medicación</span>
+            <span className="text-[10px] text-stone-500">DNI y citas médicas</span>
           </div>
         </button>
       </div>
@@ -547,96 +583,10 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Right Column: Daily Wellbeing Check-in & Fast Tools */}
+        {/* Right Column: Daily Wellbeing Check-in, Charts & Fast Tools */}
         <div className="space-y-6">
-          {/* Daily Wellbeing Card */}
-          <div className="p-6 rounded-3xl bg-white border border-stone-200 shadow-sm">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="p-2 bg-pink-50 rounded-xl text-pink-600">
-                <Smile className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">¿Cómo estás hoy?</h3>
-                <p className="text-xs text-stone-500">Cuidar de ti es el primer paso para cuidar a los demás</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <span className="text-xs font-bold text-stone-600 block mb-2">Estado de ánimo</span>
-                <div className="grid grid-cols-5 gap-2">
-                  {[
-                    { val: 1, emoji: '😔', label: 'Bajo' },
-                    { val: 2, emoji: '😕', label: 'Regular' },
-                    { val: 3, emoji: '😐', label: 'Bien' },
-                    { val: 4, emoji: '🙂', label: 'Animada' },
-                    { val: 5, emoji: '😄', label: 'Genial' },
-                  ].map((item) => (
-                    <button
-                      key={item.val}
-                      onClick={() => handleMoodSelect(item.val)}
-                      className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1 ${
-                        todayWb.mood === item.val
-                          ? 'border-[#365e45] bg-[#e8f0e8] scale-105 shadow-xs'
-                          : 'border-stone-200 hover:bg-stone-50'
-                      }`}
-                    >
-                      <span className="text-2xl">{item.emoji}</span>
-                      <span className="text-[10px] font-semibold text-stone-600">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-xs font-bold text-stone-600 block mb-2">Nivel de energía</span>
-                <div className="grid grid-cols-5 gap-2">
-                  {[
-                    { val: 1, emoji: '🪫', label: 'Agotada' },
-                    { val: 2, emoji: '😴', label: 'Cansada' },
-                    { val: 3, emoji: '⚡', label: 'Normal' },
-                    { val: 4, emoji: '🔋', label: 'Buena' },
-                    { val: 5, emoji: '🚀', label: 'A tope' },
-                  ].map((item) => (
-                    <button
-                      key={item.val}
-                      onClick={() => handleEnergySelect(item.val)}
-                      className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1 ${
-                        todayWb.energy === item.val
-                          ? 'border-emerald-600 bg-emerald-50 scale-105 shadow-xs'
-                          : 'border-stone-200 hover:bg-stone-50'
-                      }`}
-                    >
-                      <span className="text-2xl">{item.emoji}</span>
-                      <span className="text-[10px] font-semibold text-stone-600">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <label className="text-xs font-bold text-stone-600 block mb-1">Una línea de hoy</label>
-                <input
-                  type="text"
-                  value={todayWb.note || ''}
-                  onChange={(e) =>
-                    updateState((prev) => ({
-                      ...prev,
-                      wellbeing: {
-                        ...prev.wellbeing,
-                        [todayStr]: {
-                          ...todayWb,
-                          note: e.target.value,
-                        },
-                      },
-                    }))
-                  }
-                  placeholder="Hoy he aprendido, o qué me ha hecho sonreír..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#365e45]"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Daily Wellbeing Dashboard (con historial, descanso, consejos empáticos y correlación) */}
+          <WellbeingDashboard onNavigate={onNavigate} />
 
           {/* Quick Academic Progress & Study Tips */}
           <div className="p-6 rounded-3xl bg-white border border-stone-200 shadow-sm">

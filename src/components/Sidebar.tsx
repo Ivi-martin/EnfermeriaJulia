@@ -29,7 +29,9 @@ import {
   ClipboardCheck,
   ShieldCheck,
   MapPin,
-  ScrollText
+  ScrollText,
+  Wrench,
+  UtensilsCrossed
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -62,9 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'academy', label: 'Academia & Exámenes', icon: Brain },
         { id: 'evidence', label: 'Biblioteca científica', icon: Library },
         { id: 'tfg', label: 'Trabajo Fin de Grado', icon: ScrollText },
-        { id: 'tutorAI', label: 'Tutor IA', icon: Bot },
+        { id: 'tutorAI', label: 'Tutor IA (9 Asistentes)', icon: Bot },
         { id: 'anatomy', label: 'Anatomía interactiva', icon: Activity },
         { id: 'terminology', label: 'Terminología médica', icon: BookA },
+      ]
+    },
+    {
+      title: 'TUTORES IA DEL HOGAR',
+      items: [
+        { id: 'manitas', label: 'El Manitas de casa (IA)', icon: Wrench },
+        { id: 'chefNutri', label: 'Chef & Nutrición (IA)', icon: UtensilsCrossed },
       ]
     },
     {

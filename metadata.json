@@ -1,6 +1,6 @@
 {
-  "name": "Campus Enfermería Toledo - Guía y Estudio",
-  "description": "Aplicación integral para estudiantes del Grado en Enfermería: guías farmacológicas, cálculo de dosificación, terminología médica, recordatorios de exámenes y prácticas, autoevaluación interactiva y manuales de procedimientos clínicos offline.",
+  "name": "Campus Enfermería Toledo",
+  "description": "Aplicación integral para el Grado en Enfermería de Julia en la UCLM Toledo con registro de bienestar emocional, guardias de prácticas, agenda académica y tutores IA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

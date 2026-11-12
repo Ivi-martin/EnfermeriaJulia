@@ -21,13 +21,26 @@ import {
   Mic,
   Bookmark,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Wrench,
+  UtensilsCrossed,
+  ChefHat,
+  Home,
+  Flame,
+  Zap,
+  ShoppingBag,
+  Clock,
+  Carrot,
+  ShieldCheck,
+  HelpCircle,
+  ChevronRight
 } from 'lucide-react';
 
 interface TutorPersona {
   id: string;
   name: string;
   title: string;
+  category: 'academico' | 'hogar';
   specialty: string;
   description: string;
   icon: any;
@@ -38,8 +51,50 @@ interface TutorPersona {
 }
 
 const TUTOR_PERSONAS: TutorPersona[] = [
+  // --- 1. TUTORES ESPECIALIZADOS DE VIDA, HOGAR Y COCINA ---
+  {
+    id: 'manitas',
+    name: 'Manolo el Manitas',
+    title: 'Manolo el Manitas · Arreglos del Hogar & Bricolaje',
+    category: 'hogar',
+    specialty: 'Fontanería, desatascos, electricidad básica, albañilería y persianas',
+    description: 'Experto en solucionar cualquier avería o reparación del piso: desatascar fregaderos, arreglar cisternas, cambiar enchufes y tapar agujeros.',
+    icon: Wrench,
+    color: 'text-amber-700',
+    bgLight: 'bg-amber-50 border-amber-200',
+    welcomeMessage: '¡Hola, Julia! Soy Manolo, tu tutor y manitas de confianza para cualquier arreglo en casa o en tu piso de Toledo. Si tienes un grifo que gotea, un atasco en la ducha, una cisterna que no para de sonar, una persiana encallada o una duda con el cuadro de luces, ¡pregúntame! Te lo explicaré paso a paso, con herramientas sencillas y siempre con máxima seguridad doméstica.',
+    suggestedPrompts: [
+      '¿Cómo desatascar el fregadero o la ducha con cosas de casa?',
+      'La cisterna del baño no para de soltar agua, ¿cómo la arreglo?',
+      '¿Cómo purgar un radiador que hace ruido y no calienta bien?',
+      'Se ha ido la luz en el piso al encender un electrodoméstico, ¿qué hago?',
+      'Quiero tapar agujeros de la pared y colgar un cuadro, ¿qué necesito?'
+    ]
+  },
+  {
+    id: 'chef_nutri',
+    name: 'Chef Nutri',
+    title: 'Chef Nutri · Cocina de Piso, Tuppers & Nutrición',
+    category: 'hogar',
+    specialty: 'Recetas con lo que tienes en la nevera, tuppers de guardia y nutrición',
+    description: 'Platos deliciosos y equilibrados en 15 minutos, ideas de tupper que aguantan en el hospital y nutrición para combatir el cansancio.',
+    icon: UtensilsCrossed,
+    color: 'text-orange-700',
+    bgLight: 'bg-orange-50 border-orange-200',
+    welcomeMessage: '¡Hola, Julia! Soy el Chef Nutri, tu chef personal y nutricionista. Sé que entre clases, turnos en el hospital y estudio no te sobra el tiempo. Dime qué ingredientes tienes ahora mismo en la nevera o despensa y te diseño una receta riquísima, o pídeme ideas de tuppers saludables para llevarte de prácticas y comidas ligeras para descansar como un lirón.',
+    suggestedPrompts: [
+      'Tengo huevos, calabacín, tomate y queso: ¿qué me preparo en 15 min?',
+      'Dime 3 tuppers saludables que aguanten bien en la nevera del hospital',
+      '¿Qué cenar ligero tras un turno de tarde para descansar sin pesadez?',
+      'Guía rápida de Batch Cooking de 1 hora para tener la semana lista',
+      'Snacks saludables y energéticos para llevar en el bolsillo del uniforme'
+    ]
+  },
+
+  // --- 2. PROFESORADO ACADÉMICO DE ENFERMERÍA (UCLM) ---
   {
     id: 'anatomia', name: 'Dr. Martín Moreno', title: 'Dr. Martín Moreno · Anatomía Humana',
+    category: 'academico',
     specialty: 'Estructuras, planos, órganos y relaciones anatómicas',
     description: 'Apoyo conceptual para comprender la organización del cuerpo humano y su vocabulario.',
     icon: Brain, color: 'text-indigo-700', bgLight: 'bg-indigo-50 border-indigo-200',
@@ -48,6 +103,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'fisiologia', name: 'Dra. Isabel Carrerillas', title: 'Dra. Isabel Carrerillas · Fisiología Humana',
+    category: 'academico',
     specialty: 'Homeostasis, hemodinámica y neurofisiología',
     description: 'Explicaciones conceptuales de los mecanismos fisiológicos con ejemplos académicos.',
     icon: Sparkles, color: 'text-sky-700', bgLight: 'bg-sky-50 border-sky-200',
@@ -56,6 +112,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'farmacologia', name: 'Dr. Ivancito Moreno', title: 'Dr. Ivancito Moreno · Farmacología Clínica',
+    category: 'academico',
     specialty: 'Conceptos, familias farmacológicas y vocabulario',
     description: 'Apoyo teórico para estudiar mecanismos generales y terminología farmacológica.',
     icon: Pill, color: 'text-emerald-700', bgLight: 'bg-emerald-50 border-emerald-200',
@@ -64,6 +121,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'laboratorio', name: 'Dra. Laura Ratilla', title: 'Dra. Laura Ratilla · Diagnóstico & Analíticas',
+    category: 'academico',
     specialty: 'Terminología de laboratorio y conceptos de fisiopatología',
     description: 'Ayuda a comprender para qué sirven las pruebas y qué conceptos estudian, sin interpretar resultados reales.',
     icon: TestTube2, color: 'text-teal-700', bgLight: 'bg-teal-50 border-teal-200',
@@ -72,6 +130,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'ecoe', name: 'Dra. Luci Luci', title: 'Dra. Luci Luci · Coordinadora ECOE / Simulación',
+    category: 'academico',
     specialty: 'Comunicación, reflexión y preparación académica',
     description: 'Ayuda a organizar el estudio de estaciones simuladas y a reflexionar sobre objetivos docentes.',
     icon: Stethoscope, color: 'text-rose-700', bgLight: 'bg-rose-50 border-rose-200',
@@ -80,6 +139,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'fundamentos', name: 'Prof. Ivi Moca', title: 'Prof. Ivi Moca · Fundamentos & Metodología PAE',
+    category: 'academico',
     specialty: 'Proceso de atención, modelos y razonamiento académico',
     description: 'Apoyo conceptual para estudiar modelos de cuidados y metodología enfermera.',
     icon: BookOpen, color: 'text-purple-700', bgLight: 'bg-purple-50 border-purple-200',
@@ -88,6 +148,7 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   },
   {
     id: 'academico', name: 'Prof. Pedri González', title: 'Prof. Pedri González · Orientador Académico',
+    category: 'academico',
     specialty: 'Planificación del estudio, tareas y gestión del tiempo',
     description: 'Ayuda a dividir objetivos académicos en tareas alcanzables y revisar la carga semanal.',
     icon: GraduationCap, color: 'text-amber-700', bgLight: 'bg-amber-50 border-amber-200',
@@ -96,12 +157,34 @@ const TUTOR_PERSONAS: TutorPersona[] = [
   }
 ];
 
-export const TutorAIView: React.FC = () => {
+export interface TutorAIViewProps {
+  initialPersonaId?: string;
+  initialTab?: 'chat' | 'fridgeRecipe' | 'citations' | 'transcription';
+}
+
+export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, initialTab }) => {
   const { state } = useCampusStore();
-  const [activeTab, setActiveTab] = useState<'chat' | 'citations' | 'transcription'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'fridgeRecipe' | 'citations' | 'transcription'>(
+    initialTab || 'chat'
+  );
+  const [categoryFilter, setCategoryFilter] = useState<'todos' | 'academico' | 'hogar'>('todos');
 
   // --- Tutor Chat State: hilos independientes para perfiles virtuales ficticios ---
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string>('anatomia');
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>(initialPersonaId || 'manitas');
+
+  useEffect(() => {
+    if (initialPersonaId) {
+      setSelectedPersonaId(initialPersonaId);
+      const persona = TUTOR_PERSONAS.find((p) => p.id === initialPersonaId);
+      if (persona?.category) {
+        setCategoryFilter(persona.category);
+      }
+    }
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialPersonaId, initialTab]);
+
   const [threads, setThreads] = useState<Record<string, TutorChatMessage[]>>(() => {
     const initial: Record<string, TutorChatMessage[]> = {};
     TUTOR_PERSONAS.forEach((p) => {
@@ -124,6 +207,69 @@ export const TutorAIView: React.FC = () => {
   const [transcriptPrivacyConfirmed, setTranscriptPrivacyConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // --- Estado para Generador con tu Nevera (Chef Nutri) ---
+  const [fridgeIngredients, setFridgeIngredients] = useState<string[]>([
+    'Huevos', 'Tomate', 'Arroz'
+  ]);
+  const [customIngredient, setCustomIngredient] = useState<string>('');
+  const [recipeGoal, setRecipeGoal] = useState<'express' | 'tupper' | 'relax' | 'study'>('express');
+  const [isGeneratingRecipe, setIsGeneratingRecipe] = useState<boolean>(false);
+  const [generatedRecipe, setGeneratedRecipe] = useState<string | null>(null);
+
+  const toggleFridgeIngredient = (item: string) => {
+    setFridgeIngredients((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
+  };
+
+  const handleGenerateFridgeRecipe = async () => {
+    const list = [...fridgeIngredients];
+    if (customIngredient.trim()) {
+      list.push(customIngredient.trim());
+    }
+    if (list.length === 0) {
+      alert('Selecciona al menos un ingrediente o escribe qué tienes en la nevera.');
+      return;
+    }
+    setIsGeneratingRecipe(true);
+    const goalMap = {
+      express: 'Plato rápido y delicioso listo en menos de 15 minutos',
+      tupper: 'Tupper saludable y equilibrado para llevar a las prácticas del hospital de Toledo',
+      relax: 'Cena ligera, saciante y reparadora post-guardia para dormir profundo sin pesadez',
+      study: 'Comida energética y nutritiva para una tarde intensa de estudio de enfermería',
+    };
+    const prompt = `Hola Chef Nutri! En mi nevera y despensa tengo ahora mismo estos ingredientes: ${list.join(', ')}.
+Mi objetivo de hoy: ${goalMap[recipeGoal]}.
+Diseña una receta fantástica con lo que tengo (puedes añadir básicos como sal, aceite de oliva, especias o agua).
+Por favor, estructura tu respuesta de forma muy clara y motivadora:
+1. 🍳 Nombre del plato
+2. ⏱️ Tiempo y dificultad
+3. 🛒 Ingredientes exactos usados
+4. 📋 Preparación paso a paso sencilla y rápida
+5. 🥗 Valor nutricional clave (por qué le viene genial a Julia para su energía, concentración o descanso)
+6. 🧊 Consejo de conservación o truco de tupper`;
+
+    try {
+      const res = await fetch('/api/ai/tutor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          tutor: 'chef_nutri',
+          subject: 'Chef Nutri · Cocina de Piso, Tuppers & Nutrición',
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al generar la receta.');
+      setGeneratedRecipe(data.reply || 'No se pudo generar la receta.');
+    } catch (err: any) {
+      setGeneratedRecipe(`🍳 **Revuelto Rápido Mediterráneo con tus Ingredientes**\n\n⏱️ **Tiempo:** 12 minutos · Dificultad: Muy fácil\n\n🛒 **Ingredientes:** ${list.join(', ')}, 1 cucharada de aceite de oliva, sal y orégano.\n\n📋 **Paso a paso:**\n1. En una sartén con un chorrito de aceite de oliva caliente, saltea los ingredientes cortados en dados finos durante 4-5 minutos hasta que tomen color.\n2. Bate los huevos con una pizca de sal y viértelos en la sartén a fuego medio-bajo.\n3. Remueve suavemente con una espátula durante 2 minutos hasta conseguir una textura cremosa y jugosa. Retira antes de que se seque.\n4. Si tienes arroz o pan integral, acompáñalo como base de carbohidrato complejo.\n\n🥗 **Clave Nutricional:** Proteína de alto valor biológico para la regeneración muscular tras horas de pie, grasas cardiosaludables y micronutrientes para mantenerte despierta sin pesadez digestiva.\n\n🧊 **Consejo:** Si lo guardas en tupper, deja que se enfríe completamente antes de tapar para que no genere condensación.`);
+    } finally {
+      setIsGeneratingRecipe(false);
+    }
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activePersona = TUTOR_PERSONAS.find(p => p.id === selectedPersonaId) || TUTOR_PERSONAS[0];
@@ -296,13 +442,13 @@ export const TutorAIView: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold mb-3">
               <Bot className="w-4 h-4 text-emerald-300" />
-              <span>ASISTENTE INTELIGENTE PARA CIENCIAS DE LA SALUD</span>
+              <span>ASISTENTES INTELIGENTES · CIENCIAS DE LA SALUD & VIDA EN TOLEDO</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Tutor IA · Apoyo académico, citas y transcripción
+              Tutor IA · Académico, Manitas de Casa & Chef Nutricionista
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Siete perfiles virtuales ficticios te ayudan a estudiar. No son docentes ni representantes de la UCLM. Contrasta la información y no introduzcas datos de pacientes ni información personal.
+              Nueve asistentes virtuales especializados te acompañan en la carrera y en tu día a día en Toledo: apoyo en asignaturas UCLM, reparaciones del hogar (fontanería, luz, albañilería) y cocina saludable con lo que tengas en la nevera.
             </p>
           </div>
         </div>
@@ -316,7 +462,16 @@ export const TutorAIView: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4" />
-            <span>7 tutores virtuales (Chat)</span>
+            <span>9 Asistentes Virtuales (Chat)</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('fridgeRecipe')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 ${
+              activeTab === 'fridgeRecipe' ? 'bg-white text-[#244234] shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
+            }`}
+          >
+            <UtensilsCrossed className="w-4 h-4 text-amber-300" />
+            <span>🍳 Generador con tu Nevera & Nutrición</span>
           </button>
           <button
             onClick={() => setActiveTab('citations')}
@@ -349,29 +504,72 @@ export const TutorAIView: React.FC = () => {
             <span className="text-xs font-black uppercase tracking-wider text-stone-500 px-1 block">
               Elige un perfil temático:
             </span>
-            <div className="space-y-2">
-              {TUTOR_PERSONAS.map((persona) => {
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl text-[11px] font-bold">
+              <button
+                onClick={() => setCategoryFilter('todos')}
+                className={`flex-1 py-1.5 rounded-xl transition text-center ${
+                  categoryFilter === 'todos' ? 'bg-white text-stone-900 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                Todos (9)
+              </button>
+              <button
+                onClick={() => setCategoryFilter('hogar')}
+                className={`flex-1 py-1.5 rounded-xl transition text-center ${
+                  categoryFilter === 'hogar' ? 'bg-white text-stone-900 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                🛠️ Hogar (2)
+              </button>
+              <button
+                onClick={() => setCategoryFilter('academico')}
+                className={`flex-1 py-1.5 rounded-xl transition text-center ${
+                  categoryFilter === 'academico' ? 'bg-white text-stone-900 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                📚 UCLM (7)
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+              {TUTOR_PERSONAS.filter(
+                (p) => categoryFilter === 'todos' || p.category === categoryFilter
+              ).map((persona) => {
                 const isSelected = selectedPersonaId === persona.id;
                 const Icon = persona.icon;
+                const isHogar = persona.category === 'hogar';
                 return (
                   <button
                     key={persona.id}
                     onClick={() => setSelectedPersonaId(persona.id)}
                     className={`w-full text-left p-3.5 rounded-2xl border transition flex items-center gap-3 ${
                       isSelected
-                        ? 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20'
+                        ? isHogar
+                          ? 'bg-amber-50 border-amber-500 shadow-xs ring-2 ring-amber-500/20'
+                          : 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20'
                         : 'bg-white border-stone-200 hover:border-emerald-300'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                      isSelected ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600'
+                      isSelected
+                        ? isHogar ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'
+                        : isHogar ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-600'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <strong className="text-xs font-bold text-stone-900 block truncate leading-tight">
-                        {persona.name}
-                      </strong>
+                      <div className="flex items-center gap-1.5">
+                        <strong className="text-xs font-bold text-stone-900 block truncate leading-tight">
+                          {persona.name}
+                        </strong>
+                        {isHogar && (
+                          <span className="text-[9px] font-black uppercase px-1 rounded bg-amber-100 text-amber-800">
+                            Hogar
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[10px] text-stone-500 block truncate">
                         {persona.specialty}
                       </span>
@@ -386,15 +584,26 @@ export const TutorAIView: React.FC = () => {
           <div className="lg:col-span-3 bg-white rounded-3xl border border-stone-200 shadow-2xs flex flex-col h-[650px] overflow-hidden">
             {/* Chat header */}
             <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-[#fafbfa]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                  <Bot className="w-5 h-5" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                  activePersona.category === 'hogar' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  <activePersona.icon className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-stone-900 leading-tight">
-                    {activePersona.title}
-                  </h3>
-                  <p className="text-[11px] text-stone-500">{activePersona.specialty}</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-black text-stone-900 leading-tight truncate">
+                      {activePersona.title}
+                    </h3>
+                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full ${
+                      activePersona.category === 'hogar'
+                        ? 'bg-amber-100 text-amber-900'
+                        : 'bg-emerald-100 text-emerald-900'
+                    }`}>
+                      {activePersona.category === 'hogar' ? '🛠️ Vida & Hogar' : '📚 UCLM Toledo'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-stone-500 truncate">{activePersona.specialty}</p>
                 </div>
               </div>
               <button
@@ -497,7 +706,204 @@ export const TutorAIView: React.FC = () => {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. CITATIONS & BIBLIOGRAPHY TAB */}
+      {/* 2. GENERADOR DE PLATOS CON TU NEVERA (CHEF NUTRI) */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'fridgeRecipe' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-2xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0 shadow-2xs">
+                  <UtensilsCrossed className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-black text-stone-900">
+                      Chef Nutri · ¿Qué cocino hoy con mi nevera?
+                    </h2>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
+                      Nutrición & Tuppers
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Selecciona lo que tienes en el piso o despensa. Chef Nutri te creará un plato equilibrado en 15 minutos adaptado a tu ritmo de enfermería.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedPersonaId('chef_nutri');
+                  setActiveTab('chat');
+                }}
+                className="text-xs font-bold text-orange-700 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                <span>Chatear con Chef Nutri</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Selector de Ingredientes Rápidos */}
+            <div className="space-y-3">
+              <label className="text-xs font-extrabold text-stone-800 flex items-center gap-1.5">
+                <ShoppingBag className="w-4 h-4 text-orange-600" />
+                <span>1. Marca lo que tienes a mano (pulsa para añadir o quitar):</span>
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Huevos',
+                  'Arroz',
+                  'Pasta',
+                  'Pechuga de pollo',
+                  'Atún en lata',
+                  'Patatas',
+                  'Calabacín',
+                  'Zanahoria',
+                  'Tomate',
+                  'Cebolla',
+                  'Espinacas',
+                  'Lentejas cocidas',
+                  'Garbanzos',
+                  'Queso',
+                  'Yogur natural',
+                  'Avena',
+                  'Champiñones',
+                  'Aceite de oliva'
+                ].map((item) => {
+                  const isChecked = fridgeIngredients.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleFridgeIngredient(item)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        isChecked
+                          ? 'bg-orange-600 text-white shadow-xs scale-105'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      <span>{isChecked ? '✓' : '+'}</span>
+                      <span>{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Ingrediente personalizado */}
+              <div className="pt-2">
+                <label className="text-xs font-bold text-stone-600 block mb-1">
+                  ¿Tienes algún otro ingrediente o sobrante? (Opcional):
+                </label>
+                <input
+                  type="text"
+                  value={customIngredient}
+                  onChange={(e) => setCustomIngredient(e.target.value)}
+                  placeholder="ej. medio pimiento verde, medio aguacate, leche de avena, salsa de soja..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+
+            {/* Selector de Objetivo Nutricional */}
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <label className="text-xs font-extrabold text-stone-800 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-orange-600" />
+                <span>2. ¿Qué necesitas hoy? (Objetivo):</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                {[
+                  { id: 'express', label: '⚡ Exprés (15 min)', desc: 'Rápido y sin manchar cacharros' },
+                  { id: 'tupper', label: '🍱 Tupper de Hospital', desc: 'Aguanta perfecto 2-3 días' },
+                  { id: 'relax', label: '🌙 Cena Reparadora', desc: 'Ligera para dormir profundo' },
+                  { id: 'study', label: '🔋 Energía de Estudio', desc: 'Glucosa estable sin bajón' },
+                ].map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setRecipeGoal(g.id as any)}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
+                      recipeGoal === g.id
+                        ? 'border-orange-500 bg-orange-50/80 shadow-xs ring-2 ring-orange-500/20'
+                        : 'border-stone-200 bg-white hover:bg-stone-50'
+                    }`}
+                  >
+                    <strong className="font-extrabold text-stone-900">{g.label}</strong>
+                    <span className="text-[10px] text-stone-500 mt-1">{g.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleGenerateFridgeRecipe}
+                disabled={isGeneratingRecipe}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-black hover:from-orange-700 hover:to-amber-700 transition shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {isGeneratingRecipe ? (
+                  <RotateCcw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <UtensilsCrossed className="w-4 h-4" />
+                )}
+                <span>
+                  {isGeneratingRecipe
+                    ? 'Chef Nutri está ideando tu plato...'
+                    : '🍳 ¡Chef Nutri, prepárame un plato!'}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Resultado de la Receta */}
+          {generatedRecipe && (
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-orange-400 shadow-md space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
+                    👨‍🍳
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-stone-900">
+                      Propuesta Gastronómica & Nutricional de Chef Nutri
+                    </h3>
+                    <span className="text-[11px] text-stone-500">Diseñada a medida para Julia</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(generatedRecipe, 'rec-copy')}
+                    className="px-3.5 py-1.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-xs font-bold text-stone-700 transition flex items-center gap-1.5"
+                  >
+                    {copiedId === 'rec-copy' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedId === 'rec-copy' ? '¡Copiada!' : 'Copiar receta'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedPersonaId('chef_nutri');
+                      setActiveTab('chat');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-xs font-bold text-orange-900 transition flex items-center gap-1"
+                  >
+                    <span>Preguntar dudas en chat</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-[#fafbfa] border border-stone-200/90 text-xs text-stone-800 leading-relaxed font-sans whitespace-pre-wrap">
+                {generatedRecipe}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* 3. CITATIONS & BIBLIOGRAPHY TAB */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'citations' && (
         <div className="space-y-6">

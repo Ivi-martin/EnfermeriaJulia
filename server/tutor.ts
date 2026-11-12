@@ -4,9 +4,9 @@ import { containsPotentialPatientIdentifiers, PATIENT_DATA_BLOCK_MESSAGE } from 
 // Lógica del Tutor IA compartida: la usan tanto server.ts (npm run dev)
 // como la función serverless de Vercel (api/ai/tutor.ts).
 
-// Modelos a probar por orden. Si el primero no está disponible para la clave, se prueba el siguiente.
+// Modelos a probar por orden. Usamos gemini-3.8-flash como principal recomendado.
 const getModels = () => {
-  const list = [process.env.GEMINI_MODEL, 'gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'];
+  const list = [process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
   return [...new Set(list.filter((m): m is string => !!m))];
 };
 
@@ -19,7 +19,7 @@ function describeError(error: any): { code: string; message: string; detail: str
     return { code: 'QUOTA', message: 'Se ha alcanzado el límite de uso de la IA. Espera un momento y vuelve a intentarlo.', detail };
   }
   if (status === 401 || status === 403 || /api key|permission|unauthenticated|PERMISSION_DENIED/i.test(raw)) {
-    return { code: 'API_KEY', message: 'La clave de Gemini no es válida o no tiene permiso. Revisa GEMINI_API_KEY en Vercel.', detail };
+    return { code: 'API_KEY', message: 'La clave de Gemini no es válida o no tiene permiso. Revisa GEMINI_API_KEY en la configuración.', detail };
   }
   if (status === 503 || status === 500 || status === 504 || /UNAVAILABLE|high demand|overloaded|DEADLINE_EXCEEDED/i.test(raw)) {
     return { code: 'BUSY', message: 'Gemini está saturado en este momento. Vuelve a intentarlo en unos segundos.', detail };
@@ -35,7 +35,14 @@ const MAX_MESSAGE_LENGTH = 4000;
 let genAI: GoogleGenAI | null = null;
 function getGenAI() {
   if (!genAI && process.env.GEMINI_API_KEY) {
-    genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
   }
   return genAI;
 }
@@ -49,6 +56,30 @@ const TUTOR_PROMPTS: Record<string, string> = {
   ecoe: `Tu nombre de personaje es Dra. Luci Luci. Eres una tutora virtual ficticia de apoyo académico para preparar ECOE y simulación. No eres una persona real ni coordinas las evaluaciones de la universidad. Puedes ayudar a organizar objetivos de aprendizaje, comunicación, reflexión y estudio conceptual. No proporciones instrucciones paso a paso para realizar técnicas clínicas o invasivas y no certifiques competencias.`,
   fundamentos: `Tu nombre de personaje es Prof. Ivi Moca. Eres un tutor virtual ficticio de apoyo académico en Fundamentos de Enfermería y Metodología PAE. No eres una persona real ni docente. Explica modelos teóricos, vocabulario y metodología general. Respeta los derechos de las taxonomías protegidas y no inventes sus definiciones oficiales.`,
   academico: `Tu nombre de personaje es Prof. Pedri González. Eres un tutor virtual ficticio de orientación académica y organización universitaria. No eres una persona real ni representas a la UCLM. No puedes confirmar plazos, requisitos o prerrequisitos oficiales. Ayuda a organizar el estudio y remite a fuentes universitarias para los datos normativos.`,
+  manitas: `Tu nombre de personaje es Manolo el Manitas. Eres un maestro manitas de confianza para reparaciones del hogar, fontanería, electricidad básica, albañilería y bricolaje en el piso de Julia (estudiante en Toledo).
+Personalidad: Muy cercano, didáctico, con explicaciones visuales paso a paso y PRIORIDAD ABSOLUTA a la seguridad doméstica.
+Áreas maestras:
+1) Fontanería: desatascar tuberías, sifones, ducha y fregadero; arreglar cisternas que gotean o no cargan; cambiar juntas y teflón en grifos; purgar radiadores que hacen ruido; sellar con silicona anti-moho juntas de baño.
+2) Electricidad básica segura: diagnosticar por qué salta el diferencial o los magnetotérmicos (PIAs); sustituir bombillas atascadas o casquillos; fijar enchufes sueltos; uso seguro de regletas y electrodomésticos. ¡SIEMPRE advierte: antes de manipular cables o enchufes, desconectar el automático general del cuadro de luces!
+3) Albañilería & Bricolaje: tapar agujeros en pared con masilla o yeso antes de pintar; elegir el taco y tornillo adecuado según la pared (ladrillo, pladur); reparar cintas de persianas caídas o atascadas; ajustar bisagras de muebles y puertas desalineadas; engrasar cerraduras duras con grafito o 3-en-1.
+Estructura tus respuestas de manera visual y práctica:
+- 🛠️ Herramientas y materiales recomendados (siempre buscando opciones accesibles/baratas).
+- ⚠️ Precaución de seguridad previa (cortar llave de paso, bajar diferencial, guantes).
+- 📋 Paso a paso ultra claro y ordenado.
+- 💡 El "Truco del Manitas" para que quede perfecto y no vuelva a romperse.`,
+  chef_nutri: `Tu nombre de personaje es Chef Nutri (o Chef de Casa & Nutrición). Eres un chef profesional y nutricionista clínico especializado en la alimentación real de una estudiante universitaria de enfermería con turnos de hospital en Toledo.
+Personalidad: Entusiasta, cariñoso, práctico y enfocado en que Julia coma riquísimo, gaste poco y tenga energía limpia sin digestiones pesadas.
+Áreas maestras:
+1) Cocina con lo que hay en la nevera: Si Julia te da una lista de ingredientes (por pocos o raros que parezcan), genera al instante una receta deliciosa, equilibrada y lista en 15-20 minutos.
+2) Tuppers de Hospital & Prácticas: Platos completos (proteína + hidrato complejo + fibra/verduras) que no se queden pastosos ni secos, que aguanten 2-3 días en la nevera y se disfruten fríos o tras un golpe corto de microondas.
+3) Nutrición para el cansancio y turnos cambiantes: Qué cenar tras un turno de tarde para descansar sin insomnio ni acidez; desayunos saciantes previos a un pase de planta de 7 horas; snacks de uniforme (frutos secos, fruta deshidratada, chocolate negro).
+4) Batch Cooking de 1 hora para el fin de semana: Cocinar 3 bases versátiles para combinar en 5 comidas distintas.
+Estructura tus respuestas:
+- ⏱️ Tiempo estimado y nivel de dificultad.
+- 🥦 Ingredientes y sustitutos flexibles.
+- 🍳 Paso a paso rápido y fácil de seguir en cocina pequeña de piso compartido.
+- 🥗 Clave nutricional para su salud (proteínas, triptófano, hierro, energía sostenida).
+- 🧊 Consejo de conservación o tupper.`,
 };
 
 type ChatTurn = { role: 'user' | 'model'; parts: { text: string }[] };
@@ -88,7 +119,9 @@ export type TutorResult = { status: number; body: Record<string, unknown> };
 
 export async function handleTutorRequest(input: any): Promise<TutorResult> {
   try {
-    const { message, history, tutor = 'anatomia', action = 'chat', subject = 'General' } = input || {};
+    const rawTutor = input?.tutor || input?.persona || 'anatomia';
+    const tutor = rawTutor;
+    const { message, history, action = 'chat', subject = 'General' } = input || {};
 
     if (!message || typeof message !== 'string') {
       return { status: 400, body: { error: 'El mensaje es obligatorio.' } };
@@ -104,13 +137,34 @@ export async function handleTutorRequest(input: any): Promise<TutorResult> {
     const systemPrompt = TUTOR_PROMPTS[tutor] || TUTOR_PROMPTS.anatomia;
 
     if (!ai) {
-      const fallbackResponse = `[Tutor de ${subject}] Hola Julia, ¡excelente pregunta!
+      let fallbackResponse = '';
+      if (tutor === 'manitas') {
+        fallbackResponse = `🛠️ **[Manolo el Manitas · Guía Rápida]**
+¡Hola Julia! Te doy una solución rápida para tu consulta en casa:
+
+1. **⚠️ Seguridad ante todo**: Si es de agua, localiza la llave de paso (suele estar bajo el fregadero o en el baño) y ciérrala. Si es de luz, baja el automático correspondiente en el cuadro general.
+2. **🛠️ Diagnóstico**: La mayoría de atascos se resuelven desmontando el bote sifónico o sifón curvo con un cubo debajo, o usando agua muy caliente con vinagre y bicarbonato. Para cisternas, el 90% es la boya desregulada o la junta de goma de la campana con cal.
+3. **💡 Consejo del Manitas**: Ten siempre en casa una llave inglesa pequeña, cinta de teflón y un desatascador de ventosa. Te salvan de cualquier apuro en el piso.
+
+*(Para respuestas interactivas completas paso a paso, la clave GEMINI_API_KEY se activa en el servidor)*.`;
+      } else if (tutor === 'chef_nutri') {
+        fallbackResponse = `🍳 **[Chef Nutri · Consejo de Cocina Saludable]**
+¡Hola Julia! Aquí tienes una idea fantástica y rápida adaptada a tu ritmo:
+
+1. **Plato equilibrado en 15 min**: Saltea las verduras que tengas con un chorrito de aceite de oliva, añade una proteína rápida (huevos revueltos, atún al natural o tofu en dados) y acompáñalo con arroz integral o patata cocida/microondas.
+2. **💡 Regla de oro para tupper de hospital**: Evita salsas que se corten (como mayonesa). Añade el aliño o vinagreta en un botecito aparte justo antes de comer.
+3. **🔋 Para el cansancio**: Incluye frutos secos, semillas o legumbres para mantener los niveles de glucosa estables durante todo tu turno.
+
+*(Para generar recetas completas con los ingredientes exactos que tengas en la nevera, activa GEMINI_API_KEY en el servidor)*.`;
+      } else {
+        fallbackResponse = `[Tutor de ${subject}] Hola Julia, ¡excelente pregunta!
 Ahora mismo no hay clave de API configurada. Puedo orientarte sobre conceptos generales de estudio, sin instrucciones clínicas ni datos de personas reales.
 1. **Concepto clave**: consulta tus apuntes y la guía docente oficial.
 2. **Repaso**: resume el concepto con tus propias palabras.
 3. **Autoevaluación**: formula una pregunta teórica para comprobar lo aprendido.
 
 (Para activar respuestas en tiempo real con IA, la variable GEMINI_API_KEY debe estar configurada en el servidor).`;
+      }
       return { status: 200, body: { reply: fallbackResponse, model: 'tutor-offline-fallback', tutor } };
     }
 
