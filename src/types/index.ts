@@ -242,6 +242,32 @@ export interface TutorChatMessage {
   text: string;
   timestamp: string;
   tutorPersona: string;
+  /** ISO timestamp used to rebuild daily summaries across app restarts. */
+  createdAt?: string;
+}
+
+export interface TutorMemoryNote {
+  id: string;
+  category: 'aprendizaje' | 'emocional' | 'acuerdo';
+  text: string;
+  createdAt: string;
+}
+
+export interface TutorSessionSummary {
+  id: string;
+  date: string;
+  tutorPersona: string;
+  learning: string;
+  emotional: string;
+  agreements: string;
+  updatedAt: string;
+}
+
+export interface TutorCouncilMemo {
+  id: string;
+  date: string;
+  from: string;
+  text: string;
 }
 
 // -------------------------------------------------------------

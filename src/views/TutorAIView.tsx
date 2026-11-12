@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
-import { TutorChatMessage } from '../types';
+import { TutorChatMessage, TutorMemoryNote } from '../types';
+import { getDaysDifference, getLocalDateString } from '../utils/dateUtils';
 import {
   Sparkles,
   Send,
@@ -33,14 +34,25 @@ import {
   Carrot,
   ShieldCheck,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Volume2,
+  VolumeX,
+  BookHeart,
+  NotebookPen,
+  Pause,
+  Play,
+  Trash2,
+  Heart,
+  CalendarDays,
+  BatteryMedium,
+  MessageCircleHeart,
 } from 'lucide-react';
 
 interface TutorPersona {
   id: string;
   name: string;
   title: string;
-  category: 'academico' | 'hogar';
+  category: 'academico' | 'hogar' | 'bienestar';
   specialty: string;
   description: string;
   icon: any;
@@ -51,6 +63,24 @@ interface TutorPersona {
 }
 
 const TUTOR_PERSONAS: TutorPersona[] = [
+  {
+    id: 'tu_amore',
+    name: 'Tu Amore',
+    title: 'Tu Amore · Bienestar Emocional & Acompañamiento',
+    category: 'bienestar',
+    specialty: 'Regulación emocional, estrés académico y pequeños pasos',
+    description: 'Acompañamiento amable para organizarte con calma, escuchar cómo te encuentras y afrontar el estudio sin sobrecargarte.',
+    icon: HeartHandshake,
+    color: 'text-rose-700',
+    bgLight: 'bg-rose-50 border-rose-200',
+    welcomeMessage: 'Hola, Julia. Soy Tu Amore, tu acompañante virtual de bienestar y estudio. Podemos hablar con calma de cómo te encuentras, ordenar las preocupaciones y dividir lo importante en pasos pequeños. No soy psicóloga ni sustituyo a una persona profesional o adulta de confianza; sí puedo ayudarte a parar un momento, poner palabras a lo que necesitas y encontrar un siguiente paso amable. ¿Qué te vendría mejor hoy: calma, ordenar ideas o empezar por algo pequeñito?',
+    suggestedPrompts: [
+      'Hoy me cuesta arrancar. Ayúdame a elegir un primer paso pequeño.',
+      'Tengo un examen cerca y me siento saturada. ¿Qué es lo esencial?',
+      'Necesito ordenar lo que me preocupa sin agobiarme.',
+      'Ayúdame a preparar una tarde de estudio con descansos.',
+    ],
+  },
   // --- 1. TUTORES ESPECIALIZADOS DE VIDA, HOGAR Y COCINA ---
   {
     id: 'manitas',
@@ -159,18 +189,18 @@ const TUTOR_PERSONAS: TutorPersona[] = [
 
 export interface TutorAIViewProps {
   initialPersonaId?: string;
-  initialTab?: 'chat' | 'fridgeRecipe' | 'citations' | 'transcription';
+  initialTab?: 'chat' | 'fridgeRecipe' | 'citations' | 'transcription' | 'council';
 }
 
 export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, initialTab }) => {
-  const { state } = useCampusStore();
-  const [activeTab, setActiveTab] = useState<'chat' | 'fridgeRecipe' | 'citations' | 'transcription'>(
+  const { state, updateWellbeing, saveTutorConversation, saveTutorSessionSummary, addTutorCouncilMemo, addTutorMemoryNote, removeTutorMemoryNote, toggleTutorEssentialMode } = useCampusStore();
+  const [activeTab, setActiveTab] = useState<'chat' | 'fridgeRecipe' | 'citations' | 'transcription' | 'council'>(
     initialTab || 'chat'
   );
-  const [categoryFilter, setCategoryFilter] = useState<'todos' | 'academico' | 'hogar'>('todos');
+  const [categoryFilter, setCategoryFilter] = useState<'todos' | 'academico' | 'hogar' | 'bienestar'>('todos');
 
   // --- Tutor Chat State: hilos independientes para perfiles virtuales ficticios ---
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string>(initialPersonaId || 'manitas');
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>(initialPersonaId || 'tu_amore');
 
   useEffect(() => {
     if (initialPersonaId) {
@@ -186,9 +216,9 @@ export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, init
   }, [initialPersonaId, initialTab]);
 
   const [threads, setThreads] = useState<Record<string, TutorChatMessage[]>>(() => {
-    const initial: Record<string, TutorChatMessage[]> = {};
+    const initial: Record<string, TutorChatMessage[]> = { ...(state.tutorConversations || {}) };
     TUTOR_PERSONAS.forEach((p) => {
-      initial[p.id] = [
+      if (!Array.isArray(initial[p.id]) || initial[p.id].length === 0) initial[p.id] = [
         {
           id: `welcome-${p.id}`,
           sender: 'tutor',
@@ -207,6 +237,107 @@ export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, init
   const [transcriptPrivacyConfirmed, setTranscriptPrivacyConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [newMemoryNote, setNewMemoryNote] = useState('');
+  const [newMemoryCategory, setNewMemoryCategory] = useState<TutorMemoryNote['category']>('aprendizaje');
+  const [breathingActive, setBreathingActive] = useState(false);
+  const [breathingElapsed, setBreathingElapsed] = useState(0);
+
+  const todayKey = getLocalDateString();
+  const todayWellbeing = state.wellbeing[todayKey] || {};
+  const feelingTags = ['Cansada y saturada', 'Necesito calma', 'Me siento bloqueada', 'Me preocupa un examen', 'Necesito compañía', 'Me siento tranquila'];
+
+  const buildLiveTutorContext = () => {
+    const upcomingExams = state.exams
+      .filter(exam => !exam.completed && exam.date >= todayKey)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 5)
+      .map(exam => ({ subject: exam.subject, date: exam.date, daysLeft: getDaysDifference(exam.date, todayKey), topics: exam.topics }));
+    const upcomingShifts = state.shifts
+      .filter(shift => !shift.completed && shift.date >= todayKey)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 4)
+      .map(shift => ({ date: shift.date, service: shift.service, shiftType: shift.shiftType, daysLeft: getDaysDifference(shift.date, todayKey) }));
+    const openTasks = state.tasks
+      .filter(task => !task.done)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 5)
+      .map(task => ({ title: task.title, subject: task.subject, date: task.date }));
+    const studyBlocks = (state.studyBlocks || [])
+      .filter(block => !block.done && block.date >= todayKey)
+      .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))
+      .slice(0, 6)
+      .map(block => ({ title: block.title, subject: block.subject, date: block.date, startTime: block.startTime, durationMinutes: block.durationMinutes, kind: block.kind }));
+    return {
+      date: todayKey,
+      upcomingExams,
+      upcomingShifts,
+      wellbeing: {
+        mood: todayWellbeing.mood,
+        energy: todayWellbeing.energy,
+        tags: todayWellbeing.tags || [],
+        note: todayWellbeing.note || '',
+      },
+      recentGrades: (state.grades || []).slice(-5).map(grade => ({ subject: grade.subject, name: grade.name, grade: grade.grade })),
+      openTasks,
+      studyBlocks,
+      memoryNotes: (state.tutorMemoryNotes || []).slice(0, 20).map(note => ({ category: note.category, text: note.text })),
+      sessionSummaries: (state.tutorSessionSummaries || []).slice(0, 8).map(summary => ({
+        date: summary.date, tutorPersona: summary.tutorPersona, learning: summary.learning,
+        emotional: summary.emotional, agreements: summary.agreements,
+      })),
+      councilMemos: (state.tutorCouncilMemos || []).slice(0, 12).map(memo => ({ from: memo.from, text: memo.text })),
+      essentialMode: state.tutorEssentialMode,
+    };
+  };
+
+  const commitThread = (personaId: string, messages: TutorChatMessage[]) => {
+    setThreads(prev => ({ ...prev, [personaId]: messages }));
+    saveTutorConversation(personaId, messages);
+  };
+
+  const toggleFeelingTag = (tag: string) => {
+    const current = todayWellbeing.tags || [];
+    const next = current.includes(tag) ? current.filter(item => item !== tag) : [...current, tag];
+    updateWellbeing(todayKey, { tags: next });
+  };
+
+  const speakMessage = (message: TutorChatMessage) => {
+    if (!('speechSynthesis' in window)) {
+      alert('La lectura por voz no está disponible en este navegador.');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    if (speakingId === message.id) {
+      setSpeakingId(null);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(message.text.replace(/[*#`]/g, ' '));
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.94;
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(message.id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (!breathingActive) return;
+    const interval = window.setInterval(() => {
+      setBreathingElapsed(current => {
+        if (current >= 59) {
+          setBreathingActive(false);
+          return 60;
+        }
+        return current + 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [breathingActive]);
+
+  useEffect(() => () => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }, []);
 
   // --- Estado para Generador con tu Nevera (Chef Nutri) ---
   const [fridgeIngredients, setFridgeIngredients] = useState<string[]>([
@@ -216,6 +347,7 @@ export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, init
   const [recipeGoal, setRecipeGoal] = useState<'express' | 'tupper' | 'relax' | 'study'>('express');
   const [isGeneratingRecipe, setIsGeneratingRecipe] = useState<boolean>(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<string | null>(null);
+  const [recipeContextConfirmed, setRecipeContextConfirmed] = useState(false);
 
   const toggleFridgeIngredient = (item: string) => {
     setFridgeIngredients((prev) =>
@@ -230,6 +362,10 @@ export const TutorAIView: React.FC<TutorAIViewProps> = ({ initialPersonaId, init
     }
     if (list.length === 0) {
       alert('Selecciona al menos un ingrediente o escribe qué tienes en la nevera.');
+      return;
+    }
+    if (!recipeContextConfirmed) {
+      alert('Confirma que entiendes que Chef Nutri recibirá el contexto académico y de bienestar de Julia para adaptar la receta.');
       return;
     }
     setIsGeneratingRecipe(true);
@@ -259,6 +395,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
           tutor: 'chef_nutri',
           subject: 'Chef Nutri · Cocina de Piso, Tuppers & Nutrición',
           history: [],
+          context: buildLiveTutorContext(),
         }),
       });
       const data = await res.json();
@@ -268,6 +405,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
       setGeneratedRecipe(`🍳 **Revuelto Rápido Mediterráneo con tus Ingredientes**\n\n⏱️ **Tiempo:** 12 minutos · Dificultad: Muy fácil\n\n🛒 **Ingredientes:** ${list.join(', ')}, 1 cucharada de aceite de oliva, sal y orégano.\n\n📋 **Paso a paso:**\n1. En una sartén con un chorrito de aceite de oliva caliente, saltea los ingredientes cortados en dados finos durante 4-5 minutos hasta que tomen color.\n2. Bate los huevos con una pizca de sal y viértelos en la sartén a fuego medio-bajo.\n3. Remueve suavemente con una espátula durante 2 minutos hasta conseguir una textura cremosa y jugosa. Retira antes de que se seque.\n4. Si tienes arroz o pan integral, acompáñalo como base de carbohidrato complejo.\n\n🥗 **Clave Nutricional:** Proteína de alto valor biológico para la regeneración muscular tras horas de pie, grasas cardiosaludables y micronutrientes para mantenerte despierta sin pesadez digestiva.\n\n🧊 **Consejo:** Si lo guardas en tupper, deja que se enfríe completamente antes de tapar para que no genere condensación.`);
     } finally {
       setIsGeneratingRecipe(false);
+      setRecipeContextConfirmed(false);
     }
   };
 
@@ -280,9 +418,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
   }, [currentMessages, isLoading]);
 
   const handleResetCurrentTutor = () => {
-    setThreads(prev => ({
-      ...prev,
-      [selectedPersonaId]: [
+    commitThread(selectedPersonaId, [
         {
           id: `welcome-${selectedPersonaId}-${Date.now()}`,
           sender: 'tutor',
@@ -290,8 +426,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tutorPersona: selectedPersonaId
         }
-      ]
-    }));
+      ]);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -299,23 +434,24 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
     if (!text || isLoading) return;
     if (!privacyConfirmed) { alert('Antes de enviar, confirma que el texto no contiene datos personales ni información identificable de pacientes.'); return; }
 
+    const personaId = selectedPersonaId;
+    const persona = activePersona;
     const userMsg: TutorChatMessage = {
       id: 'msg-' + Date.now(),
       sender: 'user',
       text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      tutorPersona: selectedPersonaId
+      tutorPersona: personaId,
+      createdAt: new Date().toISOString(),
     };
 
-    setThreads(prev => ({
-      ...prev,
-      [selectedPersonaId]: [...(prev[selectedPersonaId] || []), userMsg]
-    }));
+    const threadWithUser = [...currentMessages, userMsg];
+    commitThread(personaId, threadWithUser);
     setInputText('');
     setPrivacyConfirmed(false);
     setIsLoading(true);
 
-    const history = currentMessages.slice(-8).map(m => ({
+    const history = currentMessages.slice(-24).map(m => ({
       role: m.sender === 'user' ? 'user' : 'model',
       text: m.text
     }));
@@ -327,8 +463,9 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
         body: JSON.stringify({
           message: text,
           history,
-          tutor: selectedPersonaId,
-          subject: `${activePersona.name} · ${activePersona.title}`
+          tutor: personaId,
+          subject: `${persona.name} · ${persona.title}`,
+          context: buildLiveTutorContext(),
         })
       });
 
@@ -343,13 +480,33 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
         sender: 'tutor',
         text: tutorReplyText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        tutorPersona: selectedPersonaId
+        tutorPersona: personaId,
+        createdAt: new Date().toISOString(),
       };
 
-      setThreads(prev => ({
-        ...prev,
-        [selectedPersonaId]: [...(prev[selectedPersonaId] || []), tutorMsg]
-      }));
+      const completedThread = [...threadWithUser, tutorMsg];
+      commitThread(personaId, completedThread);
+
+      const userTurns = completedThread.filter(item => item.sender === 'user' && (item.createdAt || '').slice(0, 10) === todayKey);
+      const tutorTurns = completedThread.filter(item => item.sender === 'tutor' && (item.createdAt || '').slice(0, 10) === todayKey);
+      const latestLearning = tutorTurns.slice(-2).map(item => item.text.replace(/\s+/g, ' ').slice(0, 260)).join(' · ') || 'Sesión de apoyo iniciada.';
+      const latestAgreements = tutorTurns.slice(-1).map(item => item.text.replace(/\s+/g, ' ').slice(0, 240)).join('') || 'Pendiente de concretar.';
+      const wellbeingLine = [
+        todayWellbeing.mood ? `ánimo ${todayWellbeing.mood}/5` : '',
+        todayWellbeing.energy ? `energía ${todayWellbeing.energy}/5` : '',
+        ...(todayWellbeing.tags || []),
+      ].filter(Boolean).join(', ');
+      saveTutorSessionSummary({
+        date: todayKey,
+        tutorPersona: personaId,
+        learning: `${userTurns.length} intervención(es) hoy. ${latestLearning}`.slice(0, 700),
+        emotional: wellbeingLine ? `Julia registró: ${wellbeingLine}.` : 'Julia no ha registrado un check-in emocional hoy.',
+        agreements: latestAgreements,
+      });
+      addTutorCouncilMemo({
+        from: persona.name,
+        text: `Julia preguntó: “${text.slice(0, 120)}”. Resumen útil para el equipo: ${tutorReplyText.replace(/\s+/g, ' ').slice(0, 180)}`,
+      });
     } catch (err) {
       const fallbackMsg: TutorChatMessage = {
         id: 'fallback-' + Date.now(),
@@ -357,12 +514,10 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
         text: err instanceof Error ? err.message : 'No se pudo conectar con el tutor virtual. Revisa tus materiales docentes y vuelve a intentarlo más tarde.',
 
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        tutorPersona: selectedPersonaId
+        tutorPersona: personaId,
+        createdAt: new Date().toISOString(),
       };
-      setThreads(prev => ({
-        ...prev,
-        [selectedPersonaId]: [...(prev[selectedPersonaId] || []), fallbackMsg]
-      }));
+      commitThread(personaId, [...threadWithUser, fallbackMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -434,6 +589,27 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
     }
   };
 
+  const nextCouncilExam = state.exams
+    .filter(exam => !exam.completed && exam.date >= todayKey)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const nextCouncilExamDays = nextCouncilExam ? getDaysDifference(nextCouncilExam.date, todayKey) : null;
+  const localHour = new Date().getHours();
+  const timeGreeting = localHour < 12 ? 'Buenos días' : localHour < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const councilGreeting = (todayWellbeing.energy && todayWellbeing.energy <= 2) || (todayWellbeing.mood && todayWellbeing.mood <= 2)
+    ? `${timeGreeting}, Julia. Hoy vamos a cuidarte el ritmo. ${nextCouncilExam ? `Tenemos presente ${nextCouncilExam.subject}${nextCouncilExamDays === 0 ? ' hoy' : ` en ${nextCouncilExamDays} día(s)`}, pero no hace falta abarcarlo todo de golpe.` : 'No hay que resolverlo todo de una vez.'} Elegiremos una prioridad pequeña y dejaremos espacio para descansar.`
+    : nextCouncilExam
+      ? `${timeGreeting}, Julia. El Consejo tiene presente tu examen de ${nextCouncilExam.subject} ${nextCouncilExamDays === 0 ? 'de hoy' : `en ${nextCouncilExamDays} día(s)`}. Vamos a ordenar lo importante y avanzar paso a paso, respetando tus pausas.`
+      : `${timeGreeting}, Julia. El Consejo está coordinado y listo para ayudarte. Cuéntanos qué necesitas hoy y lo convertiremos en un siguiente paso claro y alcanzable.`;
+  const breathingPhase = breathingElapsed >= 60 ? 'Sesión completada' : ['Inhala suavemente', 'Mantén solo si te resulta cómodo', 'Exhala despacio'][Math.floor(breathingElapsed / 4) % 3];
+  const breathingRound = Math.min(5, Math.floor(breathingElapsed / 12) + 1);
+
+  const handleSavePermanentNote = () => {
+    const text = newMemoryNote.trim();
+    if (!text) return;
+    addTutorMemoryNote({ category: newMemoryCategory, text });
+    setNewMemoryNote('');
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* Top Banner */}
@@ -445,10 +621,10 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
               <span>ASISTENTES INTELIGENTES · CIENCIAS DE LA SALUD & VIDA EN TOLEDO</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Tutor IA · Académico, Manitas de Casa & Chef Nutricionista
+              Tutor IA · El Consejo de Julia
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Nueve asistentes virtuales especializados te acompañan en la carrera y en tu día a día en Toledo: apoyo en asignaturas UCLM, reparaciones del hogar (fontanería, luz, albañilería) y cocina saludable con lo que tengas en la nevera.
+              Diez asistentes virtuales coordinados comparten el contexto académico y de bienestar de Julia: estudio, exámenes, turnos, vida diaria y acompañamiento emocional.
             </p>
           </div>
         </div>
@@ -462,7 +638,16 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
             }`}
           >
             <Bot className="w-4 h-4" />
-            <span>9 Asistentes Virtuales (Chat)</span>
+            <span>10 Tutores Virtuales (Chat)</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('council')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 ${
+              activeTab === 'council' ? 'bg-white text-[#244234] shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
+            }`}
+          >
+            <BookHeart className="w-4 h-4 text-rose-200" />
+            <span>El Consejo & Memoria</span>
           </button>
           <button
             onClick={() => setActiveTab('fridgeRecipe')}
@@ -494,6 +679,70 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
         </div>
       </div>
 
+      {activeTab === 'chat' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-2xs p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black text-stone-900 flex items-center gap-2"><Heart className="w-4 h-4 text-rose-600" /> Check-in de hoy · ¿Cómo estás, Julia?</h2>
+              <p className="text-[11px] text-stone-500 mt-1">Este estado se comparte con los tutores para adaptar el ritmo. Puedes cambiarlo cuando quieras.</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTutorEssentialMode}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center justify-center gap-2 ${state.tutorEssentialMode ? 'bg-amber-100 border-amber-300 text-amber-950' : 'bg-stone-50 border-stone-200 text-stone-700 hover:border-emerald-500'}`}
+            >
+              <Zap className="w-4 h-4" />
+              {state.tutorEssentialMode ? 'Modo esencial activo' : 'Modo esencial / respiro'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-bold text-stone-700 mb-2">Ánimo · 1 a 5</p>
+              <div className="grid grid-cols-5 gap-2">
+                {[['😔', 'Bajo'], ['😕', 'Regular'], ['😐', 'Neutro'], ['🙂', 'Bien'], ['😄', 'Muy bien']].map(([emoji, label], index) => (
+                  <button key={label} type="button" onClick={() => updateWellbeing(todayKey, { mood: index + 1 })}
+                    className={`rounded-xl border py-2 text-center transition ${todayWellbeing.mood === index + 1 ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-200' : 'border-stone-200 hover:bg-stone-50'}`}>
+                    <span className="block text-xl">{emoji}</span><span className="text-[9px] font-semibold text-stone-600">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-stone-700 mb-2">Energía · 1 a 5</p>
+              <div className="grid grid-cols-5 gap-2">
+                {[['🪫', 'Muy baja'], ['😴', 'Baja'], ['⚡', 'Media'], ['🔋', 'Buena'], ['🚀', 'Alta']].map(([emoji, label], index) => (
+                  <button key={label} type="button" onClick={() => updateWellbeing(todayKey, { energy: index + 1 })}
+                    className={`rounded-xl border py-2 text-center transition ${todayWellbeing.energy === index + 1 ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-200' : 'border-stone-200 hover:bg-stone-50'}`}>
+                    <span className="block text-xl">{emoji}</span><span className="text-[9px] font-semibold text-stone-600">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-stone-700 mb-2">Etiquetas (puedes elegir varias)</p>
+            <div className="flex flex-wrap gap-2">
+              {feelingTags.map(tag => (
+                <button key={tag} type="button" onClick={() => toggleFeelingTag(tag)}
+                  className={`px-3 py-1.5 rounded-full border text-[10px] font-semibold transition ${(todayWellbeing.tags || []).includes(tag) ? 'bg-emerald-50 border-emerald-400 text-emerald-900' : 'bg-white border-stone-200 text-stone-600 hover:border-emerald-400'}`}>
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-stone-700 mb-1" htmlFor="julia-wellbeing-note">Una nota para que los tutores te entiendan mejor (opcional)</label>
+            <textarea id="julia-wellbeing-note" value={todayWellbeing.note || ''} onChange={event => updateWellbeing(todayKey, { note: event.target.value })}
+              rows={2} maxLength={500} placeholder="Por ejemplo: hoy necesito que vayamos despacio..."
+              className="w-full rounded-xl border border-stone-200 px-3 py-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 resize-y" />
+          </div>
+          <p className="text-[10px] leading-relaxed text-stone-400">Privacidad: al enviar una pregunta, se comparte con el proveedor externo de IA el contexto seleccionado aquí, junto con exámenes, turnos, notas académicas, recuerdos permanentes y resúmenes del Consejo. No introduzcas datos de pacientes ni información especialmente sensible. El historial y la memoria se guardan en el almacenamiento local de este navegador, que no está cifrado ni se sincroniza entre dispositivos.</p>
+        </section>
+      )}
+
       {/* ------------------------------------------------------------- */}
       {/* 1. TUTOR CHAT TAB */}
       {/* ------------------------------------------------------------- */}
@@ -513,7 +762,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                   categoryFilter === 'todos' ? 'bg-white text-stone-900 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-stone-800'
                 }`}
               >
-                Todos (9)
+                Todos (10)
               </button>
               <button
                 onClick={() => setCategoryFilter('hogar')}
@@ -531,6 +780,14 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
               >
                 📚 UCLM (7)
               </button>
+              <button
+                onClick={() => setCategoryFilter('bienestar')}
+                className={`flex-1 py-1.5 rounded-xl transition text-center ${
+                  categoryFilter === 'bienestar' ? 'bg-white text-stone-900 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                💗 Bienestar (1)
+              </button>
             </div>
 
             <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
@@ -540,6 +797,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                 const isSelected = selectedPersonaId === persona.id;
                 const Icon = persona.icon;
                 const isHogar = persona.category === 'hogar';
+                const isWellbeing = persona.category === 'bienestar';
                 return (
                   <button
                     key={persona.id}
@@ -548,14 +806,16 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                       isSelected
                         ? isHogar
                           ? 'bg-amber-50 border-amber-500 shadow-xs ring-2 ring-amber-500/20'
-                          : 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20'
+                          : isWellbeing
+                            ? 'bg-rose-50 border-rose-400 shadow-xs ring-2 ring-rose-400/20'
+                            : 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20'
                         : 'bg-white border-stone-200 hover:border-emerald-300'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                       isSelected
-                        ? isHogar ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'
-                        : isHogar ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-600'
+                        ? isHogar ? 'bg-amber-600 text-white' : isWellbeing ? 'bg-rose-500 text-white' : 'bg-emerald-600 text-white'
+                        : isHogar ? 'bg-amber-100 text-amber-800' : isWellbeing ? 'bg-rose-100 text-rose-700' : 'bg-stone-100 text-stone-600'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
@@ -564,9 +824,9 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                         <strong className="text-xs font-bold text-stone-900 block truncate leading-tight">
                           {persona.name}
                         </strong>
-                        {isHogar && (
-                          <span className="text-[9px] font-black uppercase px-1 rounded bg-amber-100 text-amber-800">
-                            Hogar
+                        {(isHogar || isWellbeing) && (
+                          <span className={`text-[9px] font-black uppercase px-1 rounded ${isHogar ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
+                            {isHogar ? 'Hogar' : 'Bienestar'}
                           </span>
                         )}
                       </div>
@@ -586,7 +846,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
             <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-[#fafbfa]">
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                  activePersona.category === 'hogar' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                  activePersona.category === 'hogar' ? 'bg-amber-100 text-amber-800' : activePersona.category === 'bienestar' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
                 }`}>
                   <activePersona.icon className="w-5 h-5" />
                 </div>
@@ -598,9 +858,9 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                     <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full ${
                       activePersona.category === 'hogar'
                         ? 'bg-amber-100 text-amber-900'
-                        : 'bg-emerald-100 text-emerald-900'
+                        : activePersona.category === 'bienestar' ? 'bg-rose-100 text-rose-900' : 'bg-emerald-100 text-emerald-900'
                     }`}>
-                      {activePersona.category === 'hogar' ? '🛠️ Vida & Hogar' : '📚 UCLM Toledo'}
+                      {activePersona.category === 'hogar' ? '🛠️ Vida & Hogar' : activePersona.category === 'bienestar' ? '💗 Bienestar' : '📚 UCLM Toledo'}
                     </span>
                   </div>
                   <p className="text-[11px] text-stone-500 truncate">{activePersona.specialty}</p>
@@ -640,13 +900,16 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                       }`}>
                         <span>{m.timestamp}</span>
                         {!isUser && (
-                          <button
-                            onClick={() => handleCopy(m.text, m.id)}
-                            className="hover:underline flex items-center gap-1"
-                          >
-                            {copiedId === m.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                            <span>{copiedId === m.id ? 'Copiado' : 'Copiar'}</span>
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => speakMessage(m)} className="hover:underline flex items-center gap-1" title="Leer respuesta en voz alta">
+                              {speakingId === m.id ? <VolumeX className="w-3 h-3 text-rose-600" /> : <Volume2 className="w-3 h-3" />}
+                              <span>{speakingId === m.id ? 'Detener' : 'Leer'}</span>
+                            </button>
+                            <button onClick={() => handleCopy(m.text, m.id)} className="hover:underline flex items-center gap-1">
+                              {copiedId === m.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                              <span>{copiedId === m.id ? 'Copiado' : 'Copiar'}</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -660,7 +923,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                   </div>
                   <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-500 flex items-center gap-2">
                     <RotateCcw className="w-3.5 h-3.5 animate-spin text-emerald-700" />
-                    <span>El tutor virtual está preparando una explicación académica...</span>
+                    <span>El tutor virtual está preparando una respuesta adaptada a tu contexto...</span>
                   </div>
                 </div>
               )}
@@ -682,14 +945,14 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
 
             {/* Input bar */}
             <div className="p-4 border-t border-stone-100 bg-white space-y-3">
-              <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-950"><input type="checkbox" className="mt-0.5 accent-emerald-700" checked={privacyConfirmed} onChange={e => setPrivacyConfirmed(e.target.checked)} /><span>Confirmo que no incluyo nombres, iniciales, fechas de nacimiento, teléfonos, identificadores, números de historia ni ningún dato que permita identificar a pacientes. Este texto puede enviarse a un proveedor externo de IA.</span></label>
+              <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-950"><input type="checkbox" className="mt-0.5 accent-emerald-700" checked={privacyConfirmed} onChange={e => setPrivacyConfirmed(e.target.checked)} /><span>Confirmo que no incluyo datos identificables de pacientes. Entiendo que mi pregunta y el contexto de Julia (ánimo, energía, exámenes, turnos, notas académicas y memoria del Consejo) se enviarán al proveedor externo de IA para generar la respuesta.</span></label>
               <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => { setInputText(e.target.value); setPrivacyConfirmed(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={`Escribe una pregunta académica para ${activePersona.name}...`}
+                placeholder={`Escribe una pregunta para ${activePersona.name}...`}
                 className="flex-1 px-4 py-2.5 rounded-2xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
               />
               <button
@@ -702,6 +965,107 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'council' && (
+        <div className="space-y-6">
+          <section className="rounded-3xl bg-gradient-to-br from-[#244234] via-[#1a382a] to-[#10241b] p-6 sm:p-7 text-white shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center"><BookHeart className="w-6 h-6 text-rose-200" /></div>
+              <div>
+                <p className="text-[10px] uppercase font-extrabold tracking-widest text-emerald-200">El Consejo de Julia</p>
+                <h2 className="text-xl font-black">Un equipo, un contexto compartido</h2>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-white/90">{councilGreeting}</p>
+            <p className="text-[11px] mt-4 text-emerald-100 font-semibold">— Tu Amore, Mateo, Dr. Martín Moreno y todo el equipo</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5">
+              <div className="rounded-xl bg-white/10 p-3"><p className="text-[10px] text-white/65">Ánimo</p><p className="font-bold text-sm">{todayWellbeing.mood ? `${todayWellbeing.mood}/5` : 'Sin registrar'}</p></div>
+              <div className="rounded-xl bg-white/10 p-3"><p className="text-[10px] text-white/65">Energía</p><p className="font-bold text-sm">{todayWellbeing.energy ? `${todayWellbeing.energy}/5` : 'Sin registrar'}</p></div>
+              <div className="rounded-xl bg-white/10 p-3"><p className="text-[10px] text-white/65">Próximos exámenes</p><p className="font-bold text-sm">{state.exams.filter(exam => !exam.completed && exam.date >= todayKey).length}</p></div>
+              <div className="rounded-xl bg-white/10 p-3"><p className="text-[10px] text-white/65">Memorias guardadas</p><p className="font-bold text-sm">{(state.tutorMemoryNotes || []).length}</p></div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section className="bg-white rounded-3xl border border-stone-200 shadow-2xs p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center"><Heart className="w-5 h-5" /></div>
+                <div><h3 className="font-black text-stone-900 text-sm">Respiro 1 min con Tu Amore</h3><p className="text-[11px] text-stone-500">Un minuto suave para hacer una pausa.</p></div>
+              </div>
+              <div className="rounded-2xl bg-stone-50 border border-stone-100 p-5 text-center">
+                <div className={`mx-auto w-24 h-24 rounded-full border-4 border-emerald-200 bg-emerald-50 flex items-center justify-center transition-transform ${breathingActive ? 'scale-110' : ''}`}>
+                  <span className="text-3xl">🌿</span>
+                </div>
+                <p className="text-base font-black text-stone-800 mt-3">{breathingActive ? breathingPhase : breathingElapsed >= 60 ? 'Muy bien, pausa terminada' : 'Respira a tu ritmo'}</p>
+                <p className="text-xs text-stone-500 mt-1">{breathingActive ? `Ciclo ${breathingRound} de 5 · ${60 - breathingElapsed} segundos` : 'Inhala 4 · pausa 4 · exhala 4'}</p>
+                <div className="w-full h-2 rounded-full bg-stone-200 mt-4 overflow-hidden"><div className="h-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, (breathingElapsed / 60) * 100)}%` }} /></div>
+              </div>
+              <p className="text-[10px] text-stone-500 leading-relaxed">No fuerces el aire ni la pausa. Si mantenerlo te incomoda, respira normalmente o detén el ejercicio. Puedes hacerlo sentada y con los ojos abiertos.</p>
+              <div className="flex gap-2">
+                <button onClick={() => { setBreathingElapsed(0); setBreathingActive(true); }} className="flex-1 bg-[#365e45] hover:bg-[#284935] text-white rounded-xl py-2.5 text-xs font-bold flex items-center justify-center gap-2"><Play className="w-4 h-4" /> {breathingElapsed >= 60 ? 'Repetir ejercicio' : 'Empezar'}</button>
+                <button onClick={() => setBreathingActive(false)} disabled={!breathingActive} className="px-4 rounded-xl border border-stone-200 text-stone-600 text-xs font-bold disabled:opacity-40"><Pause className="w-4 h-4" /></button>
+              </div>
+            </section>
+
+            <section className="bg-white rounded-3xl border border-stone-200 shadow-2xs p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center"><NotebookPen className="w-5 h-5" /></div>
+                <div><h3 className="font-black text-stone-900 text-sm">Memoria a largo plazo</h3><p className="text-[11px] text-stone-500">Añade cosas que quieras que el equipo recuerde.</p></div>
+              </div>
+              <div className="space-y-2">
+                <select value={newMemoryCategory} onChange={event => setNewMemoryCategory(event.target.value as TutorMemoryNote['category'])} className="w-full rounded-xl border border-stone-200 px-3 py-2 text-xs bg-white text-stone-700">
+                  <option value="aprendizaje">Aprendizajes · cómo aprendo mejor</option>
+                  <option value="emocional">Bienestar · qué me ayuda o me bloquea</option>
+                  <option value="acuerdo">Acuerdos · cómo quiero organizarme</option>
+                </select>
+                <textarea value={newMemoryNote} onChange={event => setNewMemoryNote(event.target.value)} rows={3} maxLength={500} placeholder="Ej.: Me ayudan los esquemas visuales y prefiero una pregunta cada vez." className="w-full rounded-xl border border-stone-200 px-3 py-2 text-xs text-stone-800 resize-y focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                <button onClick={handleSavePermanentNote} disabled={!newMemoryNote.trim()} className="w-full rounded-xl bg-[#365e45] text-white py-2.5 text-xs font-bold disabled:opacity-40">Guardar recuerdo permanente</button>
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {(state.tutorMemoryNotes || []).length === 0 && <p className="text-xs text-stone-400 italic">Todavía no hay recuerdos permanentes. Julia decide qué guardar y puede borrarlo cuando quiera.</p>}
+                {(state.tutorMemoryNotes || []).map(note => (
+                  <div key={note.id} className="rounded-xl border border-stone-100 bg-stone-50 p-3 flex items-start gap-2">
+                    <div className="min-w-0 flex-1"><p className="text-[9px] uppercase tracking-wide font-extrabold text-emerald-800">{note.category}</p><p className="text-xs text-stone-700 whitespace-pre-wrap mt-1">{note.text}</p></div>
+                    <button onClick={() => removeTutorMemoryNote(note.id)} title="Eliminar recuerdo" className="p-1.5 text-stone-400 hover:text-rose-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section className="bg-white rounded-3xl border border-stone-200 shadow-2xs p-5">
+              <div className="flex items-center justify-between gap-2 mb-4"><h3 className="font-black text-stone-900 text-sm flex items-center gap-2"><CalendarDays className="w-4 h-4 text-emerald-700" /> Síntesis de sesiones</h3><span className="text-[10px] text-stone-400">Guardado automático</span></div>
+              <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                {(state.tutorSessionSummaries || []).length === 0 && <p className="text-xs text-stone-400 italic">Cuando se complete una conversación, aquí aparecerán los aprendizajes, el estado registrado y los acuerdos del día.</p>}
+                {(state.tutorSessionSummaries || []).slice(0, 20).map(summary => (
+                  <article key={summary.id} className="rounded-xl border border-stone-100 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2"><strong className="text-xs text-stone-800">{summary.date} · {TUTOR_PERSONAS.find(persona => persona.id === summary.tutorPersona)?.name || summary.tutorPersona}</strong><span className="text-[9px] text-stone-400">Sesión</span></div>
+                    <p className="text-[11px] text-stone-600"><strong>Aprendizajes:</strong> {summary.learning}</p>
+                    <p className="text-[11px] text-stone-600"><strong>Bienestar:</strong> {summary.emotional}</p>
+                    <p className="text-[11px] text-stone-600"><strong>Acuerdos:</strong> {summary.agreements}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-3xl border border-stone-200 shadow-2xs p-5">
+              <div className="flex items-center justify-between gap-2 mb-4"><h3 className="font-black text-stone-900 text-sm flex items-center gap-2"><MessageCircleHeart className="w-4 h-4 text-rose-600" /> Cuaderno del Consejo</h3><span className="text-[10px] text-stone-400">Bitácora inter-tutor</span></div>
+              <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                {(state.tutorCouncilMemos || []).length === 0 && <p className="text-xs text-stone-400 italic">La bitácora se irá completando al hablar con cualquiera de los tutores.</p>}
+                {(state.tutorCouncilMemos || []).slice(0, 30).map(memo => (
+                  <div key={memo.id} className="rounded-xl bg-stone-50 border border-stone-100 p-3">
+                    <div className="flex items-center justify-between gap-2"><strong className="text-[11px] text-emerald-900">{memo.from}</strong><span className="text-[9px] text-stone-400">{new Date(memo.date).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+                    <p className="text-[11px] text-stone-600 mt-1">{memo.text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <p className="text-[10px] leading-relaxed text-stone-400 px-1">La memoria se conserva en este navegador mediante almacenamiento local. No está cifrada, no se comparte automáticamente entre dispositivos y puede borrarse al limpiar los datos del navegador. Los tutores son herramientas virtuales: Tu Amore no sustituye a una psicóloga, terapeuta ni a una persona adulta de confianza.</p>
         </div>
       )}
 
@@ -836,11 +1200,16 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
             </div>
 
             {/* Action Button */}
-            <div className="flex justify-end pt-2">
+            <div className="space-y-3 pt-2">
+              <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-950">
+                <input type="checkbox" className="mt-0.5 accent-emerald-700" checked={recipeContextConfirmed} onChange={event => setRecipeContextConfirmed(event.target.checked)} />
+                <span>Entiendo que, además de los ingredientes, se enviará a la IA el contexto de Julia (próximos exámenes, turnos, check-in, notas y memoria del Consejo) para personalizar la ayuda. No incluiré datos personales ni de pacientes.</span>
+              </label>
+              <div className="flex justify-end">
               <button
                 type="button"
                 onClick={handleGenerateFridgeRecipe}
-                disabled={isGeneratingRecipe}
+                disabled={isGeneratingRecipe || !recipeContextConfirmed}
                 className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-black hover:from-orange-700 hover:to-amber-700 transition shadow-md flex items-center gap-2 disabled:opacity-50"
               >
                 {isGeneratingRecipe ? (
@@ -854,6 +1223,7 @@ Por favor, estructura tu respuesta de forma muy clara y motivadora:
                     : '🍳 ¡Chef Nutri, prepárame un plato!'}
                 </span>
               </button>
+              </div>
             </div>
           </div>
 

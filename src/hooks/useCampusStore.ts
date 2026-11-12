@@ -27,6 +27,7 @@ import {
   CourseDeadline,
   StudyBlock, ScientificReference, PICOQuestion, CriticalAppraisal, PracticeRotation, PracticeLearningEntry,
   EcoeTrainingResult, ClinicalSourceRecord, TFGProject, TFGMilestone, TFGMeeting, DestinationShortcut,
+  TutorChatMessage, TutorMemoryNote, TutorSessionSummary, TutorCouncilMemo,
 } from '../types';
 import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
 import { INITIAL_DRUGS } from '../data/pharmacology';
@@ -60,7 +61,12 @@ export interface CampusState {
   sbarReports: SbarReport[];
   practiceHoursTarget: number;
   clinicalProcedures: Record<string, number>;
-  wellbeing: Record<string, { mood?: number; energy?: number; sleep?: string; note?: string }>;
+  wellbeing: Record<string, { mood?: number; energy?: number; sleep?: string; note?: string; tags?: string[] }>;
+  tutorConversations: Record<string, TutorChatMessage[]>;
+  tutorMemoryNotes: TutorMemoryNote[];
+  tutorSessionSummaries: TutorSessionSummary[];
+  tutorCouncilMemos: TutorCouncilMemo[];
+  tutorEssentialMode: boolean;
   habits: { id: number; name: string }[];
   habitLogs: Record<string, number[]>; // date -> habit IDs
   parentMessage: string;
@@ -159,6 +165,11 @@ const DEMO_STATE: CampusState = {
     'Soporte Vital Básico en simulación': 4
   },
   wellbeing: {},
+  tutorConversations: {},
+  tutorMemoryNotes: [],
+  tutorSessionSummaries: [],
+  tutorCouncilMemos: [],
+  tutorEssentialMode: false,
   habits: [
     { id: 1, name: 'Beber 2 L de agua durante el turno' },
     { id: 2, name: 'Repasar 15 min de farmacología o fichas' },
@@ -473,6 +484,12 @@ export function loadSavedState(raw: string | null): CampusState {
     subjects: subjectMigration.subjects,
     legacySubjects: subjectMigration.legacySubjects,
     reflections: Array.isArray(data.reflections) ? data.reflections : [],
+    wellbeing: data.wellbeing && typeof data.wellbeing === 'object' ? data.wellbeing : {},
+    tutorConversations: data.tutorConversations && typeof data.tutorConversations === 'object' ? data.tutorConversations : {},
+    tutorMemoryNotes: Array.isArray(data.tutorMemoryNotes) ? data.tutorMemoryNotes : [],
+    tutorSessionSummaries: Array.isArray(data.tutorSessionSummaries) ? data.tutorSessionSummaries : [],
+    tutorCouncilMemos: Array.isArray(data.tutorCouncilMemos) ? data.tutorCouncilMemos : [],
+    tutorEssentialMode: Boolean(data.tutorEssentialMode),
     drugs: data.drugs?.length ? data.drugs : EMPTY_STATE.drugs,
     terms: data.terms?.length ? data.terms : EMPTY_STATE.terms,
     manuals: data.manuals?.length ? data.manuals : EMPTY_STATE.manuals,
@@ -1121,7 +1138,7 @@ export function useCampusStore() {
 
   const updateWellbeing = (
     dateStr: string,
-    patch: { mood?: number; energy?: number; sleep?: string; note?: string }
+    patch: { mood?: number; energy?: number; sleep?: string; note?: string; tags?: string[] }
   ) => {
     updateState((prev) => {
       const current = prev.wellbeing[dateStr] || {};
@@ -1138,10 +1155,52 @@ export function useCampusStore() {
     });
   };
 
+  const addTutorMemoryNote = (note: Omit<TutorMemoryNote, 'id' | 'createdAt'>) => {
+    const entry: TutorMemoryNote = { ...note, id: `memory-${Date.now()}`, createdAt: new Date().toISOString() };
+    updateState(prev => ({ ...prev, tutorMemoryNotes: [entry, ...(prev.tutorMemoryNotes || [])].slice(0, 100) }));
+  };
+
+  const removeTutorMemoryNote = (id: string) => {
+    updateState(prev => ({ ...prev, tutorMemoryNotes: (prev.tutorMemoryNotes || []).filter(note => note.id !== id) }));
+  };
+
+  const saveTutorConversation = (personaId: string, messages: TutorChatMessage[]) => {
+    updateState(prev => ({
+      ...prev,
+      tutorConversations: {
+        ...(prev.tutorConversations || {}),
+        [personaId]: messages.slice(-120),
+      },
+    }));
+  };
+
+  const saveTutorSessionSummary = (summary: Omit<TutorSessionSummary, 'id' | 'updatedAt'>) => {
+    const entry: TutorSessionSummary = { ...summary, id: `${summary.date}-${summary.tutorPersona}`, updatedAt: new Date().toISOString() };
+    updateState(prev => {
+      const existing = (prev.tutorSessionSummaries || []).filter(item => item.id !== entry.id);
+      return { ...prev, tutorSessionSummaries: [entry, ...existing].slice(0, 120) };
+    });
+  };
+
+  const addTutorCouncilMemo = (memo: Omit<TutorCouncilMemo, 'id' | 'date'>) => {
+    const entry: TutorCouncilMemo = { ...memo, id: `council-${Date.now()}`, date: new Date().toISOString() };
+    updateState(prev => ({ ...prev, tutorCouncilMemos: [entry, ...(prev.tutorCouncilMemos || [])].slice(0, 200) }));
+  };
+
+  const toggleTutorEssentialMode = () => {
+    updateState(prev => ({ ...prev, tutorEssentialMode: !prev.tutorEssentialMode }));
+  };
+
   return {
     state,
     updateState,
     updateWellbeing,
+    addTutorMemoryNote,
+    removeTutorMemoryNote,
+    saveTutorConversation,
+    saveTutorSessionSummary,
+    addTutorCouncilMemo,
+    toggleTutorEssentialMode,
     exportBackup,
     importBackup,
     addDrug,

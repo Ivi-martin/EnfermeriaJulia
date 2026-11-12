@@ -338,7 +338,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onNavigate }) => {
             </div>
             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Módulo 7</span>
             <strong className="text-xs font-black text-stone-900 group-hover:text-amber-800 transition line-clamp-1">Tutor IA</strong>
-            <span className="text-[10px] text-stone-500 mt-0.5">9 Asistentes</span>
+            <span className="text-[10px] text-stone-500 mt-0.5">10 tutores coordinados</span>
           </button>
         </div>
       </div>

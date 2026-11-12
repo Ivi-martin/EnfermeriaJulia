@@ -64,9 +64,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'academy', label: 'Academia & Exámenes', icon: Brain },
         { id: 'evidence', label: 'Biblioteca científica', icon: Library },
         { id: 'tfg', label: 'Trabajo Fin de Grado', icon: ScrollText },
-        { id: 'tutorAI', label: 'Tutor IA (9 Asistentes)', icon: Bot },
+        { id: 'tutorAI', label: 'Tutor IA (10 asistentes)', icon: Bot },
         { id: 'anatomy', label: 'Anatomía interactiva', icon: Activity },
         { id: 'terminology', label: 'Terminología médica', icon: BookA },
+      ]
+    },
+    {
+      title: 'BIENESTAR & ACOMPAÑAMIENTO',
+      items: [
+        { id: 'tuAmore', label: 'Tu Amore · Bienestar emocional', icon: Heart },
       ]
     },
     {

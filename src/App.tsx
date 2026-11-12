@@ -73,6 +73,8 @@ export default function App() {
         return <Practice360View />;
       case 'tutorAI':
         return <TutorAIView />;
+      case 'tuAmore':
+        return <TutorAIView initialPersonaId="tu_amore" initialTab="chat" />;
       case 'manitas':
         return <TutorAIView initialPersonaId="manitas" initialTab="chat" />;
       case 'chefNutri':

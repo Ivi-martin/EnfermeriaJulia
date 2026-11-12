@@ -113,3 +113,20 @@ Tras revisar las nuevas pantallas se completaron estos puntos:
 ## Actualización de nombres de los tutores IA
 
 Se actualizaron los siete perfiles visibles, sus mensajes de bienvenida y las instrucciones del servidor para utilizar los nombres y especialidades indicados por el propietario del proyecto. Se conservaron los identificadores internos (`anatomia`, `fisiologia`, `farmacologia`, `laboratorio`, `ecoe`, `fundamentos`, `academico`) para no romper conversaciones ni llamadas a la API. Las tres copias de la guía HTML también muestran los mismos nombres y aclaran que son personajes virtuales ficticios, no docentes reales de la UCLM.
+
+## Actualización: Tu Amore y Consejo de Tutores (12 de noviembre de 2026)
+
+- **Nuevo perfil Tu Amore**: acompañamiento virtual de bienestar emocional, regulación básica del estrés y organización académica amable. No se presenta como psicóloga ni sustituye a profesionales o personas adultas de confianza.
+- **Check-in diario integrado**: ánimo y energía de 1 a 5, etiquetas seleccionables y nota opcional. Reutiliza el registro de bienestar existente y se adjunta al contexto de tutoría.
+- **Contexto compartido**: las consultas a los tutores reciben próximos exámenes con días restantes, turnos, bloques de estudio, tareas, notas registradas, check-in y recuerdos/resúmenes del Consejo. Los tutores reciben también las notas de coordinación entre perfiles.
+- **Modo Esencial / Respiro**: un interruptor global reduce la extensión de las respuestas y prioriza lo imprescindible sin sobrecargar.
+- **Memoria persistente local**: se guardan hasta 120 mensajes recientes por tutor, recuerdos permanentes elegidos por Julia, resúmenes diarios por perfil y memos del Consejo. Cada consulta utiliza los últimos 24 mensajes de ese tutor y añade hasta 20 recuerdos permanentes, 8 resúmenes y 12 memos recientes compartidos. Los resúmenes se actualizan automáticamente tras cada respuesta correcta del tutor.
+- **El Consejo**: muestra un mensaje diario adaptado a la hora local, al check-in y al próximo examen, una síntesis estructurada de sesiones y una bitácora de coordinación inter-tutor. Los resúmenes automáticos condensan los últimos mensajes y el check-in; no son una evaluación clínica ni una transcripción completa.
+- **Bienestar y accesibilidad**: ejercicio guiado de respiración suave de aproximadamente un minuto y lectura por voz de las respuestas mediante las funciones del navegador.
+- **Privacidad**: antes de cada envío de chat o receta se solicita confirmar que se entiende qué contexto se transmite al proveedor externo de IA. No deben introducirse datos de pacientes ni información identificable.
+
+### Límites de persistencia y seguridad
+
+La persistencia añadida utiliza el `localStorage` del navegador: se conserva tras cerrar y volver a abrir la aplicación en el mismo navegador, pero no sincroniza dispositivos ni crea una memoria alojada en el servidor. Ese almacenamiento local no está cifrado y puede perderse al limpiar los datos del navegador; debe exportarse una copia de seguridad si se necesita conservarlo. El contexto seleccionado (incluidos ánimo, energía, notas, exámenes, turnos, calificaciones y recuerdos) se envía al proveedor de IA con cada consulta autorizada. Para sincronización multi-dispositivo, control de acceso y protección reforzada, hace falta incorporar autenticación, base de datos, cifrado y reglas de conservación/eliminación antes del despliegue público.
+
+Tu Amore proporciona acompañamiento general y estrategias cotidianas, no evaluación clínica, diagnóstico ni tratamiento. Si el desánimo persiste o empeora, la aplicación recomienda apoyo de una persona adulta de confianza y de un profesional cualificado; ante peligro inmediato, indica contactar con una persona adulta cercana y con el 112 en España.
