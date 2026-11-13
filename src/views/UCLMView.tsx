@@ -18,7 +18,8 @@ import {
   Plus,
   Pencil,
   Trash2,
-  X
+  X,
+  NotebookPen
 } from 'lucide-react';
 
 interface SubjectForm {
@@ -36,7 +37,11 @@ interface SubjectForm {
   error: string;
 }
 
-export const UCLMView: React.FC = () => {
+interface UCLMViewProps {
+  onOpenSubjectNotes?: (subjectCode: string) => void;
+}
+
+export const UCLMView: React.FC<UCLMViewProps> = ({ onOpenSubjectNotes }) => {
   const { state, updateSubjectStatus, addSubject, updateSubject, removeSubject } = useCampusStore();
   const [selectedYear, setSelectedYear] = useState<1 | 2 | 3 | 4>(1);
   const [activeTab, setActiveTab] = useState<'plan' | 'prerequisites' | 'campus'>('plan');
@@ -382,23 +387,38 @@ export const UCLMView: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="px-5 pb-3 flex justify-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openEditSubject(sub)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-600 hover:bg-stone-100 transition flex items-center gap-1"
-                      title="Editar asignatura"
-                    >
-                      <Pencil className="w-3.5 h-3.5" /> Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSubject(sub)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-500 hover:text-red-700 hover:bg-red-50 transition flex items-center gap-1"
-                      title="Eliminar asignatura"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Borrar
-                    </button>
+                  <div className="px-5 pb-3 flex flex-wrap items-center justify-between gap-2">
+                    {onOpenSubjectNotes ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenSubjectNotes(sub.code)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#2d553e] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition flex items-center gap-1"
+                        title="Ver y subir apuntes de esta asignatura"
+                      >
+                        <NotebookPen className="w-3.5 h-3.5" />
+                        <span>
+                          Apuntes ({(state.studentNotes || []).filter((n) => n.subjectCode === sub.code).length})
+                        </span>
+                      </button>
+                    ) : <span />}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openEditSubject(sub)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-600 hover:bg-stone-100 transition flex items-center gap-1"
+                        title="Editar asignatura"
+                      >
+                        <Pencil className="w-3.5 h-3.5" /> Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSubject(sub)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-stone-500 hover:text-red-700 hover:bg-red-50 transition flex items-center gap-1"
+                        title="Eliminar asignatura"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Borrar
+                      </button>
+                    </div>
                   </div>
 
                   {/* Footer of Card: Grade & Progress */}

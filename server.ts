@@ -9,6 +9,7 @@ import {
   generateCitations,
   summarizeNursingNotes,
   cleanClassTranscript,
+  analyzeNoteWithAI,
 } from './server/aiServices.ts';
 
 dotenv.config();
@@ -16,7 +17,7 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '25mb' }));
 
 // API Route for Tutor IA (la lógica vive en server/tutor.ts)
 app.post('/api/ai/tutor', async (req, res) => {
@@ -52,6 +53,12 @@ app.post('/api/ai/summarize', async (req, res) => {
 app.post('/api/ai/transcribe', async (req, res) => {
   const result = await cleanClassTranscript(req.body);
   res.json(result);
+});
+
+// Análisis multimodal de apuntes subidos (texto, PDF, imagen -> resumen, apuntes, test, flashcards)
+app.post('/api/ai/analyze-note', async (req, res) => {
+  const result = await analyzeNoteWithAI(req.body || {});
+  res.status(result.success ? 200 : 400).json(result);
 });
 
 // Health check endpoint

@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   toledoPocket: { title: 'Toledo en mi bolsillo', subtitle: 'Movilidad, campus y servicios de apoyo' },
   tfg: { title: 'Trabajo Fin de Grado', subtitle: 'Proyecto, hitos, bibliografía y tutorías' },
   uclm: { title: 'Mi UCLM', subtitle: 'Plan 4 cursos, 240 ECTS y campus Toledo' },
+  notes: { title: 'Mis Apuntes', subtitle: 'Sube, organiza por temas, edita y estudia con IA' },
   academy: { title: 'Academia', subtitle: 'Estudio, simulador 4 modos y flashcards' },
   laboratory: { title: 'Laboratorio Clínico', subtitle: 'Analíticas, gasometrías, tubos y ECG' },
   ecoe: { title: 'Simulación ECOE', subtitle: 'Estaciones clínicas y fallos críticos' },

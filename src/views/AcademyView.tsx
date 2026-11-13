@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
-import { QuizQuestion, StudyPlanGoal, SavedNoteSummary } from '../types';
+import { QuizQuestion } from '../types';
+import { NoteImportPanel, ImportedNotePayload } from '../components/NoteImportPanel';
+import { SimpleMarkdown } from '../components/SimpleMarkdown';
+import {
+  blobToBase64,
+  getNoteAttachment,
+  isGeminiMultimodalMime,
+  triggerBlobDownload,
+} from '../utils/notesStorage';
 import {
   Sparkles,
   BookOpen,
@@ -25,13 +33,25 @@ import {
   FileText,
   Search,
   Check,
-  Zap,
-  ArrowRight
+  File,
+  NotebookPen,
+  AlertCircle,
+  X
 } from 'lucide-react';
 
 type ExamMode = 'quick10' | 'normal30' | 'timed' | 'mistakes';
 
-export const AcademyView: React.FC = () => {
+interface AcademyViewProps {
+  initialNoteId?: string | null;
+  onClearInitialNote?: () => void;
+  onNavigateToNotes?: () => void;
+}
+
+export const AcademyView: React.FC<AcademyViewProps> = ({
+  initialNoteId,
+  onClearInitialNote,
+  onNavigateToNotes,
+}) => {
   const {
     state,
     recordQuizResult,
@@ -45,7 +65,8 @@ export const AcademyView: React.FC = () => {
     toggleStudyPlanStep,
     deleteStudyPlan,
     saveNoteSummary,
-    deleteNoteSummary
+    deleteNoteSummary,
+    addStudentNote,
   } = useCampusStore();
 
   const [activeTab, setActiveTab] = useState<
@@ -325,53 +346,187 @@ export const AcademyView: React.FC = () => {
   };
 
   // -------------------------------------------------------------
-  // 4. AI Generator from Notes State
+  // 4. AI Generator from Notes State (Supports full study kit + files)
   // -------------------------------------------------------------
   const [aiNoteText, setAiNoteText] = useState('');
-  const [aiGenType, setAiGenType] = useState<'quiz' | 'flashcards'>('quiz');
+  const [aiGenType, setAiGenType] = useState<'full' | 'notes' | 'quiz' | 'flashcards'>('full');
   const [aiCount, setAiCount] = useState<number>(5);
   const [aiSubject, setAiSubject] = useState('Farmacología');
+  const [aiTopic, setAiTopic] = useState('General');
+  const [aiNoteTitle, setAiNoteTitle] = useState('');
+  const [aiImportedFile, setAiImportedFile] = useState<{
+    noteId?: string;
+    fileBase64?: string;
+    fileMimeType?: string;
+    fileName?: string;
+  } | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [generatedItems, setGeneratedItems] = useState<any[]>([]);
-  const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
+  const [generatedFullResult, setGeneratedFullResult] = useState<{
+    title: string;
+    summary?: any;
+    developedNotes?: {
+      title: string;
+      structuredNotesMarkdown: string;
+      keyPoints?: string[];
+      examTips?: string[];
+    };
+    quizQuestions?: any[];
+    flashcards?: any[];
+  } | null>(null);
+  const [aiFeedbackBanner, setAiFeedbackBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Auto-load note when sent directly from "Mis Apuntes"
+  useEffect(() => {
+    if (!initialNoteId) return;
+    const targetNote = (state.studentNotes || []).find((n) => n.id === initialNoteId);
+    if (!targetNote) {
+      onClearInitialNote?.();
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      let fileBase64: string | undefined;
+      let fileMimeType: string | undefined;
+      if (targetNote.hasAttachment) {
+        try {
+          const att = await getNoteAttachment(targetNote.id);
+          const mime = att?.mimeType || targetNote.fileMimeType || '';
+          if (att?.blob && isGeminiMultimodalMime(mime)) {
+            fileBase64 = await blobToBase64(att.blob);
+            fileMimeType = mime;
+          }
+        } catch {
+          // ignore
+        }
+      }
+      if (cancelled) return;
+      setActiveTab('aiGenerator');
+      setAiSubject(targetNote.subjectName || 'Enfermería');
+      setAiTopic(targetNote.topic || 'General');
+      setAiNoteTitle(targetNote.title);
+      setAiNoteText(targetNote.content || '');
+      setAiImportedFile({
+        noteId: targetNote.id,
+        fileBase64,
+        fileMimeType,
+        fileName: targetNote.fileName,
+      });
+      setAiFeedbackBanner({
+        type: 'success',
+        message: `Apunte "${targetNote.title}" importado desde Mis Apuntes. Elige qué desarrollar con IA y pulsa Generar.`,
+      });
+      onClearInitialNote?.();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialNoteId, state.studentNotes, onClearInitialNote]);
+
+  const handleImportNoteToGenerator = (payload: ImportedNotePayload) => {
+    setAiSubject(payload.subject || 'Enfermería');
+    setAiTopic(payload.topic || 'General');
+    setAiNoteTitle(payload.title || '');
+    setAiNoteText(payload.text || '');
+    setAiImportedFile(
+      payload.fileBase64
+        ? {
+            noteId: payload.noteId,
+            fileBase64: payload.fileBase64,
+            fileMimeType: payload.fileMimeType,
+            fileName: payload.fileName,
+          }
+        : payload.noteId
+        ? { noteId: payload.noteId, fileName: payload.fileName }
+        : null
+    );
+    setAiFeedbackBanner({
+      type: 'success',
+      message: `Apunte "${payload.title}" listo para analizar con IA.`,
+    });
+  };
+
+  const canRunAiGen =
+    Boolean(aiImportedFile?.fileBase64 && aiImportedFile?.fileMimeType) ||
+    aiNoteText.trim().length >= 15;
 
   const handleRunAiGeneration = async () => {
-    if (!aiNoteText || aiNoteText.trim().length < 15) {
-      alert('Pega al menos 15 caracteres de tus apuntes.');
+    if (!canRunAiGen) {
+      setAiFeedbackBanner({
+        type: 'error',
+        message: 'Importa un apunte, adjunta un archivo o pega al menos 15 caracteres de texto.',
+      });
       return;
     }
     setIsGeneratingAi(true);
-    setAiSuccessMessage(null);
+    setAiFeedbackBanner(null);
+    setGeneratedItems([]);
+    setGeneratedFullResult(null);
     try {
-      const res = await fetch('/api/ai/generate-study', {
+      const res = await fetch('/api/ai/analyze-note', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          mode: aiGenType,
           text: aiNoteText,
-          type: aiGenType,
-          count: aiCount,
+          fileBase64: aiImportedFile?.fileBase64,
+          fileMimeType: aiImportedFile?.fileMimeType,
+          fileName: aiImportedFile?.fileName,
+          questionCount: aiCount,
           subject: aiSubject,
+          topic: aiTopic,
+          title: aiNoteTitle,
         }),
       });
       const data = await res.json();
-      if (data.success && Array.isArray(data.items)) {
-        setGeneratedItems(data.items);
-      } else {
-        alert(data.error || 'Error al generar material con IA.');
+      if (!data.success) {
+        setAiFeedbackBanner({ type: 'error', message: data.error || 'Error al analizar los apuntes con IA.' });
+        return;
       }
-    } catch (err: any) {
-      alert('Error de conexión con el servidor de IA.');
+
+      if (aiGenType === 'quiz' || aiGenType === 'flashcards') {
+        if (Array.isArray(data.items)) {
+          setGeneratedItems(data.items);
+          recordStudyActivity(10);
+        }
+      } else if (aiGenType === 'notes') {
+        setGeneratedFullResult({
+          title: data.title || aiNoteTitle || `Apuntes desarrollados (${aiSubject})`,
+          developedNotes: {
+            title: data.title || aiNoteTitle || `Apuntes desarrollados (${aiSubject})`,
+            structuredNotesMarkdown: data.structuredNotesMarkdown || '',
+            keyPoints: data.keyPoints || [],
+            examTips: data.examTips || [],
+          },
+        });
+        recordStudyActivity(10);
+      } else {
+        setGeneratedFullResult({
+          title: data.title || aiNoteTitle || `Estudio de ${aiTopic}`,
+          summary: data.summary,
+          developedNotes: data.developedNotes,
+          quizQuestions: data.quizQuestions || [],
+          flashcards: data.flashcards || [],
+        });
+        recordStudyActivity(15);
+      }
+    } catch {
+      setAiFeedbackBanner({ type: 'error', message: 'Error de conexión con el servidor de IA.' });
     } finally {
       setIsGeneratingAi(false);
     }
   };
 
-  const handleSaveGeneratedToBank = () => {
-    if (aiGenType === 'quiz') {
-      generatedItems.forEach((item) => {
+  const handleSaveGeneratedToBank = (customItems?: any[], itemType: 'quiz' | 'flashcards' = aiGenType === 'flashcards' ? 'flashcards' : 'quiz') => {
+    const list = customItems || generatedItems;
+    if (!list.length) return;
+    if (itemType === 'quiz') {
+      list.forEach((item) => {
         addQuizQuestion({
           subject: item.subject || aiSubject,
-          category: 'Farmacología',
+          category: 'Apuntes',
           question: item.question,
           options: item.options,
           correctIndex: item.correctIndex,
@@ -379,9 +534,12 @@ export const AcademyView: React.FC = () => {
           clinicalTip: item.clinicalTip,
         });
       });
-      setAiSuccessMessage(`¡${generatedItems.length} preguntas guardadas en tu Banco de Preguntas!`);
+      setAiFeedbackBanner({
+        type: 'success',
+        message: `¡${list.length} preguntas guardadas en tu Banco de Preguntas!`,
+      });
     } else {
-      generatedItems.forEach((item) => {
+      list.forEach((item) => {
         addQuizQuestion({
           subject: item.subject || aiSubject,
           category: 'Fundamentos',
@@ -391,9 +549,84 @@ export const AcademyView: React.FC = () => {
           explanation: item.back,
         });
       });
-      setAiSuccessMessage(`¡${generatedItems.length} flashcards guardadas!`);
+      setAiFeedbackBanner({
+        type: 'success',
+        message: `¡${list.length} flashcards guardadas para repasar en Flashcards Leitner!`,
+      });
     }
-    setGeneratedItems([]);
+    if (!customItems) setGeneratedItems([]);
+  };
+
+  const handleStartExamWithGenerated = (questions: any[]) => {
+    if (!questions.length) return;
+    const formatted: QuizQuestion[] = questions.map((q, idx) => ({
+      id: q.id || `quick-ai-${Date.now()}-${idx}`,
+      subject: q.subject || aiSubject,
+      category: 'Fundamentos',
+      question: q.question,
+      options: q.options,
+      correctIndex: q.correctIndex,
+      explanation: q.explanation,
+      clinicalTip: q.clinicalTip,
+    }));
+    setSelectedSubject(aiSubject);
+    setExamMode('quick10');
+    setCurrentQuestions(formatted);
+    setCurrentIndex(0);
+    setUserScore(0);
+    setAnsweredCount(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setExamFinished(false);
+    setIsExamActive(true);
+    setActiveTab('exams');
+  };
+
+  const handleSaveDevelopedNotesToLibrary = (title: string, markdown: string) => {
+    const matchedSubj = (state.subjects || []).find(
+      (s) => s.name.toLowerCase() === aiSubject.toLowerCase() || s.code === aiSubject
+    );
+    addStudentNote({
+      title: title || `Apuntes IA · ${aiTopic}`,
+      subjectCode: matchedSubj?.code || 'GENERAL',
+      subjectName: matchedSubj?.name || aiSubject,
+      topic: aiTopic || 'General',
+      category: 'Esquema',
+      content: markdown,
+      tags: ['desarrollado-ia'],
+    });
+    setAiFeedbackBanner({
+      type: 'success',
+      message: `Apuntes "${title}" guardados en Mis Apuntes (${matchedSubj?.name || aiSubject} → ${aiTopic || 'General'}).`,
+    });
+  };
+
+  const handleDownloadDevelopedNotes = (title: string, markdown: string) => {
+    const safeName = (title || 'apuntes_ia')
+      .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ _-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
+    const blob = new Blob([`# ${title}\n\n${markdown}`], { type: 'text/markdown;charset=utf-8' });
+    triggerBlobDownload(blob, `${safeName || 'apuntes_ia'}.md`);
+  };
+
+  const handleSaveFullSummaryToStore = (sum: any) => {
+    if (!sum) return;
+    saveNoteSummary({
+      title: sum.title || `Resumen de ${aiSubject}`,
+      subject: aiSubject,
+      rawText: aiNoteText || aiNoteTitle,
+      executiveSummary: sum.executiveSummary || '',
+      keyConcepts: sum.keyConcepts || [],
+      normalValuesAndTables: sum.normalValuesAndTables,
+      clinicalMnemonics: sum.clinicalMnemonics || [],
+      typicalExamQuestions: sum.typicalExamQuestions || [],
+      pocketTip: sum.pocketTip,
+    });
+    setAiFeedbackBanner({
+      type: 'success',
+      message: '¡Resumen guardado en tu biblioteca de Resúmenes Clínicos!',
+    });
   };
 
   // -------------------------------------------------------------
@@ -410,9 +643,8 @@ export const AcademyView: React.FC = () => {
     const examDate = new Date(planExamDate + 'T12:00:00');
     const diffDays = Math.max(1, Math.round((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // Create schedule
     const schedule = [];
-    const topicsPerDay = planTotalTopics / Math.max(1, diffDays - 3); // 3 days for final review
+    const topicsPerDay = planTotalTopics / Math.max(1, diffDays - 3);
     let currentTopic = 1;
 
     for (let i = 0; i < diffDays; i++) {
@@ -453,29 +685,70 @@ export const AcademyView: React.FC = () => {
   // -------------------------------------------------------------
   const [summaryInputText, setSummaryInputText] = useState('');
   const [summarySubject, setSummarySubject] = useState('Anatomía Humana');
+  const [summaryTopic, setSummaryTopic] = useState('General');
+  const [summaryImportedFile, setSummaryImportedFile] = useState<{
+    fileBase64?: string;
+    fileMimeType?: string;
+    fileName?: string;
+  } | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [generatedSummary, setGeneratedSummary] = useState<any | null>(null);
+  const [summaryBanner, setSummaryBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleImportNoteToSummary = (payload: ImportedNotePayload) => {
+    setSummarySubject(payload.subject || 'Enfermería');
+    setSummaryTopic(payload.topic || 'General');
+    setSummaryInputText(payload.text || '');
+    setSummaryImportedFile(
+      payload.fileBase64
+        ? {
+            fileBase64: payload.fileBase64,
+            fileMimeType: payload.fileMimeType,
+            fileName: payload.fileName,
+          }
+        : null
+    );
+    setSummaryBanner({
+      type: 'success',
+      message: `Apunte "${payload.title}" importado. Ya puedes generar el resumen clínico con IA.`,
+    });
+  };
+
+  const canRunSummary =
+    Boolean(summaryImportedFile?.fileBase64 && summaryImportedFile?.fileMimeType) ||
+    summaryInputText.trim().length >= 20;
 
   const handleGenerateSummary = async () => {
-    if (!summaryInputText || summaryInputText.trim().length < 20) {
-      alert('Pega al menos 20 caracteres de apuntes.');
+    if (!canRunSummary) {
+      setSummaryBanner({
+        type: 'error',
+        message: 'Importa un apunte o pega al menos 20 caracteres de texto.',
+      });
       return;
     }
     setIsSummarizing(true);
+    setSummaryBanner(null);
     try {
       const res = await fetch('/api/ai/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: summaryInputText, subject: summarySubject }),
+        body: JSON.stringify({
+          text: summaryInputText,
+          fileBase64: summaryImportedFile?.fileBase64,
+          fileMimeType: summaryImportedFile?.fileMimeType,
+          subject: summarySubject,
+          topic: summaryTopic,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setGeneratedSummary(data);
+        recordStudyActivity(10);
       } else {
-        alert(data.error || 'Error al generar el resumen.');
+        setSummaryBanner({ type: 'error', message: data.error || 'Error al generar el resumen.' });
       }
     } catch {
-      alert('Error de conexión.');
+      setSummaryBanner({ type: 'error', message: 'Error de conexión.' });
     } finally {
       setIsSummarizing(false);
     }
@@ -486,7 +759,7 @@ export const AcademyView: React.FC = () => {
     saveNoteSummary({
       title: generatedSummary.title || `Resumen de ${summarySubject}`,
       subject: summarySubject,
-      rawText: summaryInputText,
+      rawText: summaryInputText || summaryImportedFile?.fileName || 'Apunte adjunto',
       executiveSummary: generatedSummary.executiveSummary || generatedSummary.summary || '',
       keyConcepts: generatedSummary.keyConcepts || [],
       normalValuesAndTables: generatedSummary.normalValuesAndTables,
@@ -496,7 +769,8 @@ export const AcademyView: React.FC = () => {
     });
     setGeneratedSummary(null);
     setSummaryInputText('');
-    alert('¡Resumen guardado con éxito en tu biblioteca!');
+    setSummaryImportedFile(null);
+    setSummaryBanner({ type: 'success', message: '¡Resumen guardado con éxito en tu biblioteca!' });
   };
 
   return (
@@ -1095,6 +1369,7 @@ export const AcademyView: React.FC = () => {
                         <option value="Laboratorio">Laboratorio</option>
                         <option value="ECOE">ECOE</option>
                         <option value="Casos Clínicos">Casos Clínicos</option>
+                        <option value="Apuntes">Mis Apuntes</option>
                       </select>
                     </div>
                   </div>
@@ -1366,7 +1641,7 @@ export const AcademyView: React.FC = () => {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* TAB 4: GENERADOR DE TESTS Y FLASHCARDS CON IA */}
+      {/* TAB 4: ESTUDIO IA DESDE APUNTES (RESÚMENES, APUNTES, TEST, FLASHCARDS) */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'aiGenerator' && (
         <div className="space-y-6">
@@ -1374,21 +1649,64 @@ export const AcademyView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-emerald-700" />
-                <h2 className="text-lg font-black text-stone-900">Generar Tests y Flashcards con IA</h2>
+                <h2 className="text-lg font-black text-stone-900">
+                  Estudio Inteligente desde Tus Apuntes
+                </h2>
               </div>
               <p className="text-xs text-stone-500 mt-1">
-                Pega cualquier fragmento de tus apuntes, diapositivas o guías clínicas. La IA extraerá los puntos críticos y creará preguntas tipo test con retroalimentación o tarjetas listas para memorizar.
+                Importa cualquiera de los apuntes que has subido (o sube un PDF, imagen, Word o texto aquí mismo). La IA analizará el contenido automáticamente para desarrollar apuntes estructurados, resúmenes, preguntas tipo test y flashcards.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <NoteImportPanel
+              notes={state.studentNotes || []}
+              subjects={state.subjects || []}
+              selectedNoteId={aiImportedFile?.noteId}
+              onImport={handleImportNoteToGenerator}
+              onSaveUploadedNote={addStudentNote}
+              onOpenNotesLibrary={onNavigateToNotes}
+              compactTitle="Importar apuntes propios para analizar con IA"
+            />
+
+            {aiImportedFile?.fileName && (
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs">
+                <span className="flex items-center gap-2 font-bold text-stone-700 truncate">
+                  <File className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span className="truncate">
+                    Archivo cargado para análisis IA: {aiImportedFile.fileName}
+                    {aiImportedFile.fileBase64 ? ' (lectura multimodal directa activada)' : ''}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAiImportedFile(null)}
+                  className="text-stone-400 hover:text-rose-600 font-bold"
+                  title="Quitar archivo adjunto"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
-                <label className="text-xs font-bold text-stone-700 block mb-1">Materia</label>
+                <label className="text-xs font-bold text-stone-700 block mb-1">Asignatura</label>
                 <input
                   type="text"
                   value={aiSubject}
                   onChange={(e) => setAiSubject(e.target.value)}
                   placeholder="ej. Farmacología, Anatomía..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-stone-700 block mb-1">Tema específico</label>
+                <input
+                  type="text"
+                  value={aiTopic}
+                  onChange={(e) => setAiTopic(e.target.value)}
+                  placeholder="ej. Tema 3: Cardiovascular"
                   className="w-full px-3.5 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
@@ -1400,45 +1718,51 @@ export const AcademyView: React.FC = () => {
                   onChange={(e) => setAiGenType(e.target.value as any)}
                   className="w-full px-3.5 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 >
-                  <option value="quiz">Preguntas Tipo Test (con 4 opciones y explicación)</option>
-                  <option value="flashcards">Tarjetas Flashcards (Anverso y Reverso)</option>
+                  <option value="full">Paquete Completo (Resumen + Apuntes + Test + Flashcards)</option>
+                  <option value="notes">Desarrollar Apuntes Estructurados (Markdown)</option>
+                  <option value="quiz">Solo Preguntas Tipo Test (4 opciones)</option>
+                  <option value="flashcards">Solo Tarjetas Flashcards</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-stone-700 block mb-1">Cantidad</label>
+                <label className="text-xs font-bold text-stone-700 block mb-1">Nº de preguntas / cards</label>
                 <select
                   value={aiCount}
                   onChange={(e) => setAiCount(Number(e.target.value))}
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  disabled={aiGenType === 'notes'}
+                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:bg-stone-100"
                 >
-                  <option value={3}>3 preguntas clave</option>
-                  <option value={5}>5 preguntas estándar</option>
-                  <option value={10}>10 preguntas intensivas</option>
+                  <option value={3}>3 elementos clave</option>
+                  <option value={5}>5 elementos estándar</option>
+                  <option value={8}>8 elementos completos</option>
+                  <option value={10}>10 elementos intensivos</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-stone-700 block mb-1">Texto de los Apuntes (pega aquí)</label>
+              <label className="text-xs font-bold text-stone-700 block mb-1">
+                Texto del apunte {aiImportedFile?.fileBase64 ? '(opcional si ya hay PDF/imagen adjunto)' : '(importa arriba o pega aquí)'}
+              </label>
               <textarea
                 rows={6}
                 value={aiNoteText}
                 onChange={(e) => setAiNoteText(e.target.value)}
-                placeholder="Pega aquí el texto del tema (ej. El ciclo cardiaco consta de sístole y diástole... las venas pulmonares desembocan en la aurícula izquierda...)"
+                placeholder="Aquí aparecerá el contenido del apunte que importes desde Mis Apuntes, o puedes pegar/escribir tus notas directamente..."
                 className="w-full p-3.5 rounded-2xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono leading-relaxed"
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <span className="text-[11px] text-stone-400">
-                {aiNoteText.length} caracteres introducidos
+                {aiNoteText.length} caracteres · {aiImportedFile?.fileBase64 ? 'Adjunto multimodal listo' : 'Análisis de texto'}
               </span>
               <button
-                onClick={handleRunAiGeneration}
-                disabled={isGeneratingAi || aiNoteText.trim().length < 15}
+                onClick={() => void handleRunAiGeneration()}
+                disabled={isGeneratingAi || !canRunAiGen}
                 className={`px-6 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 shadow-xs ${
-                  isGeneratingAi || aiNoteText.trim().length < 15
+                  isGeneratingAi || !canRunAiGen
                     ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                     : 'bg-[#365e45] text-white hover:bg-[#284935]'
                 }`}
@@ -1446,40 +1770,262 @@ export const AcademyView: React.FC = () => {
                 {isGeneratingAi ? (
                   <>
                     <RotateCcw className="w-4 h-4 animate-spin" />
-                    <span>Analizando apuntes con IA...</span>
+                    <span>Analizando contenido con IA...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Generar con IA</span>
+                    <span>Analizar y Generar con IA</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Success Message Banner */}
-          {aiSuccessMessage && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-              <span>{aiSuccessMessage}</span>
+          {/* Feedback Banner */}
+          {aiFeedbackBanner && (
+            <div
+              className={`p-4 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 ${
+                aiFeedbackBanner.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                  : 'bg-rose-50 border-rose-300 text-rose-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {aiFeedbackBanner.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
+                )}
+                <span>{aiFeedbackBanner.message}</span>
+              </div>
+              <button onClick={() => setAiFeedbackBanner(null)} className="p-1 opacity-70 hover:opacity-100">
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
-          {/* Generated Preview List */}
+          {/* Full Study Kit & Developed Notes Preview */}
+          {generatedFullResult && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Developed Notes Section */}
+              {generatedFullResult.developedNotes && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                        Apuntes Desarrollados con IA
+                      </span>
+                      <h3 className="text-lg font-black text-stone-900 mt-1">
+                        {generatedFullResult.developedNotes.title}
+                      </h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() =>
+                          handleSaveDevelopedNotesToLibrary(
+                            generatedFullResult.developedNotes!.title,
+                            generatedFullResult.developedNotes!.structuredNotesMarkdown
+                          )
+                        }
+                        className="px-3.5 py-2 rounded-xl bg-[#365e45] hover:bg-[#284935] text-white text-xs font-extrabold flex items-center gap-1.5 transition"
+                      >
+                        <NotebookPen className="w-3.5 h-3.5" />
+                        <span>Guardar en Mis Apuntes</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDownloadDevelopedNotes(
+                            generatedFullResult.developedNotes!.title,
+                            generatedFullResult.developedNotes!.structuredNotesMarkdown
+                          )
+                        }
+                        className="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold flex items-center gap-1.5 transition"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Descargar .md</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <SimpleMarkdown content={generatedFullResult.developedNotes.structuredNotesMarkdown} />
+
+                  {generatedFullResult.developedNotes.examTips && generatedFullResult.developedNotes.examTips.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-1">
+                      <strong className="font-extrabold uppercase tracking-wide block text-amber-900">
+                        Claves para el Examen:
+                      </strong>
+                      <ul className="list-disc pl-4 space-y-1">
+                        {generatedFullResult.developedNotes.examTips.map((tip, i) => (
+                          <li key={i}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Summary Section */}
+              {generatedFullResult.summary && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-full">
+                        Resumen Clínico & Esquema
+                      </span>
+                      <h3 className="text-base font-black text-stone-900 mt-1">
+                        {generatedFullResult.summary.title}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => handleSaveFullSummaryToStore(generatedFullResult.summary)}
+                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold flex items-center gap-1.5 transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Guardar Resumen en Biblioteca</span>
+                    </button>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                    {generatedFullResult.summary.executiveSummary}
+                  </p>
+
+                  {generatedFullResult.summary.keyConcepts?.length > 0 && (
+                    <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-1.5">
+                      <strong className="text-xs font-extrabold text-stone-900 uppercase tracking-wide block">
+                        Conceptos Clave:
+                      </strong>
+                      <ul className="list-disc pl-4 space-y-1 text-xs text-stone-600">
+                        {generatedFullResult.summary.keyConcepts.map((c: string, idx: number) => (
+                          <li key={idx}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {generatedFullResult.summary.clinicalMnemonics?.length > 0 && (
+                    <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-950 text-xs">
+                      <strong className="font-bold">Reglas Nemotécnicas: </strong>
+                      <span>{generatedFullResult.summary.clinicalMnemonics.join(' · ')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Quiz Questions Section */}
+              {generatedFullResult.quizQuestions && generatedFullResult.quizQuestions.length > 0 && (
+                <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                    <h3 className="text-base font-black text-stone-900">
+                      Test Generado ({generatedFullResult.quizQuestions.length} preguntas)
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleStartExamWithGenerated(generatedFullResult.quizQuestions!)}
+                        className="px-4 py-2 rounded-xl bg-[#365e45] hover:bg-[#284935] text-white text-xs font-extrabold flex items-center gap-1.5 transition"
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                        <span>Hacer este Test ahora</span>
+                      </button>
+                      <button
+                        onClick={() => handleSaveGeneratedToBank(generatedFullResult.quizQuestions!, 'quiz')}
+                        className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold flex items-center gap-1.5 transition"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Guardar en Banco Editable</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {generatedFullResult.quizQuestions.map((item: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-stone-50/70 border border-stone-200 space-y-2.5">
+                        <p className="text-sm font-extrabold text-stone-900">
+                          {idx + 1}. {item.question}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {item.options?.map((opt: string, oIdx: number) => (
+                            <div
+                              key={oIdx}
+                              className={`p-2 rounded-xl border flex items-center gap-2 ${
+                                oIdx === item.correctIndex
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold'
+                                  : 'bg-white border-stone-200 text-stone-600'
+                              }`}
+                            >
+                              <span className="font-bold">{String.fromCharCode(65 + oIdx)})</span>
+                              <span>{opt}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-stone-600 bg-white p-2.5 rounded-xl border border-stone-200">
+                          <strong>Explicación:</strong> {item.explanation}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Flashcards Section */}
+              {generatedFullResult.flashcards && generatedFullResult.flashcards.length > 0 && (
+                <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                    <h3 className="text-base font-black text-stone-900">
+                      Flashcards Generadas ({generatedFullResult.flashcards.length})
+                    </h3>
+                    <button
+                      onClick={() => handleSaveGeneratedToBank(generatedFullResult.flashcards!, 'flashcards')}
+                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold flex items-center gap-1.5 transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Guardar en Flashcards Leitner</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {generatedFullResult.flashcards.map((card: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-2xl border border-stone-200 bg-stone-50 space-y-2">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-stone-400">Anverso</span>
+                          <p className="text-xs font-extrabold text-stone-900 mt-0.5">{card.front}</p>
+                        </div>
+                        <div className="pt-2 border-t border-stone-200">
+                          <span className="text-[10px] font-bold uppercase text-emerald-700">Reverso</span>
+                          <p className="text-xs text-emerald-950 mt-0.5">{card.back}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Generated Preview List (for quiz-only / flashcards-only mode) */}
           {generatedItems.length > 0 && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-extrabold text-stone-900">
                   Previsualización ({generatedItems.length} generadas)
                 </h3>
-                <button
-                  onClick={handleSaveGeneratedToBank}
-                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Guardar todo en mi Banco</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {aiGenType === 'quiz' && (
+                    <button
+                      onClick={() => handleStartExamWithGenerated(generatedItems)}
+                      className="px-4 py-2 rounded-xl bg-[#365e45] hover:bg-[#284935] text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                      <span>Hacer este Test ahora</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleSaveGeneratedToBank()}
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Guardar todo en mi Banco</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -1676,28 +2222,81 @@ export const AcademyView: React.FC = () => {
                 <h2 className="text-lg font-black text-stone-900">Generar Resumen Clínico & Esquema con IA</h2>
               </div>
               <p className="text-xs text-stone-500 mt-1">
-                Pega tus apuntes extensos para sintetizarlos en conceptos clave, nemotécnias, valores normales y preguntas típicas de examen de la UCLM.
+                Importa tus apuntes subidos o pega cualquier texto para sintetizarlo en conceptos clave, nemotécnias y preguntas típicas de examen de la UCLM.
               </p>
             </div>
 
+            <NoteImportPanel
+              notes={state.studentNotes || []}
+              subjects={state.subjects || []}
+              onImport={handleImportNoteToSummary}
+              onSaveUploadedNote={addStudentNote}
+              onOpenNotesLibrary={onNavigateToNotes}
+              compactTitle="Importar apunte para resumir con IA"
+            />
+
+            {summaryImportedFile?.fileName && (
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs">
+                <span className="flex items-center gap-2 font-bold text-stone-700 truncate">
+                  <File className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span className="truncate">Archivo adjunto cargado: {summaryImportedFile.fileName}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSummaryImportedFile(null)}
+                  className="text-stone-400 hover:text-rose-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {summaryBanner && (
+              <div
+                className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 ${
+                  summaryBanner.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                    : 'bg-rose-50 border-rose-300 text-rose-900'
+                }`}
+              >
+                <span>{summaryBanner.message}</span>
+                <button onClick={() => setSummaryBanner(null)} className="opacity-70 hover:opacity-100">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-1">
-                <label className="text-xs font-bold text-stone-700 block mb-1">Materia</label>
-                <input
-                  type="text"
-                  value={summarySubject}
-                  onChange={(e) => setSummarySubject(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                />
+              <div className="sm:col-span-1 space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-stone-700 block mb-1">Asignatura</label>
+                  <input
+                    type="text"
+                    value={summarySubject}
+                    onChange={(e) => setSummarySubject(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-stone-700 block mb-1">Tema</label>
+                  <input
+                    type="text"
+                    value={summaryTopic}
+                    onChange={(e) => setSummaryTopic(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-xs font-bold text-stone-700 block mb-1">Apuntes del Tema</label>
+                <label className="text-xs font-bold text-stone-700 block mb-1">
+                  Apuntes del Tema {summaryImportedFile?.fileBase64 ? '(opcional si hay archivo adjunto)' : ''}
+                </label>
                 <textarea
-                  rows={4}
+                  rows={5}
                   value={summaryInputText}
                   onChange={(e) => setSummaryInputText(e.target.value)}
-                  placeholder="Pega aquí los apuntes que quieres resumir..."
+                  placeholder="Importa un apunte arriba o pega aquí los apuntes que quieres resumir..."
                   className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono"
                 />
               </div>
@@ -1705,10 +2304,10 @@ export const AcademyView: React.FC = () => {
 
             <div className="flex justify-end">
               <button
-                onClick={handleGenerateSummary}
-                disabled={isSummarizing || summaryInputText.trim().length < 20}
+                onClick={() => void handleGenerateSummary()}
+                disabled={isSummarizing || !canRunSummary}
                 className={`px-6 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 shadow-xs ${
-                  isSummarizing || summaryInputText.trim().length < 20
+                  isSummarizing || !canRunSummary
                     ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                     : 'bg-[#365e45] text-white hover:bg-[#284935]'
                 }`}

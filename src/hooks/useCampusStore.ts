@@ -27,8 +27,9 @@ import {
   CourseDeadline,
   StudyBlock, ScientificReference, PICOQuestion, CriticalAppraisal, PracticeRotation, PracticeLearningEntry,
   EcoeTrainingResult, ClinicalSourceRecord, TFGProject, TFGMilestone, TFGMeeting, DestinationShortcut,
-  TutorChatMessage, TutorMemoryNote, TutorSessionSummary, TutorCouncilMemo,
+  TutorChatMessage, TutorMemoryNote, TutorSessionSummary, TutorCouncilMemo, StudentNote,
 } from '../types';
+import { deleteNoteAttachment } from '../utils/notesStorage';
 import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
 import { INITIAL_DRUGS } from '../data/pharmacology';
 import { MEDICAL_TERMINOLOGY } from '../data/terminology';
@@ -114,6 +115,8 @@ export interface CampusState {
   tfgMeetings: TFGMeeting[];
   destinationShortcuts: DestinationShortcut[];
   toledoChecklist: Record<string, boolean>;
+  studentNotes: StudentNote[];
+  noteTopicsBySubject: Record<string, string[]>;
 }
 
 function getInitialDatePlus(days: number): string {
@@ -297,6 +300,8 @@ const DEMO_STATE: CampusState = {
   studyBlocks: [], scientificReferences: [], picoQuestions: [], criticalAppraisals: [],
   practiceRotations: [], practiceLearningEntries: [], ecoeTrainingResults: [],
   clinicalSources: [], tfgProjects: [], tfgMilestones: [], tfgMeetings: [], destinationShortcuts: [], toledoChecklist: {},
+  studentNotes: [],
+  noteTopicsBySubject: {},
 };
 
 // ---------- Estado VACÍO: lo que ve una usuaria nueva ----------
@@ -521,6 +526,8 @@ export function loadSavedState(raw: string | null): CampusState {
     tfgMeetings: Array.isArray(data.tfgMeetings) ? data.tfgMeetings : [],
     destinationShortcuts: Array.isArray(data.destinationShortcuts) ? data.destinationShortcuts : [],
     toledoChecklist: data.toledoChecklist && typeof data.toledoChecklist === 'object' ? data.toledoChecklist : {},
+    studentNotes: Array.isArray(data.studentNotes) ? data.studentNotes : [],
+    noteTopicsBySubject: data.noteTopicsBySubject && typeof data.noteTopicsBySubject === 'object' ? data.noteTopicsBySubject : {},
   };
 }
 
@@ -1191,6 +1198,129 @@ export function useCampusStore() {
     updateState(prev => ({ ...prev, tutorEssentialMode: !prev.tutorEssentialMode }));
   };
 
+  // --- Student Notes & Topics ---
+  const addStudentNote = (
+    note: Omit<StudentNote, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
+  ): StudentNote => {
+    const now = new Date().toISOString();
+    const newNote: StudentNote = {
+      ...note,
+      id: note.id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      topic: (note.topic || 'General').trim() || 'General',
+      createdAt: now,
+      updatedAt: now,
+    };
+    updateState(prev => {
+      const subjectKey = newNote.subjectCode || newNote.subjectName || 'GENERAL';
+      const existingTopics = prev.noteTopicsBySubject?.[subjectKey] || [];
+      const nextTopics = existingTopics.includes(newNote.topic)
+        ? existingTopics
+        : [...existingTopics, newNote.topic];
+      return {
+        ...prev,
+        studentNotes: [newNote, ...(prev.studentNotes || [])],
+        noteTopicsBySubject: {
+          ...(prev.noteTopicsBySubject || {}),
+          [subjectKey]: nextTopics,
+        },
+      };
+    });
+    return newNote;
+  };
+
+  const updateStudentNote = (id: string, patch: Partial<StudentNote>) => {
+    const now = new Date().toISOString();
+    updateState(prev => {
+      const updatedNotes = (prev.studentNotes || []).map(n => {
+        if (n.id !== id) return n;
+        const nextTopic = patch.topic !== undefined ? (patch.topic.trim() || 'General') : n.topic;
+        return {
+          ...n,
+          ...patch,
+          topic: nextTopic,
+          updatedAt: now,
+        };
+      });
+      const updated = updatedNotes.find(n => n.id === id);
+      const nextTopicsMap = { ...(prev.noteTopicsBySubject || {}) };
+      if (updated) {
+        const subjectKey = updated.subjectCode || updated.subjectName || 'GENERAL';
+        const existingTopics = nextTopicsMap[subjectKey] || [];
+        if (!existingTopics.includes(updated.topic)) {
+          nextTopicsMap[subjectKey] = [...existingTopics, updated.topic];
+        }
+      }
+      return {
+        ...prev,
+        studentNotes: updatedNotes,
+        noteTopicsBySubject: nextTopicsMap,
+      };
+    });
+  };
+
+  const deleteStudentNote = (id: string) => {
+    void deleteNoteAttachment(id);
+    updateState(prev => ({
+      ...prev,
+      studentNotes: (prev.studentNotes || []).filter(n => n.id !== id),
+    }));
+  };
+
+  const addNoteTopic = (subjectKey: string, topicName: string) => {
+    const clean = topicName.trim();
+    if (!clean) return;
+    updateState(prev => {
+      const existing = prev.noteTopicsBySubject?.[subjectKey] || [];
+      if (existing.includes(clean)) return prev;
+      return {
+        ...prev,
+        noteTopicsBySubject: {
+          ...(prev.noteTopicsBySubject || {}),
+          [subjectKey]: [...existing, clean],
+        },
+      };
+    });
+  };
+
+  const renameNoteTopic = (subjectKey: string, oldTopic: string, newTopic: string) => {
+    const clean = newTopic.trim();
+    if (!clean || clean === oldTopic) return;
+    const now = new Date().toISOString();
+    updateState(prev => {
+      const existing = prev.noteTopicsBySubject?.[subjectKey] || [];
+      const replaced = existing.map(t => (t === oldTopic ? clean : t));
+      const deduped = Array.from(new Set(replaced.includes(clean) ? replaced : [...replaced, clean]));
+      return {
+        ...prev,
+        noteTopicsBySubject: {
+          ...(prev.noteTopicsBySubject || {}),
+          [subjectKey]: deduped,
+        },
+        studentNotes: (prev.studentNotes || []).map(n =>
+          (n.subjectCode === subjectKey || n.subjectName === subjectKey) && n.topic === oldTopic
+            ? { ...n, topic: clean, updatedAt: now }
+            : n
+        ),
+      };
+    });
+  };
+
+  const deleteNoteTopic = (subjectKey: string, topicName: string) => {
+    const now = new Date().toISOString();
+    updateState(prev => ({
+      ...prev,
+      noteTopicsBySubject: {
+        ...(prev.noteTopicsBySubject || {}),
+        [subjectKey]: (prev.noteTopicsBySubject?.[subjectKey] || []).filter(t => t !== topicName),
+      },
+      studentNotes: (prev.studentNotes || []).map(n =>
+        (n.subjectCode === subjectKey || n.subjectName === subjectKey) && n.topic === topicName
+          ? { ...n, topic: 'General', updatedAt: now }
+          : n
+      ),
+    }));
+  };
+
   return {
     state,
     updateState,
@@ -1252,6 +1382,12 @@ export function useCampusStore() {
     addPersonalAppointment,
     togglePersonalAppointmentCompleted,
     deletePersonalAppointment,
+    addStudentNote,
+    updateStudentNote,
+    deleteStudentNote,
+    addNoteTopic,
+    renameNoteTopic,
+    deleteNoteTopic,
   };
 }
 

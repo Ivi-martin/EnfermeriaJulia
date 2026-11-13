@@ -31,7 +31,8 @@ import {
   MapPin,
   ScrollText,
   Wrench,
-  UtensilsCrossed
+  UtensilsCrossed,
+  NotebookPen
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -61,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'APRENDER',
       items: [
         { id: 'uclm', label: 'Mi UCLM · Plan de estudios', icon: GraduationCap },
+        { id: 'notes', label: 'Mis Apuntes', icon: NotebookPen },
         { id: 'academy', label: 'Academia & Exámenes', icon: Brain },
         { id: 'evidence', label: 'Biblioteca científica', icon: Library },
         { id: 'tfg', label: 'Trabajo Fin de Grado', icon: ScrollText },

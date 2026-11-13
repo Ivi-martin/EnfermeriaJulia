@@ -181,7 +181,7 @@ export interface QuizQuestion {
   id: string;
   subject: string;
   year?: 1 | 2 | 3 | 4;
-  category: 'Anatomía' | 'Fundamentos' | 'Fisiología' | 'Farmacología' | 'Laboratorio' | 'ECOE' | 'Casos Clínicos';
+  category: 'Anatomía' | 'Fundamentos' | 'Fisiología' | 'Farmacología' | 'Laboratorio' | 'ECOE' | 'Casos Clínicos' | 'Apuntes';
   question: string;
   options: string[];
   correctIndex: number;
@@ -626,3 +626,29 @@ export interface DestinationShortcut {
   address: string;
   notes: string;
 }
+
+export type NoteCategory =
+  | 'Apuntes de clase'
+  | 'Diapositivas / PDF'
+  | 'Esquema'
+  | 'Guía / Protocolo'
+  | 'Prácticas'
+  | 'Otro';
+
+export interface StudentNote {
+  id: string;
+  title: string;
+  subjectCode: string;
+  subjectName: string;
+  topic: string;
+  category: NoteCategory;
+  content: string;
+  fileName?: string;
+  fileMimeType?: string;
+  fileSize?: number;
+  hasAttachment?: boolean;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+

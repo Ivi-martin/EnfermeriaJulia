@@ -6,6 +6,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 
 import { TodayView } from './views/TodayView';
 import { UCLMView } from './views/UCLMView';
+import { NotesView } from './views/NotesView';
 import { AcademyView } from './views/AcademyView';
 import { LaboratoryView } from './views/LaboratoryView';
 import { ECOEView } from './views/ECOEView';
@@ -36,6 +37,8 @@ import { SmartWeekView, ScientificEvidenceView, PracticePassportView, ECOETraine
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('today');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [notesTargetSubject, setNotesTargetSubject] = useState<string | null>(null);
+  const [academyTargetNoteId, setAcademyTargetNoteId] = useState<string | null>(null);
 
   const renderActiveView = () => {
     switch (currentPage) {
@@ -58,9 +61,33 @@ export default function App() {
       case 'shortcuts':
         return <ShortcutsView />;
       case 'uclm':
-        return <UCLMView />;
+        return (
+          <UCLMView
+            onOpenSubjectNotes={(code) => {
+              setNotesTargetSubject(code);
+              setCurrentPage('notes');
+            }}
+          />
+        );
+      case 'notes':
+        return (
+          <NotesView
+            initialSubjectCode={notesTargetSubject}
+            onClearInitialSubject={() => setNotesTargetSubject(null)}
+            onSendNoteToAcademy={(noteId) => {
+              setAcademyTargetNoteId(noteId);
+              setCurrentPage('academy');
+            }}
+          />
+        );
       case 'academy':
-        return <AcademyView />;
+        return (
+          <AcademyView
+            initialNoteId={academyTargetNoteId}
+            onClearInitialNote={() => setAcademyTargetNoteId(null)}
+            onNavigateToNotes={() => setCurrentPage('notes')}
+          />
+        );
       case 'laboratory':
         return <LaboratoryView />;
       case 'ecoe':
@@ -102,7 +129,13 @@ export default function App() {
       case 'reminders':
         return <RemindersView />;
       case 'selfEvaluation':
-        return <AcademyView />;
+        return (
+          <AcademyView
+            initialNoteId={academyTargetNoteId}
+            onClearInitialNote={() => setAcademyTargetNoteId(null)}
+            onNavigateToNotes={() => setCurrentPage('notes')}
+          />
+        );
       case 'manuals':
         return <ManualsView />;
       case 'practicas':
@@ -110,7 +143,14 @@ export default function App() {
       case 'scales':
         return <ScalesView />;
       case 'subjects':
-        return <UCLMView />;
+        return (
+          <UCLMView
+            onOpenSubjectNotes={(code) => {
+              setNotesTargetSubject(code);
+              setCurrentPage('notes');
+            }}
+          />
+        );
       case 'tools':
         return <ToolsView />;
       case 'life':

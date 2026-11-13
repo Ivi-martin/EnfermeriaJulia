@@ -4,9 +4,9 @@ import { containsPotentialPatientIdentifiers, PATIENT_DATA_BLOCK_MESSAGE } from 
 // Lógica del Tutor IA compartida: la usan tanto server.ts (npm run dev)
 // como la función serverless de Vercel (api/ai/tutor.ts).
 
-// Modelos a probar por orden. Usamos gemini-3.8-flash como principal recomendado.
+// Modelos a probar por orden. Usamos gemini-4-hydrogen como principal recomendado.
 const getModels = () => {
-  const list = [process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  const list = [process.env.GEMINI_MODEL, 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
   return [...new Set(list.filter((m): m is string => !!m))];
 };
 
@@ -300,7 +300,7 @@ ${buildLiveContextInstruction(context)}
         const response = await ai.models.generateContent({
           model,
           contents,
-          config: { systemInstruction, temperature: 0.7 },
+          config: { systemInstruction },
         });
         const reply = response.text || 'No se pudo generar la respuesta. Por favor, reformula tu pregunta.';
         return { status: 200, body: { reply, model, tutor } };
