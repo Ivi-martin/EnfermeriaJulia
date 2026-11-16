@@ -70,17 +70,24 @@ export const PharmacologyProView: React.FC = () => {
     return matchesSearch && matchesGroup && matchesHighRisk;
   });
 
-  // Calculate compatibility result
+  // El resultado solo puede existir si hay una ficha expresa para el par elegido.
   const compatibilityResult = IV_COMPATIBILITY_ENTRIES.find(entry =>
     (entry.drugA.toLowerCase() === drugA.toLowerCase() && entry.drugB.toLowerCase() === drugB.toLowerCase()) ||
     (entry.drugA.toLowerCase() === drugB.toLowerCase() && entry.drugB.toLowerCase() === drugA.toLowerCase())
   );
 
-  // Available drugs for compatibility selector
+  // Catálogo de primeros fármacos; el segundo se filtra por pareja documentada.
   const availableCompatDrugs = Array.from(new Set([
     ...IV_COMPATIBILITY_ENTRIES.map(e => e.drugA),
-    ...IV_COMPATIBILITY_ENTRIES.map(e => e.drugB)
-  ])).sort();
+    ...IV_COMPATIBILITY_ENTRIES.map(e => e.drugB),
+  ])).sort((a, b) => a.localeCompare(b, 'es'));
+  const getDocumentedSecondDrugs = (firstDrug: string) => Array.from(new Set(
+    IV_COMPATIBILITY_ENTRIES
+      .filter((entry) => entry.drugA.toLocaleLowerCase() === firstDrug.toLocaleLowerCase() || entry.drugB.toLocaleLowerCase() === firstDrug.toLocaleLowerCase())
+      .map((entry) => entry.drugA.toLocaleLowerCase() === firstDrug.toLocaleLowerCase() ? entry.drugB : entry.drugA)
+      .filter((otherDrug) => otherDrug.toLocaleLowerCase() !== firstDrug.toLocaleLowerCase())
+  )).sort((a, b) => a.localeCompare(b, 'es'));
+  const availableSecondDrugs = getDocumentedSecondDrugs(drugA);
 
   // Calculations
   const calculatedDoseMg = (parseFloat(weightKg) || 0) * (parseFloat(dosePerKg) || 0);
@@ -343,7 +350,12 @@ export const PharmacologyProView: React.FC = () => {
                 </label>
                 <select
                   value={drugA}
-                  onChange={(e) => setDrugA(e.target.value)}
+                  onChange={(e) => {
+                    const nextDrug = e.target.value;
+                    const nextSecondOptions = getDocumentedSecondDrugs(nextDrug);
+                    setDrugA(nextDrug);
+                    setDrugB(nextSecondOptions[0] || '');
+                  }}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#244234]"
                 >
                   {availableCompatDrugs.map(d => (
@@ -357,14 +369,18 @@ export const PharmacologyProView: React.FC = () => {
                   Segundo Fármaco (Medicamento B):
                 </label>
                 <select
-                  value={drugB}
+                  value={availableSecondDrugs.includes(drugB) ? drugB : (availableSecondDrugs[0] || '')}
                   onChange={(e) => setDrugB(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#244234]"
+                  disabled={availableSecondDrugs.length === 0}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#244234] disabled:opacity-50"
                 >
-                  {availableCompatDrugs.map(d => (
+                  {availableSecondDrugs.length === 0 ? (
+                    <option value="">Sin pares documentados</option>
+                  ) : availableSecondDrugs.map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
+                <p className="text-[10px] text-stone-500 mt-1">Solo se muestran fármacos con una ficha documentada para {drugA}.</p>
               </div>
             </div>
           </div>
@@ -402,10 +418,21 @@ export const PharmacologyProView: React.FC = () => {
                 {compatibilityResult.details}
               </div>
 
-              <div className="flex flex-wrap items-center justify-between text-xs text-stone-500 pt-2 border-t border-stone-200/60">
+              <div className="flex flex-wrap items-center justify-between text-xs text-stone-500 pt-2 border-t border-stone-200/60 gap-2">
                 <span>Diluyente de ensayo: <strong>{compatibilityResult.diluent}</strong></span>
                 <span>Fuente: {compatibilityResult.source}</span>
               </div>
+              {compatibilityResult.testedConcentrations && (
+                <div className="text-xs text-stone-700"><strong>Concentraciones estudiadas:</strong> {compatibilityResult.testedConcentrations}</div>
+              )}
+              {compatibilityResult.evidenceLimitations && (
+                <div className="text-[11px] leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <strong>Límites de la evidencia:</strong> {compatibilityResult.evidenceLimitations}
+                </div>
+              )}
+              {compatibilityResult.sourceUrl && (
+                <a href={compatibilityResult.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex text-xs font-bold text-emerald-800 underline underline-offset-2">Consultar fuente original</a>
+              )}
             </div>
           ) : (
             <div className="p-6 rounded-3xl bg-stone-100 border border-stone-200 text-center space-y-2">
@@ -414,7 +441,7 @@ export const PharmacologyProView: React.FC = () => {
                 Compatibilidad no documentada directamente para este par
               </h4>
               <p className="text-xs text-stone-500 max-w-md mx-auto">
-                Por principio de precaución enfermera, ante la ausencia de evidencia validada en la literatura, se recomienda administrar por luces venosas separadas o lavar rigurosamente con 10-20 mL de Suero Fisiológico entre ambas perfusiones.
+                Este par no tiene una ficha de compatibilidad en el catálogo. Por seguridad no se incluye como opción del segundo fármaco; consulta Farmacia o una base institucional actualizada y utiliza una luz separada hasta verificarlo.
               </p>
             </div>
           )}

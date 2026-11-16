@@ -43,6 +43,9 @@ export interface IvCompatibilityEntry {
   details: string;
   diluent: string;
   source: string;
+  testedConcentrations?: string;
+  evidenceLimitations?: string;
+  sourceUrl?: string;
 }
 
 export interface MedicalTerm {
@@ -331,6 +334,7 @@ export interface SavedNoteSummary {
 
 export interface VirtualPatientCase {
   id: string;
+  courseYear?: 1 | 2 | 3 | 4;
   title: string;
   difficulty: 'Básico' | 'Intermedio' | 'Avanzado';
   category: string;

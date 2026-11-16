@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCampusStore } from '../hooks/useCampusStore';
 import { QuizQuestion } from '../types';
+import { UCLM_NURSING_CURRICULUM } from '../data/uclm/curriculum';
 import { NoteImportPanel, ImportedNotePayload } from '../components/NoteImportPanel';
 import { SimpleMarkdown } from '../components/SimpleMarkdown';
 import {
@@ -41,6 +42,16 @@ import {
 
 type ExamMode = 'quick10' | 'normal30' | 'timed' | 'mistakes';
 
+const normalizeSubjectName = (value: string) => {
+  const normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const withAliases = normalized
+    .replace(/fundamentos de enfermeria\s+ii\b/g, 'fundamentos de enfermeria 2')
+    .replace(/fundamentos de enfermeria\s+i\b/g, 'fundamentos de enfermeria 1')
+    .replace(/^anatomia$/, 'anatomia humana')
+    .replace(/^fisiologia$/, 'fisiologia humana');
+  return withAliases.replace(/\s+/g, ' ');
+};
+
 interface AcademyViewProps {
   initialNoteId?: string | null;
   onClearInitialNote?: () => void;
@@ -77,6 +88,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
   // 1. Exam Simulator State
   // -------------------------------------------------------------
   const [examMode, setExamMode] = useState<ExamMode>('quick10');
+  const [selectedCourse, setSelectedCourse] = useState<number | 'Todas'>(1);
   const [selectedSubject, setSelectedSubject] = useState<string>('Todas');
   const [isExamActive, setIsExamActive] = useState<boolean>(false);
   const [currentQuestions, setCurrentQuestions] = useState<QuizQuestion[]>([]);
@@ -121,14 +133,31 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     ? state.quizQuestions
     : [];
 
-  const subjectsList = ['Todas', ...Array.from(new Set(questionsPool.map((q) => q.subject)))];
+  const officialSubjects = state.subjects?.length ? state.subjects : UCLM_NURSING_CURRICULUM;
+  const simulatorSubjectOptions = officialSubjects.filter((subject) =>
+    selectedCourse === 'Todas' || subject.year === selectedCourse
+  );
+  const bankSubjectsList = ['Todas', ...Array.from(new Set([
+    ...officialSubjects.map((subject) => subject.name),
+    ...questionsPool.map((question) => question.subject),
+  ]))].sort((a, b) => a === 'Todas' ? -1 : b === 'Todas' ? 1 : a.localeCompare(b, 'es'));
+
+  const getQuestionCourse = (question: QuizQuestion) => {
+    if (question.year) return question.year;
+    return officialSubjects.find((subject) =>
+      normalizeSubjectName(subject.name) === normalizeSubjectName(question.subject)
+    )?.year;
+  };
 
   const startExam = (mode: ExamMode) => {
     setExamMode(mode);
     let pool = [...questionsPool];
-    if (selectedSubject !== 'Todas') {
-      pool = pool.filter((q) => q.subject === selectedSubject);
-    }
+    pool = pool.filter((question) => {
+      const courseMatches = selectedCourse === 'Todas' || getQuestionCourse(question) === selectedCourse;
+      const subjectMatches = selectedSubject === 'Todas' ||
+        normalizeSubjectName(question.subject) === normalizeSubjectName(selectedSubject);
+      return courseMatches && subjectMatches;
+    });
 
     if (mode === 'mistakes') {
       if (mistakesHistory.length > 0) {
@@ -352,6 +381,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
   const [aiGenType, setAiGenType] = useState<'full' | 'notes' | 'quiz' | 'flashcards'>('full');
   const [aiCount, setAiCount] = useState<number>(5);
   const [aiSubject, setAiSubject] = useState('Farmacología');
+  const [aiCourse, setAiCourse] = useState<number>(2);
   const [aiTopic, setAiTopic] = useState('General');
   const [aiNoteTitle, setAiNoteTitle] = useState('');
   const [aiImportedFile, setAiImportedFile] = useState<{
@@ -362,6 +392,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
   } | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [generatedItems, setGeneratedItems] = useState<any[]>([]);
+  const [generatedItemsKind, setGeneratedItemsKind] = useState<'quiz' | 'flashcards' | null>(null);
   const [generatedFullResult, setGeneratedFullResult] = useState<{
     title: string;
     summary?: any;
@@ -403,6 +434,8 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       }
       if (cancelled) return;
       setActiveTab('aiGenerator');
+      const noteSubject = officialSubjects.find((subject) => normalizeSubjectName(subject.name) === normalizeSubjectName(targetNote.subjectName || ''));
+      if (noteSubject) setAiCourse(noteSubject.year);
       setAiSubject(targetNote.subjectName || 'Enfermería');
       setAiTopic(targetNote.topic || 'General');
       setAiNoteTitle(targetNote.title);
@@ -426,6 +459,10 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
   }, [initialNoteId, state.studentNotes, onClearInitialNote]);
 
   const handleImportNoteToGenerator = (payload: ImportedNotePayload) => {
+    const importedSubject = officialSubjects.find((subject) =>
+      normalizeSubjectName(subject.name) === normalizeSubjectName(payload.subject || '')
+    );
+    if (importedSubject) setAiCourse(importedSubject.year);
     setAiSubject(payload.subject || 'Enfermería');
     setAiTopic(payload.topic || 'General');
     setAiNoteTitle(payload.title || '');
@@ -452,7 +489,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     Boolean(aiImportedFile?.fileBase64 && aiImportedFile?.fileMimeType) ||
     aiNoteText.trim().length >= 15;
 
-  const handleRunAiGeneration = async () => {
+  const handleRunAiGeneration = async (requestedType: 'full' | 'notes' | 'quiz' | 'flashcards' = aiGenType) => {
     if (!canRunAiGen) {
       setAiFeedbackBanner({
         type: 'error',
@@ -463,13 +500,14 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     setIsGeneratingAi(true);
     setAiFeedbackBanner(null);
     setGeneratedItems([]);
+    setGeneratedItemsKind(null);
     setGeneratedFullResult(null);
     try {
       const res = await fetch('/api/ai/analyze-note', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: aiGenType,
+          mode: requestedType,
           text: aiNoteText,
           fileBase64: aiImportedFile?.fileBase64,
           fileMimeType: aiImportedFile?.fileMimeType,
@@ -486,12 +524,13 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         return;
       }
 
-      if (aiGenType === 'quiz' || aiGenType === 'flashcards') {
+      if (requestedType === 'quiz' || requestedType === 'flashcards') {
         if (Array.isArray(data.items)) {
           setGeneratedItems(data.items);
+          setGeneratedItemsKind(requestedType);
           recordStudyActivity(10);
         }
-      } else if (aiGenType === 'notes') {
+      } else if (requestedType === 'notes') {
         setGeneratedFullResult({
           title: data.title || aiNoteTitle || `Apuntes desarrollados (${aiSubject})`,
           developedNotes: {
@@ -526,6 +565,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       list.forEach((item) => {
         addQuizQuestion({
           subject: item.subject || aiSubject,
+          year: officialSubjects.find((subject) => normalizeSubjectName(subject.name) === normalizeSubjectName(item.subject || aiSubject))?.year ?? aiCourse,
           category: 'Apuntes',
           question: item.question,
           options: item.options,
@@ -542,6 +582,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       list.forEach((item) => {
         addQuizQuestion({
           subject: item.subject || aiSubject,
+          year: officialSubjects.find((subject) => normalizeSubjectName(subject.name) === normalizeSubjectName(item.subject || aiSubject))?.year ?? aiCourse,
           category: 'Fundamentos',
           question: item.front,
           options: [item.back, 'Opción B (Distractor)', 'Opción C', 'Opción D'],
@@ -554,7 +595,8 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         message: `¡${list.length} flashcards guardadas para repasar en Flashcards Leitner!`,
       });
     }
-    if (!customItems) setGeneratedItems([]);
+    setGeneratedItems([]);
+    setGeneratedItemsKind(null);
   };
 
   const handleStartExamWithGenerated = (questions: any[]) => {
@@ -569,6 +611,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       explanation: q.explanation,
       clinicalTip: q.clinicalTip,
     }));
+    setSelectedCourse(aiCourse);
     setSelectedSubject(aiSubject);
     setExamMode('quick10');
     setCurrentQuestions(formatted);
@@ -773,6 +816,112 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     setSummaryBanner({ type: 'success', message: '¡Resumen guardado con éxito en tu biblioteca!' });
   };
 
+  const aiSubjectsForCourse = officialSubjects.filter((subject) => subject.year === aiCourse);
+
+  const renderAiExpansionPanel = (kind: 'quiz' | 'flashcards') => (
+    <section className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-3xl border border-emerald-200 shadow-2xs space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-stone-900">Ampliar {kind === 'quiz' ? 'el banco de preguntas' : 'las flashcards'} con IA</h3>
+          <p className="text-xs text-stone-600 mt-1">Selecciona apuntes ya guardados en Mis Apuntes o sube un archivo desde tu equipo. La IA generará material basado en ese contenido.</p>
+        </div>
+      </div>
+
+      <NoteImportPanel
+        notes={state.studentNotes || []}
+        subjects={officialSubjects}
+        selectedNoteId={aiImportedFile?.noteId}
+        onImport={handleImportNoteToGenerator}
+        onSaveUploadedNote={addStudentNote}
+        onOpenNotesLibrary={onNavigateToNotes}
+        compactTitle="Usar apuntes de la aplicación o subir archivo"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold text-stone-700 mb-1">Curso</label>
+          <select
+            value={aiCourse}
+            onChange={(e) => {
+              const nextCourse = Number(e.target.value);
+              setAiCourse(nextCourse);
+              const firstSubject = officialSubjects.find((subject) => subject.year === nextCourse);
+              if (firstSubject) setAiSubject(firstSubject.name);
+            }}
+            className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs font-bold text-stone-800"
+          >
+            {[1, 2, 3, 4].map((year) => <option key={year} value={year}>{year}.º curso</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-stone-700 mb-1">Asignatura</label>
+          <select
+            value={aiCourseSubjects.some((subject) => subject.name === aiSubject) ? aiSubject : (aiCourseSubjects[0]?.name || aiSubject)}
+            onChange={(e) => setAiSubject(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs font-bold text-stone-800"
+          >
+            {aiCourseSubjects.map((subject) => <option key={subject.code} value={subject.name}>{subject.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-stone-700 mb-1">N.º de {kind === 'quiz' ? 'preguntas' : 'tarjetas'}</label>
+          <select value={aiCount} onChange={(e) => setAiCount(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs font-bold text-stone-800">
+            {[5, 10, 15, 20].map((count) => <option key={count} value={count}>{count}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[11px] font-bold text-stone-700 mb-1">Tema (opcional)</label>
+        <input value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="Ej. valoración neurológica, sistema cardiovascular..." className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs text-stone-800" />
+      </div>
+
+      {(aiImportedFile?.fileName || aiNoteText) && (
+        <p className="text-[11px] text-emerald-800 font-semibold">Fuente cargada: {aiNoteTitle || aiImportedFile?.fileName || 'Apunte seleccionado'}{aiNoteText ? ` · ${aiNoteText.length} caracteres extraídos` : ''}</p>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-[11px] text-stone-500">La generación usa el contenido seleccionado o subido, no el catálogo general.</span>
+        <button
+          type="button"
+          onClick={() => void handleRunAiGeneration(kind)}
+          disabled={isGeneratingAi || !canRunAiGen}
+          className="px-4 py-2.5 rounded-xl bg-[#365e45] text-white text-xs font-extrabold disabled:bg-stone-300 disabled:text-stone-500 flex items-center gap-2"
+        >
+          {isGeneratingAi ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {isGeneratingAi ? 'Generando...' : `Generar ${kind === 'quiz' ? 'preguntas' : 'flashcards'} con IA`}
+        </button>
+      </div>
+
+      {aiFeedbackBanner && (
+        <p className={`text-xs font-bold p-3 rounded-xl border ${aiFeedbackBanner.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>{aiFeedbackBanner.message}</p>
+      )}
+
+      {generatedItems.length > 0 && generatedItemsKind === kind && (
+        <div className="space-y-3 pt-2 border-t border-emerald-100">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-black text-stone-800">Vista previa · {generatedItems.length} elementos</span>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {kind === 'quiz' && <button type="button" onClick={() => handleStartExamWithGenerated(generatedItems)} className="px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 text-[11px] font-extrabold">Practicar ahora</button>}
+              <button type="button" onClick={() => handleSaveGeneratedToBank(generatedItems, kind)} className="px-3 py-2 rounded-lg bg-emerald-700 text-white text-[11px] font-extrabold">Guardar en {kind === 'quiz' ? 'Banco Editable' : 'Flashcards Leitner'}</button>
+            </div>
+          </div>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {generatedItems.slice(0, 5).map((item, index) => (
+              <div key={`${kind}-${index}`} className="bg-white border border-stone-200 rounded-xl p-3 text-xs">
+                <p className="font-bold text-stone-900">{kind === 'quiz' ? item.question : item.front}</p>
+                <p className="text-stone-600 mt-1">{kind === 'quiz' ? (item.options || []).join(' · ') : item.back}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* Header Banner */}
@@ -885,29 +1034,47 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       {/* ------------------------------------------------------------- */}
       {activeTab === 'exams' && (
         <div className="space-y-6">
+          {!isExamActive && !examFinished && renderAiExpansionPanel('quiz')}
           {!isExamActive && !examFinished && (
             <div className="space-y-6">
-              {/* Subject Filter */}
-              <div className="bg-white p-4 rounded-2xl border border-stone-200 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-stone-500" />
-                  <span className="text-xs font-bold text-stone-700">Filtrar por Materia:</span>
+              {/* Curso primero y asignatura después: catálogo completo del grado */}
+              <div className="bg-white p-4 rounded-2xl border border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-stone-700 mb-1.5">
+                    <Filter className="w-4 h-4 text-stone-500" /> 1. Selecciona el curso
+                  </label>
+                  <select
+                    value={selectedCourse}
+                    onChange={(e) => {
+                      const nextCourse = e.target.value === 'Todas' ? 'Todas' : Number(e.target.value) as 1 | 2 | 3 | 4;
+                      setSelectedCourse(nextCourse);
+                      setSelectedSubject('Todas');
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  >
+                    <option value={1}>1.º curso</option>
+                    <option value={2}>2.º curso</option>
+                    <option value={3}>3.º curso</option>
+                    <option value={4}>4.º curso</option>
+                    <option value="Todas">Todos los cursos</option>
+                  </select>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {subjectsList.map((subj) => (
-                    <button
-                      key={subj}
-                      onClick={() => setSelectedSubject(subj)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                        selectedSubject === subj
-                          ? 'bg-[#365e45] text-white shadow-xs'
-                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                      }`}
-                    >
-                      {subj}
-                    </button>
-                  ))}
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5">2. Selecciona la asignatura</label>
+                  <select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  >
+                    <option value="Todas">Todas las asignaturas de {selectedCourse === 'Todas' ? 'todos los cursos' : `${selectedCourse}.º curso`}</option>
+                    {simulatorSubjectOptions.map((subject) => (
+                      <option key={subject.code} value={subject.name}>{subject.name}</option>
+                    ))}
+                  </select>
                 </div>
+                <p className="sm:col-span-2 text-[11px] text-stone-500">
+                  El catálogo incluye las asignaturas del plan completo; si todavía no hay preguntas para una asignatura, podrás ampliarla con IA desde Banco Editable o Flashcards Leitner.
+                </p>
               </div>
 
               {/* 4 Exam Modes */}
@@ -1172,6 +1339,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       {/* ------------------------------------------------------------- */}
       {activeTab === 'questionBank' && (
         <div className="space-y-6">
+          {renderAiExpansionPanel('quiz')}
           {/* Action Header */}
           <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -1241,7 +1409,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
                 onChange={(e) => setBankSubjectFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none"
               >
-                {subjectsList.map((s) => (
+                {bankSubjectsList.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -1465,7 +1633,8 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       {/* TAB 3: FLASHCARDS CON REPETICIÓN ESPACIADA (LEITNER) */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'flashcards' && (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-6">
+          {renderAiExpansionPanel('flashcards')}
           {/* Spaced Leitner Summary Header */}
           <div className="bg-white p-4 rounded-2xl border border-stone-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-2">
@@ -2002,7 +2171,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
           )}
 
           {/* Generated Preview List (for quiz-only / flashcards-only mode) */}
-          {generatedItems.length > 0 && (
+          {generatedItems.length > 0 && generatedItemsKind === kind && (
             <div className="space-y-4 animate-fadeIn">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-extrabold text-stone-900">
