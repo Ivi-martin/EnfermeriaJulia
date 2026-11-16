@@ -21,6 +21,8 @@ import {
 
 export const ClinicalCasesView: React.FC = () => {
   const [selectedCase, setSelectedCase] = useState<VirtualPatientCase>(SIMULATION_CASES[0]);
+  const [selectedCourseYear, setSelectedCourseYear] = useState<1 | 2 | 3 | 4>(SIMULATION_CASES[0].courseYear || 1);
+  const visibleCases = SIMULATION_CASES.filter((item) => (item.courseYear || 1) === selectedCourseYear);
   const [vitals, setVitals] = useState(SIMULATION_CASES[0].patient.initialVitals);
   const [historyLog, setHistoryLog] = useState<{ role: 'enfermera' | 'paciente' | 'tutor'; text: string; time: string }[]>([
     {
@@ -40,6 +42,7 @@ export const ClinicalCasesView: React.FC = () => {
   const [actionsCount, setActionsCount] = useState(0);
 
   const handleSelectCase = (c: VirtualPatientCase) => {
+    setSelectedCourseYear(c.courseYear || 1);
     setSelectedCase(c);
     setVitals(c.patient.initialVitals);
     setScore(70);
@@ -156,7 +159,7 @@ export const ClinicalCasesView: React.FC = () => {
               Casos Clínicos & Paciente Virtual Interactivo
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-              Enfrenta situaciones reales de urgencias, hospitalización y cirugía. Monitoriza constantes, aplica los 10 correctos, toma decisiones y recibe feedback docente formativo en tiempo real con IA.
+              Entrena con 40 escenarios clínicos (10 por curso) de urgencias, hospitalización, pediatría, salud mental y paciente crítico. Monitoriza constantes, toma decisiones y recibe feedback docente formativo con IA.
             </p>
           </div>
 
@@ -172,22 +175,45 @@ export const ClinicalCasesView: React.FC = () => {
           </div>
         </div>
 
-        {/* Case Selector Pills */}
-        <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-white/15">
-          {SIMULATION_CASES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => handleSelectCase(c)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-                selectedCase.id === c.id
-                  ? 'bg-white text-[#1b3627] shadow-sm'
-                  : 'bg-white/10 text-white/80 hover:bg-white/20'
-              }`}
-            >
-              <span>{c.patient.name}</span>
-              <span className="text-[10px] opacity-70">({c.difficulty})</span>
-            </button>
-          ))}
+        {/* Selector por curso: 10 escenarios en cada curso */}
+        <div className="mt-6 pt-6 border-t border-white/15 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-extrabold text-emerald-100 mr-1">Selecciona curso:</span>
+            {([1, 2, 3, 4] as const).map((year) => {
+              const count = SIMULATION_CASES.filter((item) => item.courseYear === year).length;
+              return (
+                <button
+                  key={year}
+                  onClick={() => {
+                    const firstCase = SIMULATION_CASES.find((item) => item.courseYear === year);
+                    if (firstCase) handleSelectCase(firstCase);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${
+                    selectedCourseYear === year ? 'bg-white text-[#1b3627] shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
+                  }`}
+                >
+                  {year}.º curso · {count} casos
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {visibleCases.map((c, index) => (
+              <button
+                key={c.id}
+                onClick={() => handleSelectCase(c)}
+                className={`p-3 rounded-xl text-left transition border ${
+                  selectedCase.id === c.id
+                    ? 'bg-white text-[#1b3627] border-white shadow-sm'
+                    : 'bg-white/10 text-white/90 border-white/10 hover:bg-white/20'
+                }`}
+              >
+                <span className="block text-[10px] font-black uppercase tracking-wide opacity-70">Caso {index + 1} · {c.difficulty}</span>
+                <span className="block text-xs font-extrabold mt-1">{c.title}</span>
+                <span className="block text-[10px] mt-1 opacity-75 line-clamp-2">{c.summary}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
