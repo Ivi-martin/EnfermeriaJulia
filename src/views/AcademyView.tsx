@@ -816,7 +816,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     setSummaryBanner({ type: 'success', message: '¡Resumen guardado con éxito en tu biblioteca!' });
   };
 
-  const aiSubjectsForCourse = officialSubjects.filter((subject) => subject.year === aiCourse);
+  const aiCourseSubjects = officialSubjects.filter((subject) => subject.year === aiCourse);
 
   const renderAiExpansionPanel = (kind: 'quiz' | 'flashcards') => (
     <section className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-3xl border border-emerald-200 shadow-2xs space-y-4">
@@ -2171,7 +2171,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
           )}
 
           {/* Generated Preview List (for quiz-only / flashcards-only mode) */}
-          {generatedItems.length > 0 && generatedItemsKind === kind && (
+          {generatedItems.length > 0 && generatedItemsKind !== null && (
             <div className="space-y-4 animate-fadeIn">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-extrabold text-stone-900">
